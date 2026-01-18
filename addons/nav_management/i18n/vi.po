@@ -1,0 +1,298 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * nav_management
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-12-26 06:00+0000\n"
+"PO-Revision-Date: 2024-12-26 06:00+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: Vietnamese\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: nav_management
+#: model:ir.model,name:nav_management.model_nav_daily_inventory
+msgid "NAV Daily Inventory"
+msgstr "Tồn kho NAV hàng ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__fund_id
+msgid "Fund"
+msgstr "Quỹ"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__inventory_date
+msgid "Inventory Date"
+msgstr "Ngày tồn kho"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__status
+msgid "Status"
+msgstr "Trạng thái"
+
+#. module: nav_management
+#: model:ir.model.fields.selection,name:nav_management.field_nav_daily_inventory__status_draft
+msgid "Draft"
+msgstr "Nháp"
+
+#. module: nav_management
+#: model:ir.model.fields.selection,name:nav_management.field_nav_daily_inventory__status_confirmed
+msgid "Confirmed"
+msgstr "Đã xác nhận"
+
+#. module: nav_management
+#: model:ir.model.fields.selection,name:nav_management.field_nav_daily_inventory__status_complete
+msgid "Complete"
+msgstr "Hoàn thành"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__opening_ccq
+msgid "Opening CCQ"
+msgstr "CCQ đầu ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__opening_avg_price
+msgid "Opening Average Price"
+msgstr "Giá TB đầu ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__opening_value
+msgid "Opening Value"
+msgstr "Giá trị đầu ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__closing_ccq
+msgid "Closing CCQ"
+msgstr "CCQ cuối ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__closing_avg_price
+msgid "Closing Average Price"
+msgstr "Giá TB cuối ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__closing_value
+msgid "Closing Value"
+msgstr "Giá trị cuối ngày"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__ccq_change
+msgid "CCQ Change"
+msgstr "Thay đổi CCQ"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__price_change
+msgid "Price Change"
+msgstr "Thay đổi giá"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__value_change
+msgid "Value Change"
+msgstr "Thay đổi giá trị"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__transaction_details
+msgid "Transaction Details"
+msgstr "Chi tiết giao dịch"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__calculation_details
+msgid "Calculation Details"
+msgstr "Chi tiết tính toán"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__fund_config_info
+msgid "Fund Config Info"
+msgstr "Thông tin cấu hình quỹ"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__display_name
+msgid "Display Name"
+msgstr "Tên hiển thị"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_daily_inventory__description
+msgid "Description"
+msgstr "Mô tả"
+
+#. module: nav_management
+#: constraint:nav.daily.inventory:0
+msgid "Each fund can only have one inventory record per day."
+msgstr "Mỗi quỹ chỉ được phép có một tồn kho cho mỗi ngày."
+
+#. module: nav_management
+msgid "Stopping after %s consecutive errors"
+msgstr "Dừng xử lý sau %s lỗi liên tiếp"
+
+#. module: nav_management
+msgid "Stopping transaction processing after %s consecutive errors"
+msgstr "Dừng xử lý giao dịch sau %s lỗi liên tiếp"
+
+#. module: nav_management
+msgid "Stopping transaction filtering after %s consecutive errors"
+msgstr "Dừng lọc giao dịch sau %s lỗi liên tiếp"
+
+#. module: nav_management
+msgid "Inventory record already exists for fund %s on date %s"
+msgstr "Đã tồn tại tồn kho cho quỹ %s trong ngày %s"
+
+#. module: nav_management
+msgid "No transaction information available"
+msgstr "Chưa có thông tin giao dịch"
+
+#. module: nav_management
+msgid "New Daily Inventory"
+msgstr "Tồn kho mới"
+
+#. module: nav_management
+#: model:ir.model,name:nav_management.model_nav_transaction
+msgid "NAV Transaction Session"
+msgstr "Phiên giao dịch NAV"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_transaction__nav_value
+msgid "NAV Value"
+msgstr "Giá trị NAV"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_transaction__transaction_session
+msgid "Transaction Session"
+msgstr "Phiên giao dịch"
+
+#. module: nav_management
+msgid "NAV value must be greater than 0."
+msgstr "Giá trị NAV phải lớn hơn 0."
+
+#. module: nav_management
+msgid "This transaction session already exists for the selected fund."
+msgstr "Phiên giao dịch này đã tồn tại cho quỹ được chọn."
+
+#. module: nav_management
+#: model:ir.model,name:nav_management.model_nav_term_rate
+msgid "NAV Term Rate Configuration"
+msgstr "Cấu hình kỳ hạn / lãi suất NAV"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_term_rate__term_months
+msgid "Term (months)"
+msgstr "Kỳ hạn (tháng)"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_term_rate__interest_rate
+msgid "Interest Rate (%)"
+msgstr "Lãi suất (%)"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_term_rate__effective_date
+msgid "Effective Date"
+msgstr "Ngày hiệu lực"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_term_rate__end_date
+msgid "End Date"
+msgstr "Ngày kết thúc"
+
+#. module: nav_management
+msgid "Term (months) must be > 0."
+msgstr "Kỳ hạn (tháng) phải > 0."
+
+#. module: nav_management
+msgid "Interest rate is required."
+msgstr "Lãi suất là bắt buộc."
+
+#. module: nav_management
+msgid "Interest rate must be between 0% and 100%."
+msgstr "Lãi suất phải nằm trong khoảng 0% đến 100%."
+
+#. module: nav_management
+msgid "Effective date cannot be later than end date."
+msgstr "Ngày hiệu lực không được lớn hơn ngày kết thúc."
+
+#. module: nav_management
+msgid "Effective date cannot be in the past."
+msgstr "Ngày hiệu lực không được trong quá khứ."
+
+#. module: nav_management
+#: model:ir.model,name:nav_management.model_nav_cap_config
+msgid "NAV Cap Configuration"
+msgstr "Cấu hình chặn trên / chặn dưới NAV"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_cap_config__cap_upper
+msgid "Cap Upper (%)"
+msgstr "Chặn trên (%)"
+
+#. module: nav_management
+#: model:ir.model.fields,field_description:nav_management.field_nav_cap_config__cap_lower
+msgid "Cap Lower (%)"
+msgstr "Chặn dưới (%)"
+
+#. module: nav_management
+msgid "Cap upper and cap lower are required."
+msgstr "Chặn trên và chặn dưới là bắt buộc."
+
+#. module: nav_management
+msgid "Cap upper must be between 0% and 100%."
+msgstr "Chặn trên phải nằm trong khoảng 0% đến 100%."
+
+#. module: nav_management
+msgid "Cap lower must be between 0% and 100%."
+msgstr "Chặn dưới phải nằm trong khoảng 0% đến 100%."
+
+#. module: nav_management
+msgid "Cap upper must be greater than cap lower."
+msgstr "Chặn trên phải lớn hơn chặn dưới."
+
+#. module: nav_management
+msgid "No active cap configuration found."
+msgstr "Không tìm thấy cấu hình chặn trên/chặn dưới đang hoạt động."
+
+#. module: nav_management
+msgid "Active"
+msgstr "Hoạt động"
+
+#. module: nav_management
+msgid "Inactive"
+msgstr "Không hoạt động"
+
+#. module: nav_management
+msgid "Success"
+msgstr "Thành công"
+
+#. module: nav_management
+msgid "Error"
+msgstr "Lỗi"
+
+#. module: nav_management
+msgid "Created NAV monthly successfully"
+msgstr "Tạo NAV tháng thành công"
+
+#. module: nav_management
+msgid "Updated NAV monthly successfully"
+msgstr "Cập nhật NAV tháng thành công"
+
+#. module: nav_management
+msgid "Deleted NAV monthly successfully"
+msgstr "Xóa NAV tháng thành công"
+
+#. module: nav_management
+msgid "NAV monthly not found"
+msgstr "Không tìm thấy NAV tháng"
+
+#. module: nav_management
+msgid "Inventory record not found"
+msgstr "Không tìm thấy bản ghi tồn kho"
+
+#. module: nav_management
+msgid "Refreshed inventory after transaction change"
+msgstr "Đã refresh tồn kho sau thay đổi giao dịch"
+
+#. module: nav_management
+msgid "All funds already have inventory for today"
+msgstr "Tất cả quỹ đã có tồn kho cho ngày hôm nay"

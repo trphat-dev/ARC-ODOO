@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Daily Index Views -->
+    <record id="view_daily_index_list" model="ir.ui.view">
+        <field name="name">ssi.daily.index.list</field>
+        <field name="model">ssi.daily.index</field>
+        <field name="arch" type="xml">
+            <list string="Daily Index Data" decoration-success="change_percent &gt; 0" decoration-danger="change_percent &lt; 0" class="o_list_table_ungrouped">
+                <field name="index_code" decoration-bf="True"/>
+                <field name="exchange" decoration-info="True"/>
+                <field name="date" widget="date"/>
+                <field name="index_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="close_value" widget="monetary" options="{'currency_field': 'currency_id'}" optional="hide"/>
+                <field name="volume"/>
+                <field name="change" widget="monetary" options="{'currency_field': 'currency_id'}" decoration-success="change &gt; 0" decoration-danger="change &lt; 0"/>
+                <field name="ratio_change"/>
+                <field name="change_percent" widget="percentage" optional="hide" decoration-success="change_percent &gt; 0" decoration-danger="change_percent &lt; 0"/>
+                <field name="last_update" widget="datetime"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_daily_index_form" model="ir.ui.view">
+        <field name="name">ssi.daily.index.form</field>
+        <field name="model">ssi.daily.index</field>
+        <field name="arch" type="xml">
+            <form string="Daily Index Data">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="index_code" decoration-bf="True"/>
+                            <field name="exchange" decoration-info="True"/>
+                            <field name="date" widget="date"/>
+                        </group>
+                        <group>
+                            <field name="index_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="close_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="volume"/>
+                            <field name="total_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </group>
+                        <group>
+                            <field name="change" widget="monetary" options="{'currency_field': 'currency_id'}" decoration-success="change &gt; 0" decoration-danger="change &lt; 0"/>
+                            <field name="ratio_change" decoration-success="change_percent &gt; 0" decoration-danger="change_percent &lt; 0"/>
+                            <field name="change_percent" widget="percentage"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="last_update" widget="datetime"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_daily_index_search" model="ir.ui.view">
+        <field name="name">ssi.daily.index.search</field>
+        <field name="model">ssi.daily.index</field>
+        <field name="arch" type="xml">
+            <search string="Search Daily Index">
+                <field name="index_code"/>
+                <field name="exchange"/>
+                <field name="date"/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <filter string="Last 30 Days" name="last_30_days" domain="[('date', '&gt;=', (context_today() - relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Index Code" name="group_index_code" context="{'group_by': 'index_code'}"/>
+                    <filter string="Exchange" name="group_exchange" context="{'group_by': 'exchange'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by': 'date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_daily_index_graph" model="ir.ui.view">
+        <field name="name">ssi.daily.index.graph</field>
+        <field name="model">ssi.daily.index</field>
+        <field name="arch" type="xml">
+            <graph string="Daily Index Chart" type="line">
+                <field name="date" type="row"/>
+                <field name="close_value" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Daily Index Actions -->
+    <record id="action_daily_index" model="ir.actions.act_window">
+        <field name="name">Daily Index Data</field>
+        <field name="res_model">ssi.daily.index</field>
+        <field name="view_mode">list,form,graph</field>
+        <field name="search_view_id" ref="view_daily_index_search"/>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+
+</odoo>

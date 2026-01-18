@@ -1,0 +1,122 @@
+/* Global Loader Styles */
+#global-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000; /* Cao hơn mọi thứ khác */
+    background: rgba(255, 255, 255, 0.7); /* Nền trắng trong suốt */
+    backdrop-filter: blur(15px); /* Glassmorphism blur mạnh */
+    -webkit-backdrop-filter: blur(15px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
+    
+    &.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .loader-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logo-container {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .loader-logo {
+        width: 200px;
+        height: auto;
+        z-index: 2;
+        animation: logo-float 3s ease-in-out infinite;
+    }
+
+    .logo-pulse {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(43, 75, 255, 0.2) 0%, rgba(43, 75, 255, 0) 70%);
+        border-radius: 50%;
+        z-index: 1;
+        animation: pulse-ring 2s infinite;
+    }
+
+    .loader-text {
+        color: #1e3a5f;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 20px;
+        letter-spacing: 0.5px;
+        opacity: 0.8;
+    }
+
+    .loader-bar {
+        width: 200px;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .loader-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2B4BFF, #00d2ff);
+        border-radius: 4px;
+        width: 30%;
+        position: absolute;
+        animation: bar-loading 1.5s infinite ease-in-out;
+    }
+}
+
+/* Animations */
+@keyframes logo-float {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0.5;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+@keyframes bar-loading {
+    0% {
+        left: -30%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}

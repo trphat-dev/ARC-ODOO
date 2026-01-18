@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Bank Account Tree View -->
+    <record id="view_investor_bank_account_tree" model="ir.ui.view">
+        <field name="name">investor.bank.account.list</field>
+        <field name="model">investor.bank.account</field>
+        <field name="type">list</field>
+        <field name="arch" type="xml">
+            <list string="Bank Accounts Information">
+                <field name="active" widget="boolean_toggle"/>
+                <field name="investor_id"/>
+                <field name="bank_name"/>
+                <field name="account_number"/>
+                <field name="account_holder"/>
+                <field name="branch"/>
+                <field name="is_default"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Bank Account Form View -->
+    <record id="view_investor_bank_account_form" model="ir.ui.view">
+        <field name="name">investor.bank.account.form</field>
+        <field name="model">investor.bank.account</field>
+        <field name="arch" type="xml">
+            <form string="Bank Account Information">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="investor_id" placeholder="Select Investor" required="1" class="oe_required"/>
+                        </h1>
+                    </div>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options="{'terminology': 'archive'}"/>
+                        </button>
+                    </div>
+                    <notebook>
+                        <page string="1. Thông tin tài khoản ngân hàng">
+                            <group>
+                                <group>
+                                    <field name="bank_name"/>
+                                    <field name="account_number"/>
+                                </group>
+                                <group>
+                                    <field name="account_holder"/>
+                                    <field name="branch"/>
+                                    <field name="is_default"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="2. Thông tin khác">
+                            <group>
+                                <group>
+                                    <field name="company_name"/>
+                                    <field name="company_address"/>
+                                    <field name="occupation"/>
+                                </group>
+                                <group>
+                                    <field name="monthly_income"/>
+                                    <field name="position"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Bank Account Search View -->
+    <record id="view_investor_bank_account_search" model="ir.ui.view">
+        <field name="name">investor.bank.account.search</field>
+        <field name="model">investor.bank.account</field>
+        <field name="arch" type="xml">
+            <search string="Search Bank Account">
+                <field name="investor_id"/>
+                <field name="bank_name"/>
+                <field name="account_number"/>
+                <field name="account_holder"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Default Accounts" name="default" domain="[('is_default', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Investor" name="group_by_investor" context="{'group_by': 'investor_id'}"/>
+                    <filter string="Bank" name="group_by_bank" context="{'group_by': 'bank_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Bank Account Action -->
+    <record id="action_investor_bank_account" model="ir.actions.act_window">
+        <field name="name">Bank Accounts Information</field>
+        <field name="res_model">investor.bank.account</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_investor_bank_account_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new bank account
+            </p>
+        </field>
+    </record>
+</odoo>

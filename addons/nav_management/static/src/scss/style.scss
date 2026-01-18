@@ -1,0 +1,742 @@
+// ==========================================================================
+// NAV Management - Main Styles
+// Clean code refactored with SCSS, responsive design, and smooth animations
+// 
+// NOTE: This file requires _variables.scss and _mixins.scss to be loaded
+// before it in the Odoo manifest assets declaration
+// ==========================================================================
+
+// ==========================================================================
+// BASE CONTAINER
+// ==========================================================================
+
+.nav-management-fund-overview-container {
+  background: linear-gradient(135deg, $gray-50 0%, $gray-200 100%);
+  min-height: 100vh;
+  font-family: $font-family-base;
+}
+
+// ==========================================================================
+// LOADING STATE
+// ==========================================================================
+
+.nav-management-loading-container {
+  @include flex-center;
+  min-height: 60vh;
+  background: rgba($white, 0.8);
+  border-radius: $radius-lg;
+  margin: $spacing-8 0;
+}
+
+.nav-management-loading-spinner {
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+  
+  .nav-management-spinner-border {
+    width: 3rem;
+    height: 3rem;
+    color: $primary-color;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    display: inline-block;
+  }
+}
+
+.nav-management-loading-text {
+  margin-top: $spacing-4;
+  color: $gray-500;
+  font-weight: $font-weight-medium;
+  animation: pulse 2s infinite;
+}
+
+// ==========================================================================
+// ERROR STATE
+// ==========================================================================
+
+.nav-management-error-container {
+  @include card;
+  background: $error-bg;
+  border-color: lighten($error-color, 30%);
+  padding: $spacing-8;
+  margin: $spacing-8 0;
+  text-align: center;
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.nav-management-error-icon {
+  font-size: $font-size-3xl;
+  color: $primary-color;
+  margin-bottom: $spacing-4;
+  animation: bounce 1s infinite;
+}
+
+.nav-management-error-title {
+  color: $error-text;
+  font-weight: $font-weight-semibold;
+  margin-bottom: $spacing-2;
+}
+
+.nav-management-error-message {
+  color: $error-text;
+  margin-bottom: 0;
+}
+
+// ==========================================================================
+// STATS GRID
+// ==========================================================================
+
+.nav-management-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: $spacing-4;
+  margin-bottom: $spacing-4;
+  
+  @include md-down {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-3;
+  }
+  
+  @include sm-down {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav-management-stat-card {
+  @include card;
+  @include card-hover;
+  position: relative;
+  padding: $spacing-4;
+  overflow: hidden;
+  animation: fadeInUp 0.3s ease-out backwards;
+  
+  @for $i from 1 through 6 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.05}s;
+    }
+  }
+  
+  @include card-accent($primary-color);
+  
+  @include md-down {
+    padding: $spacing-3;
+  }
+}
+
+.nav-management-stat-icon {
+  @include flex-center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-3;
+  font-size: $font-size-base;
+  transition: transform $transition-base;
+  
+  .nav-management-stat-card:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.nav-management-stat-number {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $gray-800;
+  margin-bottom: $spacing-1;
+  line-height: 1.2;
+  
+  @include md-down {
+    font-size: $font-size-lg;
+  }
+}
+
+.nav-management-stat-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $gray-700;
+  margin-bottom: $spacing-1;
+}
+
+.nav-management-stat-description {
+  font-size: $font-size-xs;
+  color: $gray-500;
+  line-height: $line-height-relaxed;
+}
+
+// ==========================================================================
+// CONTENT HEADER
+// ==========================================================================
+
+.nav-management-content-header {
+  @include card;
+  padding: $spacing-6;
+  margin-bottom: $spacing-6;
+  animation: slideInLeft 0.4s ease-out;
+  
+  @include md-down {
+    padding: $spacing-4;
+  }
+}
+
+.nav-management-content-title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $gray-800;
+  margin-bottom: $spacing-2;
+  
+  @include md-down {
+    font-size: $font-size-xl;
+  }
+}
+
+.nav-management-content-subtitle {
+  color: $gray-500;
+  margin-bottom: 0;
+  font-size: $font-size-sm;
+}
+
+// ==========================================================================
+// BUTTONS
+// ==========================================================================
+
+.nav-management-btn {
+  @include button-base;
+}
+
+.nav-management-btn-primary {
+  @include button-primary;
+}
+
+.nav-management-btn-secondary {
+  background: $gray-100;
+  color: $gray-700;
+  border: 1px solid $gray-300;
+  
+  &:hover:not(:disabled) {
+    background: $gray-200;
+    border-color: $gray-400;
+  }
+}
+
+.nav-management-btn-modern {
+  @include button-base;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba($white, 0.2), transparent);
+    transition: left $transition-slow;
+  }
+  
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+.nav-management-btn-primary-modern {
+  @extend .nav-management-btn-modern;
+  background: var(--btn-bg, $primary-color);
+  color: $white;
+  
+  &:hover:not(:disabled) {
+    background: var(--btn-hover, $primary-light);
+    transform: translateY(-1px);
+    box-shadow: $shadow-primary;
+  }
+}
+
+.nav-management-btn-secondary-modern {
+  @extend .nav-management-btn-modern;
+  background: transparent;
+  color: var(--btn-color, $primary-color);
+  border: 2px solid var(--btn-border, $primary-color);
+  
+  &:hover:not(:disabled) {
+    background: var(--btn-color, $primary-color);
+    color: $white;
+    transform: translateY(-1px);
+  }
+}
+
+// ==========================================================================
+// TABLE STYLES
+// ==========================================================================
+
+.nav-management-table-container {
+  @include card;
+  overflow: hidden;
+  box-shadow: none;
+  @include custom-scrollbar;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.nav-management-modern-table {
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: collapse;
+  
+  // Compact mode
+  &.compact {
+    font-size: $font-size-xs;
+    
+    th, td {
+      padding: $spacing-2;
+      text-align: center;
+    }
+  }
+  
+  th, td {
+    text-align: center;
+  }
+  
+  thead {
+    background: linear-gradient(135deg, #e7d4be 0%, #F8FAFC 100%);
+    color: $gray-800;
+  }
+  
+  th {
+    padding: $spacing-4;
+    font-weight: $font-weight-semibold;
+    color: $gray-800;
+    border-bottom: 2px solid $table-border-color;
+    border-right: 1px solid rgba($gray-400, 0.3);
+    font-size: $font-size-sm;
+    letter-spacing: 0.05em;
+    
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color $transition-fast;
+      
+      &:hover {
+        background-color: rgba($gray-600, 0.1);
+      }
+      
+      i {
+        font-size: $font-size-xs;
+        opacity: 0.7;
+      }
+    }
+    
+    &:last-child {
+      border-right: none;
+    }
+  }
+  
+  td {
+    padding: $spacing-4;
+    border-bottom: 1px solid $gray-200;
+    border-right: 1px solid $gray-200;
+    color: $gray-600;
+    vertical-align: middle;
+    transition: background-color $transition-fast;
+    
+    &:last-child {
+      border-right: none;
+    }
+  }
+  
+  tbody tr {
+    transition: background-color $transition-fast;
+    
+    &:hover {
+      background-color: $table-hover-bg;
+    }
+    
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+  
+  // Responsive table
+  @include md-down {
+    font-size: $font-size-sm;
+    
+    th, td {
+      padding: $spacing-3 $spacing-2;
+    }
+  }
+  
+  @include sm-down {
+    font-size: $font-size-xs;
+    
+    th, td {
+      padding: $spacing-2 $spacing-1;
+    }
+  }
+}
+
+// ==========================================================================
+// BADGES
+// ==========================================================================
+
+.badge-chip {
+  display: inline-block;
+  padding: $spacing-1 $spacing-2;
+  border-radius: $radius-full;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-xs;
+  line-height: 1;
+  animation: scaleIn 0.2s ease-out;
+}
+
+.badge-type-buy { 
+  background: $success-bg; 
+  color: $success-text; 
+}
+
+.badge-type-sell { 
+  background: $error-bg; 
+  color: $error-text; 
+}
+
+.badge-type-exchange { 
+  background: $info-bg; 
+  color: $info-text; 
+}
+
+.badge-pnl-profit { 
+  background: lighten($success-color, 45%); 
+  color: $success-text; 
+  border: 1px solid $success-color; 
+}
+
+.badge-pnl-loss { 
+  background: lighten($error-color, 40%); 
+  color: $error-text; 
+  border: 1px solid $error-color; 
+}
+
+.badge-pnl-na { 
+  background: $gray-100; 
+  color: $gray-500; 
+  border: 1px solid $gray-200; 
+}
+
+.nav-management-status-badge {
+  padding: $spacing-1 $spacing-3;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-management-status-pending {
+  background: $warning-bg;
+  color: $warning-text;
+}
+
+.nav-management-status-active {
+  background: $success-bg;
+  color: $success-text;
+}
+
+.nav-management-status-inactive {
+  background: $error-bg;
+  color: $error-text;
+}
+
+// ==========================================================================
+// FILTER & INPUTS
+// ==========================================================================
+
+.nav-management-filter-row th {
+  padding: $spacing-3 $spacing-4;
+  background: $gray-50;
+  border-bottom: 1px solid $table-border-color;
+}
+
+.nav-management-filter-input {
+  @include input-base;
+}
+
+.nav-management-form-label {
+  margin-bottom: $spacing-2;
+  font-weight: $font-weight-medium;
+  color: $gray-700;
+}
+
+.nav-management-form-control,
+.nav-management-form-select {
+  @include input-base;
+}
+
+// ==========================================================================
+// PAGINATION
+// ==========================================================================
+
+.nav-management-pagination-modern {
+  @include flex-between;
+  padding: $spacing-6;
+  background: $white;
+  border-top: 1px solid $table-border-color;
+  
+  @include md-down {
+    @include flex-column;
+    gap: $spacing-4;
+    text-align: center;
+  }
+}
+
+.nav-management-pagination-info {
+  color: $gray-500;
+  font-size: $font-size-sm;
+}
+
+.nav-management-pagination-controls {
+  display: flex;
+  gap: $spacing-1;
+}
+
+.nav-management-page-btn {
+  @include button-base;
+  padding: $spacing-2 $spacing-3;
+  min-width: 2.5rem;
+  background: $white;
+  color: $gray-700;
+  border: 1px solid $gray-300;
+  
+  &:hover:not(:disabled) {
+    background: $primary-color;
+    color: $white;
+    border-color: $primary-color;
+  }
+  
+  &.active {
+    background: $primary-color;
+    color: $white;
+    border-color: $primary-color;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ==========================================================================
+// EMPTY STATE
+// ==========================================================================
+
+.nav-management-loading-state,
+.nav-management-error-state,
+.nav-management-empty-state {
+  text-align: center;
+  padding: $spacing-12 $spacing-4;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.nav-management-loading-icon,
+.nav-management-empty-state-icon {
+  font-size: $font-size-3xl;
+  margin-bottom: $spacing-4;
+}
+
+.nav-management-loading-icon {
+  color: $primary-color;
+  animation: spin 1s linear infinite;
+}
+
+.nav-management-empty-state-icon {
+  color: $gray-400;
+}
+
+.nav-management-loading-title,
+.nav-management-error-title,
+.nav-management-empty-state-title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $gray-700;
+  margin-bottom: $spacing-2;
+}
+
+.nav-management-loading-description,
+.nav-management-error-description,
+.nav-management-empty-state-description {
+  color: $gray-500;
+  margin-bottom: 0;
+}
+
+// ==========================================================================
+// MODAL
+// ==========================================================================
+
+.nav-management-modal {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  background-color: rgba($black, 0.5);
+  @include flex-center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity $transition-base, visibility $transition-base;
+  
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.nav-management-modal-dialog {
+  position: relative;
+  width: auto;
+  max-width: 720px;
+  margin: $spacing-6;
+  transform: translateY(-20px);
+  transition: transform $transition-base;
+  
+  .nav-management-modal.show & {
+    transform: translateY(0);
+  }
+}
+
+.nav-management-modal-content {
+  @include card;
+  @include flex-column;
+  width: 100%;
+  border: 1px solid rgba($black, 0.2);
+  animation: scaleIn 0.25s ease-out;
+  user-select: text;
+}
+
+.nav-management-modal-header {
+  @include flex-between;
+  padding: $spacing-4;
+  border-bottom: 1px solid $gray-300;
+  border-radius: $radius-md $radius-md 0 0;
+}
+
+.nm-modal-success {
+  background: linear-gradient(90deg, $success-color, $success-light);
+  color: $white;
+}
+
+.nm-modal-error {
+  background: linear-gradient(90deg, $error-color, $error-light);
+  color: $white;
+}
+
+.nm-modal-warning {
+  background: linear-gradient(90deg, $warning-color, $warning-light);
+  color: $white;
+}
+
+.nav-management-modal-title {
+  margin-bottom: 0;
+  line-height: $line-height-base;
+  font-weight: $font-weight-semibold;
+  color: $white;
+}
+
+.nav-management-modal-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: $spacing-5;
+  color: $gray-700;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+}
+
+.nav-management-modal-footer {
+  @include flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: $spacing-2;
+  padding: $spacing-4;
+  border-top: 1px solid $gray-300;
+}
+
+.nav-management-btn-close {
+  width: 1em;
+  height: 1em;
+  padding: $spacing-1;
+  background: transparent 
+    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='m.5 1.5 1.5-1.5L8 6.5 14.5 0l1.5 1.5L9.5 8l6.5 6.5-1.5 1.5L8 9.5l-6.5 6.5-1.5-1.5L6.5 8 0 1.5z'/%3e%3c/svg%3e") 
+    center/1em auto no-repeat;
+  border: 0;
+  border-radius: $radius-base;
+  opacity: 0.7;
+  cursor: pointer;
+  transition: opacity $transition-fast;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// ==========================================================================
+// UTILITY ANIMATION CLASSES
+// ==========================================================================
+
+.nav-management-fade-in {
+  animation: fadeIn $transition-base ease-out;
+}
+
+.nav-management-fade-in-up {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+.nav-management-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.nav-management-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.nav-management-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+// Skeleton loading
+.nav-management-skeleton {
+  @include skeleton-loading;
+  border-radius: $radius-base;
+}
+
+// ==========================================================================
+// SPINNER
+// ==========================================================================
+
+.nav-management-spinner-border {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.nav-management-spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+// ==========================================================================
+// TEXT UTILITIES
+// ==========================================================================
+
+.nav-management-text-danger {
+  color: $error-color !important;
+}
+
+.nav-management-text-success {
+  color: $success-color !important;
+}
+
+.nav-management-text-warning {
+  color: $warning-color !important;
+}
+
+.nav-management-text-muted {
+  color: $gray-500 !important;
+}

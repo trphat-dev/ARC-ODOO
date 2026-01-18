@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_daily_ohlc_search" model="ir.ui.view">
+        <field name="name">ssi.daily.ohlc.search</field>
+        <field name="model">ssi.daily.ohlc</field>
+        <field name="arch" type="xml">
+            <search string="Daily OHLC">
+                <field name="symbol"/>
+                <field name="security_id"/>
+                <field name="date"/>
+                <filter string="Today" name="today" domain="[('date','=',context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Last 7 Days" name="last_7_days" domain="[('date','&gt;=',(context_today()-relativedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Last 30 Days" name="last_30_days" domain="[('date','&gt;=',(context_today()-relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter string="Security" name="group_security" context="{'group_by':'security_id'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by':'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_daily_ohlc_tree" model="ir.ui.view">
+        <field name="name">ssi.daily.ohlc.tree</field>
+        <field name="model">ssi.daily.ohlc</field>
+        <field name="arch" type="xml">
+            <list string="Daily OHLC" default_order="date desc" decoration-success="change_percent &gt; 0" decoration-danger="change_percent &lt; 0" decoration-muted="change_percent == 0">
+                <field name="date"/>
+                <field name="symbol" decoration-bf="True"/>
+                <field name="open_price"/>
+                <field name="high_price"/>
+                <field name="low_price"/>
+                <field name="close_price" decoration-bf="True"/>
+                <field name="volume"/>
+                <field name="value" widget="monetary" optional="show"/>
+                <field name="change_percent" widget="percentage" decoration-success="change_percent &gt; 0" decoration-danger="change_percent &lt; 0" string="+/-%"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_daily_ohlc_graph" model="ir.ui.view">
+        <field name="name">ssi.daily.ohlc.graph</field>
+        <field name="model">ssi.daily.ohlc</field>
+        <field name="arch" type="xml">
+            <graph string="Price History" type="line" sample="1">
+                <field name="date" type="row" interval="day"/>
+                <field name="close_price" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_daily_ohlc_pivot" model="ir.ui.view">
+        <field name="name">ssi.daily.ohlc.pivot</field>
+        <field name="model">ssi.daily.ohlc</field>
+        <field name="arch" type="xml">
+            <pivot string="OHLC Analytics" sample="1">
+                <field name="date" type="row" interval="month"/>
+                <field name="symbol" type="col"/>
+                <field name="volume" type="measure"/>
+                <field name="value" type="measure"/>
+                <field name="close_price" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_daily_ohlc" model="ir.actions.act_window">
+        <field name="name">Daily OHLC</field>
+        <field name="res_model">ssi.daily.ohlc</field>
+        <field name="view_mode">list,graph,pivot</field>
+    </record>
+</odoo>

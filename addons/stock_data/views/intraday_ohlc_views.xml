@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_intraday_ohlc_search" model="ir.ui.view">
+        <field name="name">ssi.intraday.ohlc.search</field>
+        <field name="model">ssi.intraday.ohlc</field>
+        <field name="arch" type="xml">
+            <search string="Intraday OHLC">
+                <field name="symbol"/>
+                <field name="date"/>
+                <filter string="Today" name="today" domain="[('date','=',context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Last 7 Days" name="last_7_days" domain="[('date','&gt;=',(context_today()-relativedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Last 30 Days" name="last_30_days" domain="[('date','&gt;=',(context_today()-relativedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Symbol" name="group_symbol" context="{'group_by':'symbol'}"/>
+                    <filter string="Date" name="group_date" context="{'group_by':'date'}"/>
+                    <filter string="Security" name="group_security" context="{'group_by':'security_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_intraday_ohlc_tree" model="ir.ui.view">
+        <field name="name">ssi.intraday.ohlc.tree</field>
+        <field name="model">ssi.intraday.ohlc</field>
+        <field name="arch" type="xml">
+            <list string="Intraday OHLC" default_order="date desc, time desc" decoration-success="close_price &gt;= open_price" decoration-danger="close_price &lt; open_price">
+                <field name="date"/>
+                <field name="time"/>
+                <field name="symbol" optional="show" decoration-bf="True"/>
+                <field name="open_price"/>
+                <field name="high_price"/>
+                <field name="low_price"/>
+                <field name="close_price" decoration-bf="True"/>
+                <field name="volume"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_intraday_ohlc_graph" model="ir.ui.view">
+        <field name="name">ssi.intraday.ohlc.graph</field>
+        <field name="model">ssi.intraday.ohlc</field>
+        <field name="arch" type="xml">
+            <graph string="Intraday Chart" type="line" sample="1">
+                <field name="time" type="row"/>
+                <field name="close_price" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_intraday_ohlc_pivot" model="ir.ui.view">
+        <field name="name">ssi.intraday.ohlc.pivot</field>
+        <field name="model">ssi.intraday.ohlc</field>
+        <field name="arch" type="xml">
+            <pivot string="Intraday Analysis" sample="1">
+                <field name="date" type="row"/>
+                <field name="symbol" type="col"/>
+                <field name="volume" type="measure"/>
+                <field name="close_price" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_intraday_ohlc" model="ir.actions.act_window">
+        <field name="name">Intraday OHLC</field>
+        <field name="res_model">ssi.intraday.ohlc</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="search_view_id" ref="view_intraday_ohlc_search"/>
+        <field name="context">{'search_default_today': 1, 'search_default_group_symbol': 1}</field>
+    </record>
+</odoo>

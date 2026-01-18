@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!-- Main menu -->
+    <menuitem id="menu_ssi_market_data_root"
+              name="Stock Data"
+              sequence="100"/>
+
+    <menuitem id="menu_ssi_config"
+              name="Configuration"
+              parent="menu_ssi_market_data_root"
+              action="action_ssi_api_config"
+              sequence="10"/>
+
+    <menuitem id="menu_ssi_securities"
+              name="Securities"
+              parent="menu_ssi_market_data_root"
+              action="action_securities"
+              sequence="20"/>
+
+
+    <menuitem id="menu_ssi_fetch_data"
+              name="Fetch Market Data"
+              parent="menu_ssi_market_data_root"
+              action="action_wizard_fetch_market_data"
+              sequence="30"/>
+
+    <menuitem id="menu_ssi_historical_data"
+              name="Historical Data"
+              parent="menu_ssi_market_data_root"
+              sequence="40"/>
+
+    <menuitem id="menu_ssi_daily_ohlc"
+              name="Daily OHLC"
+              parent="menu_ssi_historical_data"
+              action="action_daily_ohlc"
+              sequence="10"/>
+
+    <menuitem id="menu_ssi_intraday_ohlc"
+              name="Intraday OHLC"
+              parent="menu_ssi_historical_data"
+              action="action_intraday_ohlc"
+              sequence="15"/>
+
+    <menuitem id="menu_ssi_index_list"
+              name="Index List"
+              parent="menu_ssi_market_data_root"
+              action="action_index_list"
+              sequence="50"/>
+
+    <menuitem id="menu_ssi_daily_index"
+              name="Daily Index"
+              parent="menu_ssi_historical_data"
+              action="action_daily_index"
+              sequence="20"/>
+
+    <menuitem id="menu_ssi_fetch_daily_ohlc_all_funds"
+              name="Fetch Daily OHLC - All Funds"
+              parent="menu_ssi_historical_data"
+              action="action_fetch_daily_ohlc_all_funds"
+              sequence="30"/>
+
+    <menuitem id="menu_ssi_securities_details"
+              name="Securities Details"
+              parent="menu_ssi_market_data_root"
+              action="action_securities_details"
+              sequence="25"/>
+
+    <menuitem id="menu_ssi_backtest"
+              name="Backtest Data"
+              parent="menu_ssi_historical_data"
+              action="action_backtest"
+              sequence="40"/>
+
+    </data>
+</odoo>
+

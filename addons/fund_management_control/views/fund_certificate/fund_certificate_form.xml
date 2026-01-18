@@ -1,0 +1,815 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="fund_management_control.fund_certificate_form" name="Tạo mới Chứng chỉ quỹ">
+        <t t-call="web.layout">
+            <t t-set="title">Tạo mới Chứng chỉ quỹ</t>
+            <t t-call-assets="web.assets_backend" t-js="true"/>
+
+            <t t-set="head">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+            </t>
+
+            <!-- Header Container for Management -->
+            <div id="headermana-container"></div>
+
+            <div class="fund-management-container">
+                <div class="dashboard-shell">
+                    <!-- Sidebar Widget Container -->
+                    <div id="sidebarWidget"></div>
+
+                    <!-- Main Content -->
+                    <main class="dashboard-main">
+                        <!-- Mobile content offset -->
+                        <div class="d-block d-md-none" style="height: 70px;"></div>
+
+                    <!-- REFACTOR: Auto-save status indicator -->
+                    <div class="auto-save-status" id="autoSaveStatus">
+                        <i class="fas fa-check-circle me-1"></i>
+                        <span id="autoSaveText">Đã lưu tự động</span>
+                    </div>
+
+                    <div class="form-main-container">
+                        <div class="form-card">
+                            <!-- REFACTOR: Progressive Disclosure - Step Progress Header -->
+                            <div class="step-progress">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h2 class="mb-0 h4"><i class="fas fa-file-signature me-2"></i>Tạo mới Chứng chỉ quỹ</h2>
+                                    <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                                        <span id="currentStepText">Bước 1/4</span>
+                                    </span>
+                                </div>
+                                <p class="mb-3 opacity-90">Thiết lập thông tin chi tiết cho một chứng chỉ quỹ mới.</p>
+                                
+                                <!-- Progress Bar -->
+                                <div class="progress-bar-custom">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                
+                                <!-- Step Navigation Pills -->
+                                <div class="step-nav">
+                                    <div class="step-nav-item active" id="stepNav1">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <span class="d-none d-sm-inline">Thông tin cơ bản</span>
+                                        <span class="d-sm-none">Bước 1</span>
+                                    </div>
+                                    <div class="step-nav-item" id="stepNav2">
+                                        <i class="fas fa-calendar-alt me-1"></i>
+                                        <span class="d-none d-sm-inline">Thời gian</span>
+                                        <span class="d-sm-none">Bước 2</span>
+                                    </div>
+                                    <div class="step-nav-item" id="stepNav3">
+                                        <i class="fas fa-sitemap me-1"></i>
+                                        <span class="d-none d-sm-inline">Phân loại</span>
+                                        <span class="d-sm-none">Bước 3</span>
+                                    </div>
+                                    <div class="step-nav-item" id="stepNav4">
+                                        <i class="fas fa-puzzle-piece me-1"></i>
+                                        <span class="d-none d-sm-inline">Hoàn thiện</span>
+                                        <span class="d-sm-none">Bước 4</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form action="/fund_certificate/create" method="POST" enctype="multipart/form-data" id="fundCertificateForm" novalidate="1">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                
+                                <!-- REFACTOR: Multi-step form container with progressive disclosure -->
+                                <div class="form-steps-container">
+                                    <!-- Step 1: Basic Information -->
+                                    <div class="form-step active" id="step1">
+                                        <div class="form-section">
+                                            <div class="section-header">
+                                                <div class="section-icon"><i class="fas fa-info-circle fa-lg text-primary"></i></div>
+                                                <div>
+                                                    <h5 class="mb-1">Thông tin cơ bản</h5>
+                                                    <small class="text-muted">Nhập thông tin tên và mã định danh của quỹ.</small>
+                                                </div>
+                                            </div>
+                                            <div class="row g-4">
+                                                <!-- REFACTOR: Enhanced required field styling with better visual hierarchy -->
+                                                <div class="col-md-6 required-field">
+                                                    <label for="symbol" class="form-label">Mã chứng khoán
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Mã định danh chứng khoán trên sàn giao dịch (VD: VCB, VIC, VNM)."></i>
+                                                    </label>
+                                                    <input type="text" class="form-control" id="symbol" name="symbol" 
+                                                           placeholder="Ví dụ: VCB" required="1" maxlength="10"/>
+                                                    <div class="field-error" id="symbol_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="market" class="form-label">Sàn giao dịch
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Sàn giao dịch chứng khoán: HOSE, HNX hoặc UPCOM."></i>
+                                                    </label>
+                                                    <select class="form-select" id="market" name="market" required="1">
+                                                        <option value="" selected="1" disabled="1">-- Chọn sàn giao dịch --</option>
+                                                        <option value="HOSE">HOSE</option>
+                                                        <option value="HNX">HNX</option>
+                                                        <option value="UPCOM">UPCOM</option>
+                                                    </select>
+                                                    <div class="field-error" id="market_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Vui lòng chọn sàn giao dịch</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- REFACTOR: Responsive field layout for better mobile experience -->
+                                                <div class="col-xl-6 col-lg-6 col-md-6">
+                                                    <label for="short_name_vn" class="form-label">Tên viết tắt (VN)
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Tên viết tắt bằng tiếng Việt của chứng khoán."></i>
+                                                    </label>
+                                                    <input type="text" class="form-control" id="short_name_vn" name="short_name_vn" 
+                                                           placeholder="Ví dụ: Ngân hàng TMCP Ngoại Thương"/>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-6">
+                                                    <label for="short_name_en" class="form-label">Tên viết tắt (EN)
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Tên viết tắt bằng tiếng Anh của chứng khoán."></i>
+                                                    </label>
+                                                    <input type="text" class="form-control" id="short_name_en" name="short_name_en" 
+                                                           placeholder="Ví dụ: Bank for Foreign Trade"/>
+                                                </div>
+                                                
+                                                <!-- Bỏ Loại chứng khoán và Mã sàn -->
+                                                
+                                                <div class="col-xl-4 col-lg-6 col-md-6">
+                                                    <label for="fund_color" class="form-label">Màu đại diện
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Màu này sẽ được sử dụng trong biểu đồ và báo cáo."></i>
+                                                    </label>
+                                                    <input type="color" class="form-control form-control-color" id="fund_color" name="fund_color" value="#667eea"/>
+                                                </div>
+                                                
+                                                <div class="col-xl-4 col-lg-6 col-md-6">
+                                                    <label for="current_price" class="form-label">Giá hiện tại
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Giá giao dịch hiện tại của chứng khoán."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="current_price" name="current_price" 
+                                                               placeholder="10000"/>
+                                                        <span class="input-group-text">VND</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-4 col-lg-6 col-md-6">
+                                                    <label for="reference_price" class="form-label">Giá tham chiếu
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Giá tham chiếu để tính giá trần và giá sàn."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="reference_price" name="reference_price" 
+                                                               placeholder="10000"/>
+                                                        <span class="input-group-text">VND</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-4 col-lg-6 col-md-6">
+                                                    <label for="ceiling_price" class="form-label">Giá trần
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Giá cao nhất có thể giao dịch trong ngày."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="ceiling_price" name="ceiling_price" 
+                                                               placeholder="11000"/>
+                                                        <span class="input-group-text">VND</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-4 col-lg-6 col-md-6">
+                                                    <label for="floor_price" class="form-label">Giá sàn
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Giá thấp nhất có thể giao dịch trong ngày."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="floor_price" name="floor_price" 
+                                                               placeholder="9000"/>
+                                                        <span class="input-group-text">VND</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Bỏ Khối lượng: volume được tính từ initial_certificate_quantity -->
+                                                
+                                                <!-- Trường mới cho quỹ đóng -->
+                                                <div class="col-xl-6 col-lg-6 col-md-12">
+                                                    <label for="initial_certificate_quantity" class="form-label">Số lượng chứng chỉ quỹ đóng ban đầu
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Tổng số chứng chỉ quỹ được phát hành ban đầu cho quỹ đóng."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" id="initial_certificate_quantity" name="initial_certificate_quantity" 
+                                                               placeholder="1000000" value="1000000"/>
+                                                        <span class="input-group-text">chứng chỉ</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-12">
+                                                    <label for="initial_certificate_price" class="form-label">Giá chứng chỉ quỹ ban đầu
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Giá phát hành ban đầu của mỗi chứng chỉ quỹ."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="initial_certificate_price" name="initial_certificate_price" 
+                                                               placeholder="10000" value="10000"/>
+                                                        <span class="input-group-text">VND</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-12">
+                                                    <label for="capital_cost" class="form-label">Chi phí vốn
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Tỷ lệ chi phí vốn của quỹ (%)."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" step="0.01" class="form-control" id="capital_cost" name="capital_cost" 
+                                                               placeholder="9.00" value="9.00"/>
+                                                        <span class="input-group-text">%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Step 2: Timing Information -->
+                                    <div class="form-step" id="step2">
+                                        <div class="form-section">
+                                            <div class="section-header">
+                                                <div class="section-icon"><i class="fas fa-calendar-alt fa-lg text-info"></i></div>
+                                                <div>
+                                                    <h5 class="mb-1">Thông tin thời gian</h5>
+                                                    <small class="text-muted">Cấu hình lịch giao dịch và các thời hạn quan trọng.</small>
+                                                </div>
+                                            </div>
+                                            <div class="row g-4">
+                                                <div class="col-md-6 required-field">
+                                                    <label for="inception_date" class="form-label">Thời gian đóng sổ lệnh
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Thời điểm ngừng nhận lệnh giao dịch trong ngày."></i>
+                                                    </label>
+                                                    <input type="datetime-local" class="form-control" id="inception_date" name="inception_date" required="1"/>
+                                                    <div class="field-error" id="inception_date_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="closure_date" class="form-label">Ngày đóng sổ lệnh
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Ngày cuối cùng trong kỳ nhận lệnh đặt mua/bán."></i>
+                                                    </label>
+                                                    <input type="date" class="form-control" id="closure_date" name="closure_date" required="1"/>
+                                                    <div class="field-error" id="closure_date_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="receive_money_time" class="form-label">Thời điểm ghi nhận tiền
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Thời điểm chính thức ghi nhận tiền từ nhà đầu tư vào quỹ."></i>
+                                                    </label>
+                                                    <input type="datetime-local" class="form-control" id="receive_money_time" name="receive_money_time" required="1"/>
+                                                    <div class="field-error" id="receive_money_time_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="payment_deadline" class="form-label">Thời hạn thanh toán bán
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Số ngày làm việc tối đa để hoàn tất thanh toán cho lệnh bán."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" id="payment_deadline" name="payment_deadline" 
+                                                               placeholder="5" required="1"/>
+                                                        <span class="input-group-text">ngày</span>
+                                                    </div>
+                                                    <div class="field-error" id="payment_deadline_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="redemption_time" class="form-label">Thời gian xử lý hoán đổi
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Số ngày làm việc để xử lý lệnh chuyển đổi giữa các quỹ."></i>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" id="redemption_time" name="redemption_time" 
+                                                               placeholder="3" required="1"/>
+                                                        <span class="input-group-text">ngày</span>
+                                                    </div>
+                                                    <div class="field-error" id="redemption_time_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-md-6 required-field">
+                                                    <label for="report_website" class="form-label">Website báo cáo
+                                                        <i class="fas fa-question-circle tooltip-icon" data-bs-toggle="tooltip" title="Địa chỉ website công bố báo cáo tài chính của quỹ."></i>
+                                                    </label>
+                                                    <input type="url" class="form-control" id="report_website" name="report_website" 
+                                                           placeholder="https://example.com/reports" required="1"/>
+                                                    <div class="field-error" id="report_website_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Trường này là bắt buộc</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 3: Product Classification -->
+                                    <div class="form-step" id="step3">
+                                        <div class="form-section">
+                                            <div class="section-header">
+                                                <div class="section-icon"><i class="fas fa-sitemap fa-lg text-warning"></i></div>
+                                                <div>
+                                                    <h5 class="mb-1">Phân loại sản phẩm</h5>
+                                                    <small class="text-muted">Xác định các thuộc tính của quỹ để phân loại và báo cáo.</small>
+                                                </div>
+                                            </div>
+                                            <!-- REFACTOR: Improved responsive layout for classification fields -->
+                                            <div class="row g-4">
+                                                <div class="col-xl-6 col-lg-6 col-md-12 required-field">
+                                                    <label for="fund_type" class="form-label">Loại quỹ</label>
+                                                    <select class="form-select" id="fund_type" name="fund_type" required="1">
+                                                        <option value="" selected="1" disabled="1">-- Chọn loại quỹ --</option>
+                                                        <t t-foreach="fund_types" t-as="ft">
+                                                            <option t-att-value="ft[0]" t-esc="ft[1]"/>
+                                                        </t>
+                                                    </select>
+                                                    <div class="field-error" id="fund_type_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Vui lòng chọn loại quỹ</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-12 required-field">
+                                                    <label for="risk_level" class="form-label">Mức độ rủi ro</label>
+                                                    <select class="form-select" id="risk_level" name="risk_level" required="1">
+                                                        <option value="" selected="1" disabled="1">-- Chọn mức độ rủi ro --</option>
+                                                        <t t-foreach="risk_levels" t-as="rl">
+                                                            <option t-att-value="rl[0]" t-esc="rl[1]"/>
+                                                        </t>
+                                                    </select>
+                                                    <div class="field-error" id="risk_level_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Vui lòng chọn mức độ rủi ro</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-12 required-field">
+                                                    <label for="product_type" class="form-label">Loại sản phẩm</label>
+                                                    <select class="form-select" id="product_type" name="product_type" required="1">
+                                                        <option value="" selected="1" disabled="1">-- Chọn loại sản phẩm --</option>
+                                                        <t t-foreach="product_types" t-as="pt">
+                                                            <option t-att-value="pt[0]" t-esc="pt[1]"/>
+                                                        </t>
+                                                    </select>
+                                                    <div class="field-error" id="product_type_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Vui lòng chọn loại sản phẩm</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="col-xl-6 col-lg-6 col-md-12 required-field">
+                                                    <label for="product_status" class="form-label">Trạng thái</label>
+                                                    <select class="form-select" id="product_status" name="product_status" required="1">
+                                                        <option value="" selected="1" disabled="1">-- Chọn trạng thái --</option>
+                                                        <t t-foreach="product_statuses" t-as="ps">
+                                                            <option t-att-value="ps[0]" t-esc="ps[1]"/>
+                                                        </t>
+                                                    </select>
+                                                    <div class="field-error" id="product_status_error" style="display: none;">
+                                                        <i class="fas fa-exclamation-circle"></i>
+                                                        <span>Vui lòng chọn trạng thái</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Step 4: Additional Information -->
+                                    <div class="form-step" id="step4">
+                                        <div class="form-section">
+                                            <div class="section-header">
+                                                <div class="section-icon"><i class="fas fa-puzzle-piece fa-lg text-success"></i></div>
+                                                <div>
+                                                    <h5 class="mb-1">Thông tin bổ sung</h5>
+                                                    <small class="text-muted">Mô tả chi tiết, hình ảnh và lịch giao dịch.</small>
+                                                </div>
+                                            </div>
+                                            <div class="row g-4">
+                                                <div class="col-lg-7">
+                                                    <label for="fund_description" class="form-label">Mô tả chi tiết quỹ</label>
+                                                    <textarea class="form-control" id="fund_description" name="fund_description" rows="12" 
+                                                              placeholder="Nhập mô tả chi tiết về chiến lược đầu tư, mục tiêu, và các thông tin quan trọng khác của quỹ..."></textarea>
+                                                </div>
+                                                <div class="col-lg-5">
+                                                    <div class="mb-3">
+                                                        <label for="fund_image" class="form-label">Hình ảnh đại diện quỹ</label>
+                                                        <input class="form-control" type="file" id="fund_image" name="fund_image" accept="image/png, image/jpeg"/>
+                                                    </div>
+                                                    <div>
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <label class="form-label mb-0">Lịch giao dịch trong tuần</label>
+                                                            <a href="#" id="selectAllDays" class="small text-decoration-none">Chọn/Bỏ chọn tất cả</a>
+                                                        </div>
+                                                        <div class="row g-2 trading-days-grid" id="tradingDaysCheckboxes">
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="monday" name="monday"/><label class="form-check-label w-100" for="monday">Thứ Hai</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="tuesday" name="tuesday"/><label class="form-check-label w-100" for="tuesday">Thứ Ba</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="wednesday" name="wednesday"/><label class="form-check-label w-100" for="wednesday">Thứ Tư</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="thursday" name="thursday"/><label class="form-check-label w-100" for="thursday">Thứ Năm</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="friday" name="friday"/><label class="form-check-label w-100" for="friday">Thứ Sáu</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="saturday" name="saturday"/><label class="form-check-label w-100" for="saturday">Thứ Bảy</label></div></div>
+                                                            <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" value="1" id="sunday" name="sunday"/><label class="form-check-label w-100" for="sunday">Chủ Nhật</label></div></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- REFACTOR: Step navigation with enhanced UX -->
+                                <div class="step-navigation">
+                                    <button type="button" class="btn btn-step btn-step-prev" id="prevBtn" style="visibility: hidden;">
+                                        <i class="fas fa-chevron-left me-2"></i>Quay lại
+                                    </button>
+                                    
+                                    <div class="step-info text-muted">
+                                        <small id="stepInfo">Bước 1 của 4</small>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-step btn-step-next" id="nextBtn">
+                                        Tiếp theo<i class="fas fa-chevron-right ms-2"></i>
+                                    </button>
+                                    
+                                    <!-- Enhanced submit button with loading state -->
+                                    <button type="submit" class="btn btn-form-primary" id="submitBtn" style="display: none;">
+                                        <span class="spinner-border spinner-border-sm d-none me-2" role="status" id="submitSpinner"></span>
+                                        <i class="fas fa-save me-2" id="submitIcon"></i>
+                                        <span id="submitText">Lưu Chứng chỉ quỹ</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    </main>
+                </div>
+            </div>
+
+            <script>
+                <![CDATA[ 
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('DOM loaded, initializing enhanced form...');
+
+                    // === ENHANCED FORM FUNCTIONALITY ===
+                    
+                    // REFACTOR: Multi-step form implementation
+                    let currentStep = 1;
+                    const totalSteps = 4;
+                    const formSteps = document.querySelectorAll('.form-step');
+                    const stepNavItems = document.querySelectorAll('.step-nav-item');
+                    const progressFill = document.getElementById('progressFill');
+                    const currentStepText = document.getElementById('currentStepText');
+                    const stepInfo = document.getElementById('stepInfo');
+                    const prevBtn = document.getElementById('prevBtn');
+                    const nextBtn = document.getElementById('nextBtn');
+                    const submitBtn = document.getElementById('submitBtn');
+
+                    // REFACTOR: Initialize Bootstrap Tooltips with better configuration
+                    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.map(function (tooltipTriggerEl) { 
+                        return new bootstrap.Tooltip(tooltipTriggerEl, {
+                            delay: { show: 300, hide: 100 }
+                        }); 
+                    });
+
+                    // REFACTOR: Step navigation functionality
+                    function updateStepDisplay() {
+                        // Hide all steps
+                        formSteps.forEach(step => {
+                            step.classList.remove('active');
+                        });
+
+                        // Show current step
+                        const activeStep = document.getElementById(`step${currentStep}`);
+                        if (activeStep) {
+                            activeStep.classList.add('active');
+                        }
+
+                        // Update progress bar
+                        const progressPercent = (currentStep / totalSteps) * 100;
+                        progressFill.style.width = `${progressPercent}%`;
+
+                        // Update step navigation pills
+                        stepNavItems.forEach((item, index) => {
+                            item.classList.remove('active', 'completed');
+                            if (index + 1 === currentStep) {
+                                item.classList.add('active');
+                            } else if (index + 1 < currentStep) {
+                                item.classList.add('completed');
+                            }
+                        });
+
+                        // Update text indicators
+                        currentStepText.textContent = `Bước ${currentStep}/${totalSteps}`;
+                        stepInfo.textContent = `Bước ${currentStep} của ${totalSteps}`;
+
+                        // Update button visibility
+                        prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+                        
+                        if (currentStep === totalSteps) {
+                            nextBtn.style.display = 'none';
+                            submitBtn.style.display = 'block';
+                        } else {
+                            nextBtn.style.display = 'block';
+                            submitBtn.style.display = 'none';
+                        }
+                    }
+
+                    // REFACTOR: Step navigation event handlers
+                    prevBtn.addEventListener('click', function() {
+                        if (currentStep > 1) {
+                            currentStep--;
+                            updateStepDisplay();
+                        }
+                    });
+
+                    nextBtn.addEventListener('click', function() {
+                        if (validateCurrentStep() && currentStep < totalSteps) {
+                            currentStep++;
+                            updateStepDisplay();
+                        }
+                    });
+
+                    // Allow clicking on step nav items to jump to steps
+                    stepNavItems.forEach((item, index) => {
+                        item.addEventListener('click', function() {
+                            const targetStep = index + 1;
+                            if (targetStep <= currentStep || validateStepsUpTo(targetStep - 1)) {
+                                currentStep = targetStep;
+                                updateStepDisplay();
+                            }
+                        });
+                    });
+
+                    // REFACTOR: Real-time validation implementation
+                    function showFieldError(fieldId, message) {
+                        const field = document.getElementById(fieldId);
+                        const errorDiv = document.getElementById(`${fieldId}_error`);
+                        
+                        if (field && errorDiv) {
+                            field.classList.add('is-invalid');
+                            field.classList.remove('is-valid');
+                            errorDiv.style.display = 'flex';
+                            errorDiv.querySelector('span').textContent = message;
+                        }
+                    }
+
+                    function showFieldSuccess(fieldId) {
+                        const field = document.getElementById(fieldId);
+                        const errorDiv = document.getElementById(`${fieldId}_error`);
+                        
+                        if (field && errorDiv) {
+                            field.classList.remove('is-invalid');
+                            field.classList.add('is-valid');
+                            errorDiv.style.display = 'none';
+                        }
+                    }
+
+                    function validateField(fieldId, customValidation = null) {
+                        const field = document.getElementById(fieldId);
+                        if (!field) return true;
+
+                        const value = field.value.trim();
+                        const isRequired = field.hasAttribute('required');
+
+                        // Check if required field is empty
+                        if (isRequired && value === '') {
+                            showFieldError(fieldId, 'Trường này là bắt buộc');
+                            return false;
+                        }
+
+                        // Custom validation
+                        if (customValidation && value !== '') {
+                            const customResult = customValidation(value);
+                            if (customResult !== true) {
+                                showFieldError(fieldId, customResult);
+                                return false;
+                            }
+                        }
+
+                        // HTML5 validation
+                        if (value !== '' && !field.checkValidity()) {
+                            showFieldError(fieldId, 'Định dạng không hợp lệ');
+                            return false;
+                        }
+
+                        if (value !== '' || !isRequired) {
+                            showFieldSuccess(fieldId);
+                        }
+                        return true;
+                    }
+
+                    // REFACTOR: Enhanced field validation with real-time feedback
+                    const requiredFields = document.querySelectorAll('.required-field .form-control, .required-field .form-select');
+                    requiredFields.forEach(field => {
+                        // Validate on blur
+                        field.addEventListener('blur', function() {
+                            validateField(this.id);
+                        });
+
+                        // Clear error on input for text fields
+                        if (field.type === 'text' || field.type === 'number' || field.type === 'url' || field.tagName === 'TEXTAREA') {
+                            field.addEventListener('input', function() {
+                                if (this.value.trim() !== '' && this.classList.contains('is-invalid')) {
+                                    validateField(this.id);
+                                }
+                            });
+                        }
+
+                        // Validate on change for select fields
+                        if (field.tagName === 'SELECT') {
+                            field.addEventListener('change', function() {
+                                validateField(this.id);
+                            });
+                        }
+                    });
+
+                    // REFACTOR: Step validation functions
+                    function validateCurrentStep() {
+                        const currentStepElement = document.getElementById(`step${currentStep}`);
+                        if (!currentStepElement) return true;
+
+                        const stepFields = currentStepElement.querySelectorAll('.required-field .form-control, .required-field .form-select');
+                        let isValid = true;
+
+                        stepFields.forEach(field => {
+                            if (!validateField(field.id)) {
+                                isValid = false;
+                            }
+                        });
+
+                        if (!isValid) {
+                            // Scroll to first error field
+                            const firstError = currentStepElement.querySelector('.is-invalid');
+                            if (firstError) {
+                                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                firstError.focus();
+                            }
+                        }
+
+                        return isValid;
+                    }
+
+                    function validateStepsUpTo(stepNumber) {
+                        for (let i = 1; i <= stepNumber; i++) {
+                            const stepElement = document.getElementById(`step${i}`);
+                            if (!stepElement) continue;
+
+                            const stepFields = stepElement.querySelectorAll('.required-field .form-control, .required-field .form-select');
+                            for (let field of stepFields) {
+                                if (!validateField(field.id)) {
+                                    return false;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+
+                    // REFACTOR: Auto-save functionality
+                    let autoSaveTimer;
+                    const autoSaveStatus = document.getElementById('autoSaveStatus');
+                    const autoSaveText = document.getElementById('autoSaveText');
+
+                    function showAutoSaveStatus(message, isError = false) {
+                        autoSaveText.textContent = message;
+                        autoSaveStatus.className = `auto-save-status show ${isError ? 'bg-danger' : ''}`;
+                        
+                        setTimeout(() => {
+                            autoSaveStatus.classList.remove('show');
+                        }, 2000);
+                    }
+
+                    function autoSave() {
+                        const form = document.getElementById('fundCertificateForm');
+                        const formData = new FormData(form);
+                        
+                        // Add draft flag
+                        formData.append('is_draft', '1');
+                        
+                        fetch('/fund_certificate/save_draft', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showAutoSaveStatus('Đã lưu tự động');
+                            }
+                        }).catch(error => {
+                            console.error('Auto-save failed:', error);
+                            showAutoSaveStatus('Lỗi lưu tự động', true);
+                        });
+                    }
+
+                    // Set up auto-save
+                    document.addEventListener('input', function(e) {
+                        if (e.target.matches('input, select, textarea')) {
+                            clearTimeout(autoSaveTimer);
+                            autoSaveTimer = setTimeout(autoSave, 30000); // 30s delay
+                        }
+                    });
+
+                    // REFACTOR: Enhanced form submission with loading state
+                    const form = document.getElementById('fundCertificateForm');
+                    if (form) {
+                        form.addEventListener('submit', function (event) {
+                            event.preventDefault();
+                            
+                            // Validate all steps
+                            if (!validateStepsUpTo(totalSteps)) {
+                                // Find first invalid step and navigate to it
+                                for (let i = 1; i <= totalSteps; i++) {
+                                    const stepElement = document.getElementById(`step${i}`);
+                                    const hasError = stepElement.querySelector('.is-invalid');
+                                    if (hasError) {
+                                        currentStep = i;
+                                        updateStepDisplay();
+                                        hasError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                        hasError.focus();
+                                        break;
+                                    }
+                                }
+                                return;
+                            }
+
+                            // Show loading state
+                            const submitSpinner = document.getElementById('submitSpinner');
+                            const submitIcon = document.getElementById('submitIcon');
+                            const submitTextEl = document.getElementById('submitText');
+                            
+                            submitBtn.disabled = true;
+                            submitSpinner.classList.remove('d-none');
+                            submitIcon.classList.add('d-none');
+                            submitTextEl.textContent = 'Đang lưu...';
+
+                            // Submit form
+                            this.submit();
+                        });
+                    }
+                    
+                    // REFACTOR: Trading Days Checkbox Functionality (unchanged)
+                    const selectAllLink = document.getElementById('selectAllDays');
+                    const checkboxes = document.querySelectorAll('#tradingDaysCheckboxes .form-check-input');
+                    if (selectAllLink) {
+                        selectAllLink.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const anyUnchecked = Array.from(checkboxes).some(cb => !cb.checked);
+                            checkboxes.forEach(cb => cb.checked = anyUnchecked);
+                        });
+                    }
+
+                    // REFACTOR: Smart field dependencies - Auto-generate English name from Vietnamese name
+                    const shortNameVnField = document.getElementById('short_name_vn');
+                    const shortNameEnField = document.getElementById('short_name_en');
+                    
+                    if (shortNameVnField && shortNameEnField) {
+                        shortNameVnField.addEventListener('input', function() {
+                            if (shortNameEnField.value === '' && this.value.trim() !== '') {
+                                // Simple transliteration (basic implementation)
+                                const transliterated = transliterate(this.value);
+                                shortNameEnField.value = transliterated;
+                            }
+                        });
+                    }
+
+                    function transliterate(text) {
+                        // Basic Vietnamese to English transliteration
+                        const vnMap = {
+                            'à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ': 'a',
+                            'è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ': 'e',
+                            'ì|í|ị|ỉ|ĩ': 'i',
+                            'ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ': 'o',
+                            'ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ': 'u',
+                            'ỳ|ý|ỵ|ỷ|ỹ': 'y',
+                            'đ': 'd',
+                            'Đ': 'D',
+                        };
+
+                        let result = text;
+                        for (const [vietnamese, english] of Object.entries(vnMap)) {
+                            result = result.replace(new RegExp(vietnamese, 'gi'), english);
+                        }
+                        return result;
+                    }
+
+                    // Initialize the form
+                    updateStepDisplay();
+                    
+                    console.log('Enhanced multi-step form initialized successfully');
+                });
+                ]]>
+            </script>
+        </t>
+    </template>
+</odoo>

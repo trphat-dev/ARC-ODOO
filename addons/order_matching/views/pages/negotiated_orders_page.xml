@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="negotiated_orders_page" name="Negotiated Orders Page">
+    <t t-call="web.layout">
+      <t t-set="title">Khoản đầu tư khớp theo thỏa thuận</t>
+
+      <t t-set="head">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+        <link rel="stylesheet" href="/order_matching/static/src/css/order_book.css"/>
+      </t>
+
+      <div id="headermana-container"></div>
+
+      <div class="order-book-container">
+        <div class="container-fluid py-4">
+          <div id="negotiated-orders-widget" class="w-100"></div>
+        </div>
+      </div>
+
+      <t t-set="js">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+      </t>
+      <t t-call-assets="web.assets_frontend" t-js="false" t-css="true"/>
+      <t t-call-assets="web.assets_frontend" t-js="true" t-css="false"/>
+    </t>
+  </template>
+</odoo>

@@ -1,0 +1,1127 @@
+// Custom Auth - Common Styles (Premium Design)
+// =============================================
+
+
+// Variables are loaded via manifest
+
+// ============================================
+// ROOT VARIABLES
+// ============================================
+:root {
+    --primary-start: #FF8C42;
+    --primary-end: #F9A825;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --success-color: #10B981;
+    --error-color: #EF4444;
+}
+
+// ============================================
+// BASE STYLES
+// ============================================
+.auth-page {
+    min-height: 100vh;
+    background: linear-gradient(-45deg, #FFECD2, #FCB69F, #FF9A56, #F9A825);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 400; // Body Regular
+    -webkit-font-smoothing: antialiased;
+    
+    // Floating bubbles decoration
+    &::before,
+    &::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        animation: float 20s ease-in-out infinite;
+    }
+    
+    &::before {
+        width: 500px;
+        height: 500px;
+        top: -150px;
+        left: -150px;
+    }
+    
+    &::after {
+        width: 400px;
+        height: 400px;
+        bottom: -100px;
+        right: -100px;
+        animation-delay: -7s;
+    }
+}
+
+// ============================================
+// ANIMATIONS
+// ============================================
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(180deg); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+@keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+// Staggered animation for form elements
+.login-form .form-group,
+.signup-form .form-group,
+.reset-form .form-group {
+    animation: slideUp 0.6s ease-out backwards;
+    
+    &:nth-child(1) { animation-delay: 0.1s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.3s; }
+    &:nth-child(4) { animation-delay: 0.4s; }
+    &:nth-child(5) { animation-delay: 0.5s; }
+}
+
+// Login options stagger
+.login-options {
+    animation: fadeIn 0.6s ease-out 0.4s backwards;
+}
+
+// Button entrance
+.btn-login,
+.btn-signup,
+.btn-reset {
+    animation: slideUp 0.6s ease-out 0.5s backwards;
+}
+
+// Footer entrance
+.login-footer,
+.signup-footer,
+.reset-footer {
+    animation: fadeIn 0.8s ease-out 0.6s backwards;
+}
+
+// Logo bounce on load
+.login-logo .logo-icon,
+.signup-logo .logo-icon,
+.reset-logo .logo-icon {
+    animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    &:hover {
+        animation: pulse 0.6s ease-in-out;
+    }
+}
+
+// Input focus transition enhancement
+.form-control {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    &:focus {
+        transform: translateY(-2px);
+    }
+}
+
+// Error shake animation class
+.shake-error {
+    animation: shake 0.5s ease-in-out;
+}
+
+// Button shimmer effect on hover
+.btn-login,
+.btn-signup,
+.btn-reset {
+    position: relative;
+    overflow: hidden;
+    
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+        );
+        transition: left 0.5s;
+    }
+    
+    &:hover::after {
+        left: 100%;
+    }
+}
+
+// OTP input focus animation
+.otp-input {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+
+}
+
+// Modal scale in
+.otp-modal .modal-content {
+    animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Password requirements animation
+.req-item {
+    transition: all 0.3s ease;
+    
+    &.req-valid {
+        animation: bounce 0.4s ease;
+    }
+}
+
+// Toast slide in from right
+.custom-toast {
+    animation: slideInRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+// Reduced motion preference
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+
+// ============================================
+// GLASSMORPHISM CARDS
+// ============================================
+.login-card,
+.signup-card,
+.reset-card {
+    width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-card {
+    max-width: 480px;
+    padding: 3rem;
+}
+
+.signup-card {
+    max-width: 560px;
+    padding: 2.5rem;
+}
+
+.reset-card {
+    max-width: 460px;
+    padding: 3rem;
+}
+
+// ============================================
+// WIDE CARD WITH ILLUSTRATION (Two Column Layout)
+// ============================================
+.auth-card-wide {
+    max-width: 960px !important;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.auth-row {
+    display: flex;
+    min-height: 480px;
+    
+    @media (max-width: 768px) {
+        flex-direction: column;
+        min-height: auto;
+    }
+}
+
+.auth-illustration {
+    flex: 0 0 42%;
+    background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    padding: 0;
+    animation: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    
+    // HDC Logo positioned at top-left
+    .hdc-logo {
+        position: absolute;
+        top: 1.5rem;
+        left: 1.5rem;
+        height: 70px;
+        width: auto;
+        z-index: 10;
+        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s backwards;
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+        transition: transform 0.3s ease;
+        
+        &:hover {
+            transform: scale(1.05);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        flex: 0 0 auto;
+        min-height: 220px;
+        
+        .hdc-logo {
+            top: 1rem;
+            left: 1rem;
+            height: 40px;
+        }
+    }
+}
+
+.auth-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: scaleIn 0.6s ease-out 0.3s backwards;
+    transition: transform 0.3s ease;
+    position: relative;
+    z-index: 1;
+    
+    &:hover {
+        transform: scale(1.02);
+    }
+    
+    @media (max-width: 768px) {
+        min-height: 200px;
+    }
+}
+
+
+
+
+.auth-form-section {
+    flex: 1;
+    padding: 1.5rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    animation: slideInRight 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    background: #f8f9fa;
+    backdrop-filter: none;
+    overflow-y: visible;
+    
+    @media (max-width: 768px) {
+        padding: 1rem 1.5rem;
+    }
+}
+
+
+
+
+// ============================================
+// LOGO AREA
+// ============================================
+.login-logo,
+.signup-logo,
+.reset-logo {
+    text-align: center;
+    margin-bottom: 1rem;
+    
+    // HDC Logo Image
+    .hdc-logo {
+        height: 60px;
+        width: auto;
+        margin-bottom: 1rem;
+        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: transform 0.3s ease;
+        
+        &:hover {
+            transform: scale(1.05);
+        }
+    }
+    
+    // Legacy icon-based logo (fallback)
+    .logo-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        box-shadow: 0 10px 30px -10px rgba(255, 107, 53, 0.5);
+        
+        i {
+            font-size: 28px;
+            color: white;
+        }
+    }
+}
+
+.signup-logo {
+    margin-bottom: 1.5rem;
+    
+    .logo-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        
+        i {
+            font-size: 24px;
+        }
+    }
+}
+
+// ============================================
+// TYPOGRAPHY
+// ============================================
+.login-title,
+.signup-title,
+.reset-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 600; // Heading SemiBold
+    color: #1a1a2e;
+    margin-bottom: 0.25rem;
+}
+
+.signup-title {
+    font-size: 1.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.login-subtitle,
+.signup-subtitle,
+.reset-subtitle {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.signup-subtitle {
+    font-size: 0.9rem;
+}
+
+// ============================================
+// FORM STYLING
+// ============================================
+.login-form,
+.signup-form,
+.reset-form {
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #334155;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+        display: block;
+    }
+    
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 0.65rem 0.875rem;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.8);
+        width: 100%;
+        font-variant-numeric: tabular-nums; // Tabular numbers for inputs
+        
+        &:focus {
+            border-color: var(--primary-end);
+            box-shadow: 0 0 0 4px rgba(142, 45, 226, 0.1);
+            background: white;
+            outline: none;
+        }
+        
+        &::placeholder {
+            color: #94a3b8;
+        }
+    }
+}
+
+.signup-form {
+    .form-group {
+        margin-bottom: 0.75rem;
+    }
+    
+    .form-label {
+        margin-bottom: 0.4rem;
+        font-size: 0.85rem;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
+// Form Row Layout
+.form-row {
+    display: flex;
+    gap: 1rem;
+    
+    .form-group {
+        flex: 1;
+    }
+    
+    @media (max-width: 576px) {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+// ============================================
+// PASSWORD FIELD
+// ============================================
+.password-wrapper {
+    position: relative;
+    
+    .form-control {
+        padding-right: 3rem;
+    }
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    
+    &:hover {
+        color: var(--primary-end);
+    }
+}
+
+// Password Requirements
+.password-requirements {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+}
+
+.req-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 2px;
+    
+    i {
+        font-size: 6px;
+    }
+    
+    &.req-valid {
+        color: #10b981;
+        
+        i {
+            font-size: 10px;
+        }
+    }
+}
+
+// ============================================
+// LOGIN OPTIONS (Remember me, Forgot password)
+// ============================================
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    
+    .form-check-input {
+        border-radius: 4px;
+        border: 2px solid #cbd5e1;
+        
+        &:checked {
+            background-color: var(--primary-end);
+            border-color: var(--primary-end);
+        }
+    }
+    
+    a {
+        color: var(--primary-end);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+        
+        &:hover {
+            color: var(--primary-start);
+        }
+    }
+}
+
+// ============================================
+// BUTTONS
+// ============================================
+.btn-login,
+.btn-signup,
+.btn-reset {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    border: none;
+    border-radius: 12px;
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(rgba(255,255,255,0.2), transparent);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px -10px rgba(255, 107, 53, 0.5);
+        
+        &::before {
+            opacity: 1;
+        }
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    &:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+.btn-signup {
+    border-radius: 10px;
+    padding: 0.875rem;
+}
+
+// ============================================
+// FOOTER
+// ============================================
+.login-footer,
+.signup-footer,
+.reset-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 0.95rem;
+    
+    a {
+        color: var(--primary-end);
+        font-weight: 600;
+        text-decoration: none;
+        
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}
+
+.signup-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+}
+
+// ============================================
+// OTP MODAL
+// ============================================
+.otp-modal {
+    .modal-dialog {
+        max-width: 420px;
+    }
+    
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        // box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+        border-radius: 0;
+        padding: 1rem 1.5rem;
+        border: none;
+        transition: background 0.4s ease;
+        
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: white;
+        }
+        
+        .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+            
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
+    
+    // Success state - green gradient header
+    &.otp-success .modal-header {
+        background: linear-gradient(135deg, #10B981, #34D399);
+    }
+    
+    // Error state - red gradient header
+    &.otp-error .modal-header {
+        background: linear-gradient(135deg, #EF4444, #F87171);
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+        text-align: center;
+    }
+}
+
+
+// OTP Input Row
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+.otp-input {
+    width: 45px;
+    height: 52px;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-radius: 10px;
+    font-variant-numeric: tabular-nums;
+    border: 2px solid #e2e8f0;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+    
+    &:focus {
+        border-color: var(--primary-end);
+        box-shadow: 0 0 0 3px rgba(249, 168, 37, 0.2);
+        background: white;
+        outline: none;
+        // transform: scale(1.05);
+    }
+    
+    &.is-valid {
+        border-color: #10B981;
+        background: #ecfdf5;
+    }
+    
+    &.is-invalid {
+        border-color: #EF4444;
+        background: #fef2f2;
+    }
+}
+
+// OTP Timer
+.otp-timer {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    
+    span {
+        color: var(--primary-end);
+        font-weight: 600;
+    }
+}
+
+// Resend button
+.otp-resend {
+    color: var(--primary-start);
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s;
+    
+    &:hover {
+        color: var(--primary-end);
+        text-decoration: underline;
+    }
+    
+    &.disabled {
+        color: #94a3b8;
+        pointer-events: none;
+    }
+}
+
+// OTP Verify Button
+.btn-verify-otp {
+    width: 100%;
+    background: linear-gradient(135deg, var(--primary-start), var(--primary-end));
+    border: none;
+    border-radius: 12px;
+    padding: 0.875rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(255, 140, 66, 0.4);
+    }
+    
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+}
+
+
+// ============================================
+// TOAST CONTAINER
+// ============================================
+.toast-container {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.5rem;
+    z-index: 1100;
+}
+
+.custom-toast {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: slideInRight 0.4s ease;
+    
+    &.error {
+        border-left: 4px solid #ef4444;
+    }
+    
+    &.success {
+        border-left: 4px solid #10b981;
+    }
+    
+    .toast-icon {
+        font-size: 1.25rem;
+    }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+// ============================================
+// ALERTS
+// ============================================
+.alert-success {
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    color: #117e5f;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+// ============================================
+// MOBILE RESPONSIVE STYLES
+// ============================================
+@media (max-width: 768px) {
+    // Base page adjustments
+    .auth-page {
+        padding: 0.5rem !important;
+        min-height: 100vh;
+        align-items: flex-start !important;
+    }
+    
+    // Card adjustments - full width on mobile
+    .auth-card-wide {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 16px !important;
+    }
+    
+    // Row becomes column - illustration on top, form below
+    .auth-row {
+        flex-direction: column !important;
+        min-height: auto !important;
+    }
+    
+    // Illustration section on mobile - on TOP
+    .auth-illustration {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        min-height: 160px !important;
+        max-height: 200px !important;
+        border-radius: 16px 16px 0 0 !important;
+        order: 1 !important; // Ensure it's first
+        
+        .hdc-logo {
+            top: 0.75rem !important;
+            left: 0.75rem !important;
+            height: 40px !important;
+        }
+    }
+    
+    .auth-img {
+        min-height: 160px !important;
+        max-height: 200px !important;
+        object-fit: cover !important;
+    }
+    
+    // Form section on mobile - below illustration
+    .auth-form-section {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        padding: 1.25rem 1rem !important;
+        border-radius: 0 0 16px 16px !important;
+        order: 2 !important; // Ensure it's second
+        overflow-y: auto !important;
+    }
+    
+    // Typography adjustments
+    .login-title,
+    .signup-title,
+    .reset-title {
+        font-size: 1.4rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .login-subtitle,
+    .signup-subtitle,
+    .reset-subtitle {
+        font-size: 0.8rem !important;
+    }
+    
+    // Logo area
+    .login-logo,
+    .signup-logo,
+    .reset-logo {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    // Form controls - compact on mobile
+    .login-form,
+    .signup-form,
+    .reset-form {
+        .form-group {
+            margin-bottom: 0.6rem !important;
+        }
+        
+        .form-label {
+            font-size: 0.8rem !important;
+            margin-bottom: 0.2rem !important;
+        }
+        
+        .form-control {
+            padding: 0.5rem 0.75rem !important;
+            font-size: 0.85rem !important;
+            border-radius: 8px !important;
+        }
+    }
+    
+    // Form row - stack on mobile
+    .form-row {
+        flex-direction: column !important;
+        gap: 0 !important;
+    }
+    
+    // Buttons
+    .btn-login,
+    .btn-signup,
+    .btn-reset {
+        padding: 0.7rem !important;
+        font-size: 0.9rem !important;
+        border-radius: 10px !important;
+    }
+    
+    // Login options
+    .login-options {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        align-items: flex-start !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    // Footer
+    .login-footer,
+    .signup-footer,
+    .reset-footer {
+        margin-top: 0.75rem !important;
+        padding-top: 0.5rem !important;
+        font-size: 0.8rem !important;
+    }
+    
+    // Terms checkbox
+    .terms-checkbox {
+        font-size: 0.75rem !important;
+    }
+    
+    // Password requirements
+    .password-requirements {
+        font-size: 0.7rem !important;
+    }
+}
+
+// Extra small devices (phones < 480px)
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 0.5rem;
+    }
+    
+    .auth-illustration {
+        min-height: 150px;
+        max-height: 180px;
+    }
+    
+    .auth-form-section {
+        padding: 1rem 0.75rem;
+    }
+    
+    .login-title,
+    .signup-title,
+    .reset-title {
+        font-size: 1.35rem;
+    }
+    
+    // OTP Modal responsive
+    .otp-modal {
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+        
+        .modal-content {
+            border-radius: 16px;
+        }
+        
+        .modal-header {
+            padding: 0.75rem 1rem;
+            
+            .modal-title {
+                font-size: 1.1rem;
+            }
+        }
+        
+        .modal-body {
+            padding: 1rem;
+        }
+    }
+    
+    .otp-inputs {
+        gap: 0.35rem;
+    }
+    
+    .otp-input {
+        width: 38px;
+        height: 44px;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+    
+    .btn-verify-otp {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    // Password requirements compact
+    .password-requirements {
+        font-size: 0.7rem;
+    }
+}

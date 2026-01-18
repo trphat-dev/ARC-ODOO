@@ -1,0 +1,152 @@
+// Investor Profile Management - SCSS Variables
+// ==============================================
+// Premium Design System for Investor Portal
+
+// ============================================
+// TYPOGRAPHY
+// ============================================
+$font-family-heading: "Inter", sans-serif;
+$font-family-base: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+// Font Weights
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// ============================================
+// COLOR PALETTE - Warm Orange/Gold Theme
+// ============================================
+// Primary Colors (Gradient)
+$primary-start: #ff8c42; // Warm Orange
+$primary-end: #f9a825; // Golden Yellow
+$primary-gradient: linear-gradient(
+  135deg,
+  $primary-start 0%,
+  $primary-end 100%
+);
+$primary-gradient-hover: linear-gradient(
+  135deg,
+  darken($primary-start, 8%) 0%,
+  darken($primary-end, 8%) 100%
+);
+
+// Secondary Colors
+$secondary-start: #1a1a2e;
+$secondary-end: #16213e;
+
+// Background Gradient (Animated)
+$bg-gradient: linear-gradient(-45deg, #ffecd2, #fcb69f, #ff9a56, #f9a825);
+
+// Text Colors
+$text-dark: #1a1a2e;
+$text-primary: #334155;
+$text-muted: #64748b;
+$text-light: #94a3b8;
+$text-white: #ffffff;
+
+// Background Colors
+$bg-white: #ffffff;
+$bg-light: #f8f9fa;
+$bg-lighter: #f1f5f9;
+
+// State Colors
+$success: #10b981;
+$success-light: #d1fae5;
+$success-dark: #047857;
+$warning: #f59e0b;
+$warning-light: #fffbe6;
+$danger: #ef4444;
+$danger-light: #fee2e2;
+$danger-dark: #dc2626;
+$info: #3b82f6;
+$info-light: #dbeafe;
+
+// ============================================
+// GLASSMORPHISM
+// ============================================
+$glass-bg: rgba(255, 255, 255, 0.95);
+$glass-bg-light: rgba(255, 255, 255, 0.85);
+$glass-border: rgba(255, 255, 255, 0.3);
+$glass-border-heavy: rgba(255, 255, 255, 0.5);
+$glass-blur: 20px;
+$glass-blur-light: 12px;
+$glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+$glass-shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+// ============================================
+// BORDERS
+// ============================================
+$border-color: #e2e8f0;
+$border-color-light: #f1f5f9;
+$border-focus: $primary-end;
+
+// Border Radius
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+$radius-xl: 20px;
+$radius-2xl: 24px;
+$radius-full: 9999px;
+
+// ============================================
+// SHADOWS
+// ============================================
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+$shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+$shadow-primary: 0 10px 25px -5px rgba($primary-start, 0.4);
+$shadow-primary-lg: 0 15px 35px -10px rgba($primary-start, 0.5);
+$shadow-input-focus: 0 0 0 4px rgba($primary-end, 0.15);
+
+// ============================================
+// SPACING
+// ============================================
+$spacing-xs: 0.125rem; // 2px
+$spacing-sm: 0.25rem; // 4px
+$spacing-md: 0.5rem; // 8px
+$spacing-lg: 0.75rem; // 12px
+$spacing-xl: 1rem; // 16px
+$spacing-2xl: 1.5rem; // 24px
+$spacing-3xl: 2rem; // 32px
+
+// ============================================
+// BREAKPOINTS
+// ============================================
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-2xl: 1400px;
+
+// ============================================
+// TRANSITIONS
+// ============================================
+$transition-fast: 0.15s ease;
+$transition-base: 0.3s ease;
+$transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+$transition-spring: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+// ============================================
+// Z-INDEX LAYERS
+// ============================================
+$z-dropdown: 100;
+$z-sticky: 200;
+$z-fixed: 300;
+$z-modal-backdrop: 400;
+$z-modal: 500;
+$z-popover: 600;
+$z-tooltip: 700;
+$z-toast: 800;
+
+// ============================================
+// LAYOUT
+// ============================================
+$sidebar-width: 260px;
+$sidebar-width-collapsed: 50px;
+$content-max-width: 1100px;
+$card-padding: 1rem;
+$card-padding-mobile: 0.75rem;

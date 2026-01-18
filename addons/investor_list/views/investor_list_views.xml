@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_investor_list_tree" model="ir.ui.view">
+        <field name="name">investor.list.list</field>
+        <field name="model">investor.list</field>
+        <field name="arch" type="xml">
+            <list string="Danh sách nhà đầu tư" decoration-info="status == 'pending'" decoration-success="status == 'kyc'" decoration-warning="status == 'vsd'" decoration-danger="status == 'incomplete'">
+                <field name="open_date" widget="datetime"/>
+                <field name="account_number"/>
+                <field name="partner_name"/>
+                <field name="id_number"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="province_city"/>
+                <field name="source"/>
+                <field name="bda_user"/>
+                <field name="account_status"/>
+                <field name="profile_status"/>
+                <field name="status" widget="badge" decoration-info="status == 'pending'" decoration-success="status == 'kyc'" decoration-warning="status == 'vsd'" decoration-danger="status == 'incomplete'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_investor_list_form" model="ir.ui.view">
+        <field name="name">investor.list.form</field>
+        <field name="model">investor.list</field>
+        <field name="arch" type="xml">
+            <form string="Thông tin nhà đầu tư">
+                <header>
+                    <button name="action_refresh_data" string="Làm mới dữ liệu" type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Thông tin cơ bản">
+                            <field name="user_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="open_date" readonly="1"/>
+                            <field name="account_number" readonly="1"/>
+                        </group>
+                        <group string="Thông tin cá nhân">
+                            <field name="partner_name"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                            <field name="id_number"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Thông tin địa chỉ">
+                            <field name="province_city"/>
+                        </group>
+                        <group string="Thông tin bổ sung">
+                            <field name="source"/>
+                            <field name="bda_user"/>
+                            <field name="account_status"/>
+                            <field name="profile_status"/>
+                            <field name="status"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_investor_list_search" model="ir.ui.view">
+        <field name="name">investor.list.search</field>
+        <field name="model">investor.list</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm nhà đầu tư">
+                <field name="partner_name"/>
+                <field name="account_number"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="id_number"/>
+                <field name="province_city"/>
+                <separator/>
+                <filter string="Chờ KYC" name="pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="KYC" name="kyc" domain="[('status', '=', 'kyc')]"/>
+                <filter string="VSD" name="vsd" domain="[('status', '=', 'vsd')]"/>
+                <filter string="Chưa cập nhật" name="incomplete" domain="[('status', '=', 'incomplete')]"/>
+                <separator/>
+                <filter string="TPB2" name="tpb2" domain="[('source', '=', 'tpb2')]"/>
+                <filter string="FPLA1" name="fpla1" domain="[('source', '=', 'fpla1')]"/>
+                <filter string="SCB" name="scb" domain="[('source', '=', 'scb')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Trạng thái" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="Nguồn" name="group_source" context="{'group_by': 'source'}"/>
+                    <filter string="BDA" name="group_bda" context="{'group_by': 'bda_user'}"/>
+                    <filter string="Tỉnh/Thành phố" name="group_province" context="{'group_by': 'province_city'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_investor_list" model="ir.actions.act_window">
+        <field name="name">Danh sách nhà đầu tư</field>
+        <field name="res_model">investor.list</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có nhà đầu tư nào trong danh sách
+            </p>
+            <p>
+                Nhấn "Đồng bộ tài khoản portal" để thêm các tài khoản portal vào danh sách.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_investor_list"
+              name="Danh sách nhà đầu tư"
+              parent="menu_investor_list_root"
+              action="action_investor_list"
+              sequence="10"/>
+
+    <!-- Server Action để đồng bộ portal users -->
+    <record id="action_sync_portal_users" model="ir.actions.server">
+        <field name="name">Đồng bộ tài khoản portal</field>
+        <field name="model_id" ref="model_investor_list"/>
+        <field name="state">code</field>
+        <field name="code">
+            model.sync_portal_users()
+        </field>
+    </record>
+
+    <!-- Menu cho server action -->
+    <menuitem id="menu_sync_portal_users"
+              name="Đồng bộ tài khoản portal"
+              parent="menu_investor_list_root"
+              action="action_sync_portal_users"
+              sequence="20"/>
+</odoo> 

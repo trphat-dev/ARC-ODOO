@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- 
+    Không cần tạo custom group nữa vì sử dụng groups mặc định của Odoo:
+    - base.group_user: Internal Users (Fund Operator)
+    - base.group_system: System Administrators (System Admin)
+    - base.group_portal: Portal Users (Portal Admin)
+    -->
+</odoo>
+

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sequence cho Maturity Notification -->
+    <record id="seq_transaction_maturity_notification" model="ir.sequence">
+        <field name="name">Maturity Notification Sequence</field>
+        <field name="code">transaction.maturity.notification</field>
+        <field name="prefix">MAT/%(year)s%(month)s%(day)s/</field>
+        <field name="padding">4</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Mail Template: Thông báo đáo hạn -->
+    <record id="maturity_notification_email_template" model="mail.template">
+        <field name="name">Thông báo đáo hạn lệnh giao dịch</field>
+        <field name="model_id" ref="model_transaction_maturity_notification"/>
+        <field name="subject">Thông báo đáo hạn lệnh giao dịch - ${object.transaction_id.name}</field>
+        <field name="email_from">${(object.create_uid.email_formatted or user.email_formatted)}</field>
+        <field name="email_to">${object.partner_id.email or ''}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #2c3e50;">Thông báo đáo hạn lệnh giao dịch</h2>
+                
+                <p>Xin chào <strong>${object.partner_id.name or 'Nhà đầu tư'}</strong>,</p>
+                
+                <p>Lệnh giao dịch của bạn đã đến ngày đáo hạn:</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Mã lệnh:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.transaction_id.name}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Quỹ:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.fund_id.name or 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Số lượng CCQ:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.remaining_units}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Ngày đáo hạn:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.maturity_date.strftime('%d/%m/%Y') if object.maturity_date else 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Kỳ hạn:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.term_months} tháng</td>
+                    </tr>
+                </table>
+                
+                <p>Bạn có muốn bán số lượng CCQ còn lại không?</p>
+                
+                <div style="margin: 30px 0; text-align: center;">
+                    <a href="${object.env['ir.config_parameter'].sudo().get_param('web.base.url')}/maturity-notification/confirm/${object.id}/${object.confirmation_token}" 
+                       style="display: inline-block; padding: 12px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+                        Đồng ý bán
+                    </a>
+                    <a href="${object.env['ir.config_parameter'].sudo().get_param('web.base.url')}/maturity-notification/reject/${object.id}/${object.confirmation_token}" 
+                       style="display: inline-block; padding: 12px 30px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px;">
+                        Từ chối bán
+                    </a>
+                </div>
+                
+                <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                    <strong>Lưu ý:</strong> Nếu bạn đồng ý bán, hệ thống sẽ tự động tạo lệnh bán và đưa vào sổ lệnh để khớp với các lệnh mua khác.
+                </p>
+                
+                <p style="color: #666; font-size: 12px;">
+                    Link này sẽ hết hạn sau 7 ngày. Nếu bạn không phản hồi, thông báo sẽ tự động hết hạn.
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;"/>
+                
+                <p style="color: #999; font-size: 11px; text-align: center;">
+                    Đây là email tự động, vui lòng không trả lời email này.
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <!-- Mail Template: Xác nhận đã tạo lệnh bán -->
+    <record id="maturity_confirmation_email_template" model="mail.template">
+        <field name="name">Xác nhận đã tạo lệnh bán từ đáo hạn</field>
+        <field name="model_id" ref="model_transaction_maturity_notification"/>
+        <field name="subject">Xác nhận đã tạo lệnh bán - ${object.transaction_id.name}</field>
+        <field name="email_from">${(object.create_uid.email_formatted or user.email_formatted)}</field>
+        <field name="email_to">${object.partner_id.email or ''}</field>
+        <field name="body_html" type="html">
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2 style="color: #28a745;">Xác nhận đã tạo lệnh bán</h2>
+                
+                <p>Xin chào <strong>${object.partner_id.name or 'Nhà đầu tư'}</strong>,</p>
+                
+                <p>Cảm ơn bạn đã xác nhận. Hệ thống đã tự động tạo lệnh bán cho bạn:</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Lệnh mua gốc:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.transaction_id.name}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Lệnh bán mới:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.sell_order_id.name if object.sell_order_id else 'Đang xử lý...'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Số lượng:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.remaining_units} CCQ</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;"><strong>Quỹ:</strong></td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${object.fund_id.name or 'N/A'}</td>
+                    </tr>
+                </table>
+                
+                <p style="color: #28a745; font-weight: bold;">
+                    Lệnh bán đã được đưa vào sổ lệnh và sẽ được khớp tự động với các lệnh mua phù hợp.
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;"/>
+                
+                <p style="color: #999; font-size: 11px; text-align: center;">
+                    Đây là email tự động, vui lòng không trả lời email này.
+                </p>
+            </div>
+        </field>
+    </record>
+
+    <!-- Scheduled Action: Kiểm tra và gửi thông báo đáo hạn -->
+    <record id="ir_cron_check_maturity_dates" model="ir.cron">
+        <field name="name">Kiểm tra và gửi thông báo đáo hạn</field>
+        <field name="model_id" ref="model_transaction_maturity_notification"/>
+        <field name="state">code</field>
+        <field name="code">model.check_maturity_dates()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Scheduled Action: Đánh dấu thông báo hết hạn -->
+    <record id="ir_cron_expire_maturity_notifications" model="ir.cron">
+        <field name="name">Đánh dấu thông báo đáo hạn hết hạn</field>
+        <field name="model_id" ref="model_transaction_maturity_notification"/>
+        <field name="state">code</field>
+        <field name="code">model.action_expire_notification()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+</odoo>

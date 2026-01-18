@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fund_dashboard_daily_user,fund.dashboard.daily.user,model_fund_dashboard_daily,base.group_user,1,1,1,0
+access_fund_dashboard_daily_manager,fund.dashboard.daily.manager,model_fund_dashboard_daily,base.group_system,1,1,1,1
+access_dashboard_account_stat_user,dashboard.account.stat.user,model_dashboard_account_stat,base.group_user,1,1,1,1
+access_dashboard_fund_movement_user,dashboard.fund.movement.user,model_dashboard_fund_movement,base.group_user,1,1,1,1
+access_dashboard_transaction_user,dashboard.transaction.user,model_dashboard_transaction,base.group_user,1,1,1,1
+access_dashboard_nav_opening_user,dashboard.nav.opening.user,model_dashboard_nav_opening,base.group_user,1,1,1,1
+

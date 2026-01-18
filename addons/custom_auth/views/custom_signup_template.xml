@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="custom_signup_inherit" inherit_id="auth_signup.signup">
+        <xpath expr="." position="replace">
+            <t t-call="web.layout">
+                <t t-set="title">Đăng ký</t>
+                <t t-set="head">
+                    <!-- Google Fonts: Inter & Playfair Display -->
+                    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+                    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+
+                    <!-- Bootstrap 5 CDN -->
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+                    <!-- FontAwesome CDN -->
+                    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                    
+                    <!-- Odoo SCSS Assets -->
+                    <t t-call-assets="web.assets_frontend" t-css="true" t-js="false"/>
+                </t>
+                
+                <!-- Page Content -->
+                <div class="auth-page">
+                    <div class="signup-card auth-card-wide">
+                        <div class="auth-row">
+                            <!-- Left side - Illustration -->
+                            <div class="auth-illustration">
+                                <img src="/custom_auth/static/src/img/hdc-logo.png" alt="HDC Logo" class="hdc-logo"/>
+                                <img src="/custom_auth/static/src/img/signup.png" alt="Signup Illustration" class="auth-img"/>
+                            </div>
+                            
+                            <!-- Right side - Form -->
+                            <div class="auth-form-section">
+                                <!-- Title -->
+                                <div class="signup-logo">
+                                    <h1 class="signup-title">Đăng ký tài khoản</h1>
+                                    <p class="signup-subtitle">Tạo tài khoản để truy cập hệ thống</p>
+                                </div>
+                                
+                                <!-- Form -->
+                                <form class="signup-form" id="signup-form" action="javascript:void(0);">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label" for="name">Họ và tên <span style="color:#ef4444">*</span></label>
+                                            <input type="text" class="form-control" id="name" name="name" placeholder="Nguyễn Văn A" required="required"/>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" for="phone">Số điện thoại <span style="color:#ef4444">*</span></label>
+                                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="0909123456" pattern="[0-9]{10}" maxlength="10" required="required"/>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label class="form-label" for="email">Email <span style="color:#ef4444">*</span></label>
+                                        <input type="email" class="form-control" id="email" name="login" placeholder="email@domain.com" required="required"/>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="form-label" for="password">Mật khẩu <span style="color:#ef4444">*</span></label>
+                                            <div class="password-wrapper">
+                                                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required="required" minlength="8"/>
+                                                <button type="button" class="password-toggle-btn" id="togglePassword1"><i class="fas fa-eye-slash"></i></button>
+                                            </div>
+                                            <div class="password-requirements">
+                                                <div class="req-item" id="req-length"><i class="fa fa-circle"></i>Tối thiểu 8 ký tự</div>
+                                                <div class="req-item" id="req-uppercase"><i class="fa fa-circle"></i>Có chữ in hoa</div>
+                                                <div class="req-item" id="req-number"><i class="fa fa-circle"></i>Có chữ số</div>
+                                                <div class="req-item" id="req-special"><i class="fa fa-circle"></i>Có ký tự đặc biệt</div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" for="confirm_password">Xác nhận mật khẩu <span style="color:#ef4444">*</span></label>
+                                            <div class="password-wrapper">
+                                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="••••••••" required="required"/>
+                                                <button type="button" class="password-toggle-btn" id="togglePassword2"><i class="fas fa-eye-slash"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-check mb-3" style="font-size:0.85rem;">
+                                        <input type="checkbox" class="form-check-input" id="terms" name="terms" required="required"/>
+                                        <label class="form-check-label" for="terms">Tôi đồng ý với <a href="#" style="color:var(--primary-end)">điều khoản sử dụng</a></label>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn-signup" id="signup-submit">
+                                        <i class="fas fa-user-plus me-2"></i>Đăng ký
+                                    </button>
+                                </form>
+                                
+                                <div class="signup-footer">Đã có tài khoản? <a href="/web/login">Đăng nhập</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- OTP Modal -->
+                <div class="modal fade otp-modal" id="otp-modal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header text-white">
+                                <h5 class="modal-title fw-bold">Xác thực OTP</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <p class="text-muted mb-3">Nhập mã 6 số đã được gửi đến:</p>
+                                <p id="otp-phone" class="fw-medium text-dark mb-4"></p>
+                                
+                                <div class="d-flex gap-2 justify-content-center mb-3">
+                                    <input type="text" maxlength="1" class="otp-input" data-index="0"/>
+                                    <input type="text" maxlength="1" class="otp-input" data-index="1"/>
+                                    <input type="text" maxlength="1" class="otp-input" data-index="2"/>
+                                    <input type="text" maxlength="1" class="otp-input" data-index="3"/>
+                                    <input type="text" maxlength="1" class="otp-input" data-index="4"/>
+                                    <input type="text" maxlength="1" class="otp-input" data-index="5"/>
+                                </div>
+                                <p id="otp-error" class="text-danger small d-none text-center"></p>
+                                <p class="text-center text-muted small mb-4">Hết hạn sau <span id="otp-timer" class="fw-medium" style="color:var(--primary-end)">05:00</span></p>
+                                
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="resend-otp" class="btn btn-outline-secondary flex-fill">Gửi lại</button>
+                                    <button type="button" id="verify-otp" class="btn-signup flex-fill" disabled="disabled">Xác nhận</button>
+                                </div>
+                                <div id="otp-loading" class="text-center mt-3 d-none">
+                                    <span class="spinner-border spinner-border-sm text-primary me-2"></span><span class="text-primary">Đang xử lý...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Toast -->
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1100;">
+                    <div id="signup-toast" class="toast align-items-center border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body" id="toast-message"></div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scripts -->
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+                <script><![CDATA[
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var otpModal = null;
+                        var currentFormData = null;
+                        var timerInterval = null;
+                        var countdown = 300;
+                        
+                        var modalEl = document.getElementById('otp-modal');
+                        if (modalEl && typeof bootstrap !== 'undefined') otpModal = new bootstrap.Modal(modalEl);
+                        
+                        // Password toggle
+                        ['togglePassword1', 'togglePassword2'].forEach(function(id) {
+                            var btn = document.getElementById(id);
+                            if (btn) {
+                                btn.addEventListener('click', function() {
+                                    var input = this.previousElementSibling;
+                                    var type = input.type === 'password' ? 'text' : 'password';
+                                    input.type = type;
+                                    this.querySelector('i').className = type === 'password' ? 'fas fa-eye-slash' : 'fas fa-eye';
+                                });
+                            }
+                        });
+                        
+                        // Password validation
+                        var pw = document.getElementById('password');
+                        if (pw) {
+                            pw.addEventListener('input', function() {
+                                var v = this.value;
+                                updateReq('req-length', v.length >= 8);
+                                updateReq('req-uppercase', /[A-Z]/.test(v));
+                                updateReq('req-number', /[0-9]/.test(v));
+                                updateReq('req-special', /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'`~]/.test(v));
+                            });
+                        }
+                        
+                        function updateReq(id, valid) {
+                            var el = document.getElementById(id);
+                            if (el) {
+                                var icon = el.querySelector('i');
+                                if (valid) { el.classList.add('req-valid'); icon.className = 'fa fa-check'; }
+                                else { el.classList.remove('req-valid'); icon.className = 'fa fa-circle'; }
+                            }
+                        }
+                        
+                        // Phone input filter
+                        var phone = document.getElementById('phone');
+                        if (phone) phone.addEventListener('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
+                        
+                        // Form submit
+                        var form = document.getElementById('signup-form');
+                        if (form) {
+                            form.addEventListener('submit', function(e) {
+                                e.preventDefault();
+                                var name = document.getElementById('name').value.trim();
+                                var email = document.getElementById('email').value.trim();
+                                var phoneVal = document.getElementById('phone').value.trim();
+                                var password = document.getElementById('password').value;
+                                var confirmPassword = document.getElementById('confirm_password').value;
+                                var terms = document.getElementById('terms').checked;
+                                
+                                if (!name || !email || !phoneVal || !password || !confirmPassword || !terms) { showToast('Vui lòng điền đầy đủ thông tin', 'warning'); return; }
+                                if (password !== confirmPassword) { showToast('Mật khẩu xác nhận không khớp', 'danger'); return; }
+                                
+                                var btn = document.getElementById('signup-submit');
+                                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi OTP...';
+                                btn.disabled = true;
+                                
+                                currentFormData = {name: name, email: email, phone: phoneVal, password: password, confirm_password: confirmPassword};
+                                
+                                fetch('/web/signup/otp', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: currentFormData})
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(result) {
+                                    if (result.result && result.result.success) {
+                                        document.getElementById('otp-phone').textContent = result.result.phone || phoneVal;
+                                        if (otpModal) otpModal.show();
+                                        startTimer();
+                                        document.querySelector('.otp-input').focus();
+                                    } else {
+                                        showToast(result.result ? result.result.message : 'Có lỗi xảy ra', 'danger');
+                                    }
+                                    btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Đăng ký';
+                                    btn.disabled = false;
+                                })
+                                .catch(function() {
+                                    showToast('Có lỗi xảy ra khi gửi OTP', 'danger');
+                                    btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Đăng ký';
+                                    btn.disabled = false;
+                                });
+                            });
+                        }
+                        
+                        // OTP inputs
+                        var otpInputs = document.querySelectorAll('.otp-input');
+                        otpInputs.forEach(function(input, idx) {
+                            input.addEventListener('input', function(e) {
+                                if (!/^\d*$/.test(e.target.value)) { e.target.value = ''; return; }
+                                if (e.target.value && idx < 5) otpInputs[idx + 1].focus();
+                                updateVerifyBtn();
+                            });
+                            input.addEventListener('keydown', function(e) {
+                                if (e.key === 'Backspace' && !e.target.value && idx > 0) otpInputs[idx - 1].focus();
+                            });
+                        });
+                        
+                        function getOTP() { var otp = ''; otpInputs.forEach(function(i) { otp += i.value; }); return otp; }
+                        function updateVerifyBtn() { document.getElementById('verify-otp').disabled = getOTP().length !== 6; }
+                        function clearOTP() { otpInputs.forEach(function(i) { i.value = ''; }); updateVerifyBtn(); }
+                        
+                        function startTimer() {
+                            countdown = 300;
+                            updateTimer();
+                            if (timerInterval) clearInterval(timerInterval);
+                            timerInterval = setInterval(function() {
+                                countdown--;
+                                updateTimer();
+                                if (countdown <= 0) { clearInterval(timerInterval); showOTPError('Mã OTP đã hết hạn.'); }
+                            }, 1000);
+                        }
+                        function updateTimer() {
+                            var m = Math.floor(countdown / 60), s = countdown % 60;
+                            document.getElementById('otp-timer').textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+                        }
+                        function showOTPError(msg) { var el = document.getElementById('otp-error'); el.textContent = msg; el.classList.remove('d-none'); }
+                        function hideOTPError() { document.getElementById('otp-error').classList.add('d-none'); }
+                        
+                        // Verify OTP
+                        var verifyBtn = document.getElementById('verify-otp');
+                        var otpModalEl = document.getElementById('otp-modal');
+                        
+                        if (verifyBtn) {
+                            verifyBtn.addEventListener('click', function() {
+                                var otp = getOTP();
+                                if (otp.length !== 6) { showOTPError('Vui lòng nhập đủ 6 số'); return; }
+                                
+                                var loading = document.getElementById('otp-loading');
+                                loading.classList.remove('d-none');
+                                this.disabled = true;
+                                hideOTPError();
+                                // Remove previous states
+                                otpModalEl.classList.remove('otp-success', 'otp-error');
+                                
+                                fetch('/web/signup/verify-otp', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: {otp: otp}})
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(result) {
+                                    if (result.result && result.result.success) {
+                                        // Success - add green border
+                                        otpModalEl.classList.add('otp-success');
+                                        loading.innerHTML = '<i class="fa fa-check text-success me-2"></i><span class="text-success">' + result.result.message + '</span>';
+                                        otpInputs.forEach(function(i) { i.classList.add('is-valid'); });
+                                        setTimeout(function() { window.location.href = result.result.redirect_url; }, 2000);
+                                    } else {
+                                        // Error - add red border with shake
+                                        otpModalEl.classList.add('otp-error');
+                                        otpInputs.forEach(function(i) { i.classList.add('is-invalid'); });
+                                        showOTPError(result.result ? result.result.message : 'Mã OTP không đúng');
+                                        loading.classList.add('d-none');
+                                        verifyBtn.disabled = false;
+                                        // Remove error state after animation
+                                        setTimeout(function() { 
+                                            otpModalEl.classList.remove('otp-error'); 
+                                            otpInputs.forEach(function(i) { i.classList.remove('is-invalid'); });
+                                        }, 1500);
+                                    }
+                                })
+                                .catch(function() { 
+                                    otpModalEl.classList.add('otp-error');
+                                    showOTPError('Có lỗi xảy ra'); 
+                                    loading.classList.add('d-none'); 
+                                    verifyBtn.disabled = false;
+                                    setTimeout(function() { otpModalEl.classList.remove('otp-error'); }, 1500);
+                                });
+                            });
+                        }
+                        
+                        // Resend OTP
+                        var resendBtn = document.getElementById('resend-otp');
+                        if (resendBtn) {
+                            resendBtn.addEventListener('click', function() {
+                                if (!currentFormData) return;
+                                this.disabled = true;
+                                clearOTP();
+                                hideOTPError();
+                                var btn = this;
+                                
+                                fetch('/web/signup/otp', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({jsonrpc: '2.0', method: 'call', params: currentFormData})
+                                })
+                                .then(function(r) { return r.json(); })
+                                .then(function(result) {
+                                    if (result.result && result.result.success) { startTimer(); document.querySelector('.otp-input').focus(); showToast('Đã gửi lại mã OTP', 'success'); }
+                                    else showOTPError(result.result ? result.result.message : 'Có lỗi xảy ra');
+                                    btn.disabled = false;
+                                })
+                                .catch(function() { showOTPError('Có lỗi xảy ra'); btn.disabled = false; });
+                            });
+                        }
+                        
+                        function showToast(message, type) {
+                            var toastEl = document.getElementById('signup-toast');
+                            var body = document.getElementById('toast-message');
+                            body.textContent = message;
+                            toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+                            toastEl.classList.add('bg-' + type, 'text-white');
+                            var toast = new bootstrap.Toast(toastEl, {delay: 5000});
+                            toast.show();
+                        }
+                    });
+                ]]></script>
+            </t>
+        </xpath>
+    </template>
+</odoo>

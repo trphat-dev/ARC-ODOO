@@ -1,0 +1,91 @@
+// Fund Management - Design Variables
+// ===================================
+// This file defines all design tokens and SCSS variables
+
+// --------------------------------------------------------------------------
+// COLORS
+// --------------------------------------------------------------------------
+
+// Background Colors
+$fm-bg-header-start: #E2E8F0;
+$fm-bg-header-end: #F8FAFC;
+$fm-bg-main: #F1F5F9;
+$fm-bg-white: #FFFFFF;
+$fm-bg-card: #FFFFFF;
+
+// Text Colors
+$fm-text-primary: #000000;
+$fm-text-secondary: #64748B;
+$fm-text-muted: #94A3B8;
+
+// Primary Brand (Orange gradient)
+$fm-primary: #F26522;
+$fm-primary-dark: #D45113;
+$fm-primary-start: #F26522;
+$fm-primary-end: #D45113;
+$fm-primary-gradient: linear-gradient(180deg, $fm-primary-start 0%, $fm-primary-end 100%);
+
+// Semantic Colors
+$fm-success: #27AE60;
+$fm-success-light: #D4EDDA;
+$fm-warning: #F39C12;
+$fm-warning-light: #FFF3CD;
+$fm-danger: #E74C3C;
+$fm-danger-light: #F8D7DA;
+$fm-info: #3498DB;
+$fm-info-light: #D1ECF1;
+
+// Border & Divider
+$fm-border: #CBD5E1;
+$fm-border-light: #E2E8F0;
+$fm-divider: #CBD5E1;
+
+// --------------------------------------------------------------------------
+// SHADOWS
+// --------------------------------------------------------------------------
+$fm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$fm-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$fm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$fm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// --------------------------------------------------------------------------
+// TYPOGRAPHY
+// --------------------------------------------------------------------------
+$fm-font-family: 'Be Vietnam Pro', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$fm-font-size-xs: 12px;
+$fm-font-size-sm: 13px;
+$fm-font-size-base: 14px;
+$fm-font-size-md: 15px;
+$fm-font-size-lg: 16px;
+$fm-font-size-xl: 18px;
+$fm-font-size-2xl: 20px;
+$fm-font-size-3xl: 24px;
+$fm-font-size-4xl: 32px;
+
+// --------------------------------------------------------------------------
+// SPACING
+// --------------------------------------------------------------------------
+$fm-spacing-1: 4px;
+$fm-spacing-2: 8px;
+$fm-spacing-3: 12px;
+$fm-spacing-4: 16px;
+$fm-spacing-5: 20px;
+$fm-spacing-6: 24px;
+$fm-spacing-8: 32px;
+
+// --------------------------------------------------------------------------
+// BORDER RADIUS
+// --------------------------------------------------------------------------
+$fm-radius-sm: 4px;
+$fm-radius-md: 8px;
+$fm-radius-lg: 12px;
+$fm-radius-xl: 16px;
+$fm-radius-2xl: 24px;
+$fm-radius-full: 9999px;
+
+// --------------------------------------------------------------------------
+// TRANSITIONS
+// --------------------------------------------------------------------------
+$fm-transition-fast: 0.15s ease;
+$fm-transition-base: 0.2s ease;
+$fm-transition-slow: 0.3s ease;

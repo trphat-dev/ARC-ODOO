@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Search View -->
+    <record id="view_securities_search" model="ir.ui.view">
+        <field name="name">ssi.securities.search</field>
+        <field name="model">ssi.securities</field>
+        <field name="arch" type="xml">
+            <search string="Securities">
+                <field name="symbol"/>
+                <field name="stock_name_vn"/>
+                <filter string="HOSE" name="market_hose" domain="[('market','=','HOSE')]"/>
+                <filter string="HNX" name="market_hnx" domain="[('market','=','HNX')]"/>
+                <filter string="UPCOM" name="market_upcom" domain="[('market','=','UPCOM')]"/>
+                <separator/>
+                <filter string="Active" name="active" domain="[('is_active','=',True)]"/>
+                <filter string="Inactive" name="inactive" domain="[('is_active','=',False)]"/>
+                <separator/>
+                <group expand="1" string="Group By">
+                    <filter string="Market" name="group_market" context="{'group_by':'market'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Kanban View -->
+    <record id="view_securities_kanban" model="ir.ui.view">
+        <field name="name">ssi.securities.kanban</field>
+        <field name="model">ssi.securities</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard o_kanban_mobile" sample="1">
+                <field name="symbol"/>
+                <field name="market"/>
+                <field name="current_price"/>
+                <field name="change"/>
+                <field name="change_percent"/>
+                <field name="reference_price"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click p-2">
+                            <div class="row mb-2">
+                                <div class="col-8">
+                                    <strong class="o_kanban_record_title" style="font-size: 1.25rem;">
+                                        <field name="symbol"/>
+                                    </strong>
+                                    <div class="text-muted small">
+                                        <field name="stock_name_vn"/>
+                                    </div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <span t-attf-class="badge #{record.market.raw_value == 'HOSE' ? 'bg-primary' : (record.market.raw_value == 'HNX' ? 'bg-info' : 'bg-warning')}">
+                                        <field name="market"/>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mt-2">
+                                <div class="col-6">
+                                    <h3 class="mb-0">
+                                        <field name="current_price" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                                    </h3>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <t t-if="record.change.raw_value > 0">
+                                        <span class="text-success fw-bold">
+                                            <i class="fa fa-arrow-up"/>
+                                            <field name="change_percent" widget="percentage"/>
+                                        </span>
+                                    </t>
+                                    <t t-elif="record.change.raw_value &lt; 0">
+                                        <span class="text-danger fw-bold">
+                                            <i class="fa fa-arrow-down"/>
+                                            <field name="change_percent" widget="percentage"/>
+                                        </span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-muted">
+                                            <i class="fa fa-minus"/>
+ 0.00%
+                                        </span>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2 text-muted small">
+                                <div class="col-6">
+                                    Vol: <field name="volume"/>
+                                </div>
+                                <div class="col-6 text-end">
+                                    Ref: <field name="reference_price" widget="float" digits="[12,2]"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Tree View -->
+    <record id="view_securities_tree" model="ir.ui.view">
+        <field name="name">ssi.securities.tree</field>
+        <field name="model">ssi.securities</field>
+        <field name="arch" type="xml">
+            <list string="Securities" decoration-success="change &gt; 0" decoration-danger="change &lt; 0" sample="1">
+                <field name="symbol" decoration-bf="True"/>
+                <field name="market" decoration-info="True"/>
+                <field name="stock_name_vn" optional="hide"/>
+                <field name="reference_price" optional="show" string="Ref"/>
+                <field name="current_price" widget="price_ticker" decoration-bf="True" string="Close"/>
+                <field name="change_percent" widget="percentage" optional="show" decoration-success="change &gt; 0" decoration-danger="change &lt; 0" string="+/-%"/>
+                <field name="last_volume" optional="show" string="Last Vol"/>
+                <field name="volume" optional="show" string="Total Vol"/>
+                <field name="est_match_price" optional="hide"/>
+                <field name="ceiling_price" optional="hide" string="Ceiling"/>
+                <field name="floor_price" optional="hide" string="Floor"/>
+                <field name="last_update" widget="datetime" optional="show" string="Updated"/>
+                <field name="currency_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_securities_form" model="ir.ui.view">
+        <field name="name">ssi.securities.form</field>
+        <field name="model">ssi.securities</field>
+        <field name="arch" type="xml">
+            <form string="Security">
+                <header>
+                    <button name="action_fetch_latest_price" string="Update Price" type="object" class="btn-primary" icon="fa-refresh"/>
+                    <button name="action_fetch_securities_details" string="Update Details" type="object" class="btn-secondary"/>
+                    <button name="action_fetch_daily_ohlc_today" string="Fetch Daily OHLC" type="object" class="btn-secondary"/>
+                    <button name="action_fetch_all_intraday_ohlc" string="Fetch Intraday" type="object" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="symbol" string="Symbol"/>
+                        <h1>
+                            <field name="symbol" readonly="1"/>
+                        </h1>
+                        <h3>
+                            <field name="stock_name_vn" placeholder="Stock Name (VN)"/>
+                        </h3>
+                    </div>
+
+                    <!-- Market Info & Limits -->
+                    <group>
+                        <group string="Identifier">
+                            <field name="market"/>
+                            <field name="security_type"/>
+                            <field name="floor_code"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                        <group string="Trading Limits">
+                            <field name="reference_price" class="fw-bold text-warning"/>
+                            <field name="ceiling_price" class="fw-bold text-primary" style="color: #ff00ff !important;"/>
+                            <field name="floor_price" class="fw-bold text-info" style="color: #00bcd4 !important;"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Real-time Market Data" name="market_data">
+                            <div class="o_horizontal_separator">Current Session</div>
+                            <group>
+                                <group string="Main Status">
+                                    <field name="current_price" widget="monetary" class="fw-bold fs-3" decoration-success="change &gt; 0" decoration-danger="change &lt; 0"/>
+                                    <div class="d-flex gap-2">
+                                        <field name="change"/>
+ 
+                                        (                                        <field name="change_percent" widget="percentage" decoration-success="change &gt; 0" decoration-danger="change &lt; 0"/>
+)
+                                    </div>
+                                    <field name="last_volume"/>
+                                    <field name="est_match_price"/>
+                                </group>
+                                <group string="Session Statistics">
+                                    <field name="today_open_price"/>
+                                    <field name="avg_price"/>
+                                    <field name="high_price" decoration-success="True"/>
+                                    <field name="low_price" decoration-danger="True"/>
+                                    <field name="volume"/>
+                                    <field name="total_value"/>
+                                </group>
+                            </group>
+
+                            <div class="o_horizontal_separator">Order Book (Top 3)</div>
+                            <group>
+                                <group string="Best Bid (Mua)">
+                                    <field name="bid_price_1" string="Price 1"/>
+                                    <field name="bid_vol_1" string="Vol 1"/>
+                                    <separator/>
+                                    <field name="bid_price_2" string="Price 2"/>
+                                    <field name="bid_vol_2" string="Vol 2"/>
+                                    <separator/>
+                                    <field name="bid_price_3" string="Price 3"/>
+                                    <field name="bid_vol_3" string="Vol 3"/>
+                                </group>
+                                <group string="Best Ask (Bán)">
+                                    <field name="ask_price_1" string="Price 1"/>
+                                    <field name="ask_vol_1" string="Vol 1"/>
+                                    <separator/>
+                                    <field name="ask_price_2" string="Price 2"/>
+                                    <field name="ask_vol_2" string="Vol 2"/>
+                                    <separator/>
+                                    <field name="ask_price_3" string="Price 3"/>
+                                    <field name="ask_vol_3" string="Vol 3"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Daily History" name="daily_ohlc">
+                            <field name="daily_ohlc_ids">
+                                <list default_order="date desc" editable="bottom">
+                                    <field name="date"/>
+                                    <field name="open_price"/>
+                                    <field name="high_price"/>
+                                    <field name="low_price"/>
+                                    <field name="close_price"/>
+                                    <field name="volume"/>
+                                    <field name="value" optional="hide"/>
+                                    <field name="change_percent" widget="percentage" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Intraday Details" name="intraday_ohlc">
+                            <field name="intraday_ohlc_ids">
+                                <list default_order="date desc, time desc">
+                                    <field name="date"/>
+                                    <field name="time"/>
+                                    <field name="close_price"/>
+                                    <field name="volume"/>
+                                    <field name="high_price" optional="hide"/>
+                                    <field name="low_price" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_securities" model="ir.actions.act_window">
+        <field name="name">Securities</field>
+        <field name="res_model">ssi.securities</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Track and Monitor Securities
+            </p>
+            <p>
+                Add symbols to "Tracked Securities" in Configuration.
+            </p>
+        </field>
+    </record>
+</odoo>

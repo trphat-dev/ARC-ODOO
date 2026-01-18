@@ -1,0 +1,549 @@
+//vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv Order Mode Tabs - used by XML (fund_buy.xml) at root level
+.order-mode-tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+
+    .order-mode-tab {
+        flex: 1;
+        padding: 10px;
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        font-weight: 600;
+        color: #6b7280;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+
+        &:hover {
+            color: #374151;
+            background: #f9fafb;
+        }
+
+        &.active {
+            color: #2563EB;
+            border-bottom-color: #2563EB;
+            background: #eff6ff;
+        }
+        
+        i {
+            font-size: 14px;
+        }
+        
+        span {
+            font-size: 13px;
+        }
+    }
+}
+
+.normal-order-form-container {
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+    .normal-order-form {
+        padding: 12px 16px;
+        
+        // Compact Purchasing Power Display
+        .purchasing-power-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #eeac76 0%, #48585c 100%);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
+            
+            .pp-icon {
+                width: 40px;
+                height: 40px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2rem;
+            }
+            
+            .pp-info {
+                flex: 1;
+                
+                .pp-label {
+                    font-size: 0.7rem;
+                    opacity: 0.9;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    display: block;
+                    margin-bottom: 2px;
+                }
+                
+                .pp-value {
+                    font-size: 1.1rem;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: baseline;
+                    justify-content: flex-end;
+                    gap: 6px;
+                    text-align: right;
+                }
+                
+                .pp-units {
+                    font-size: 0.8rem;
+                    font-weight: 500;
+                    opacity: 0.9;
+                    
+                    .pp-buy {
+                        color: #a7f3d0; // Light green
+                        font-weight: 600;
+                    }
+                    
+                    .pp-sell {
+                        color: #fc3030; // Amber
+                        font-weight: 600;
+                    }
+                }
+            }
+            
+            .pp-refresh {
+                width: 32px;
+                height: 32px;
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.2s;
+                
+                &:hover {
+                    background: rgba(255, 255, 255, 0.25);
+                    transform: rotate(180deg);
+                }
+                
+                i {
+                    font-size: 0.85rem;
+                }
+            }
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+
+            label {
+                display: block;
+                margin-bottom: 4px;
+                font-weight: 500;
+                font-size: 0.8rem;
+                color: #374151;
+            }
+
+            .form-control, .form-select {
+                padding: 6px 10px;
+                border-radius: 6px;
+                border: 1px solid #d1d5db;
+                font-size: 0.85rem;
+                
+                &:focus {
+                    border-color: #2563EB;
+                    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+                }
+            }
+
+            .input-group {
+                .input-group-text {
+                    background: #f3f4f6;
+                    color: #6b7280;
+                    border-radius: 0 6px 6px 0;
+                    font-size: 0.8rem;
+                    padding: 6px 10px;
+                }
+                
+                .form-control {
+                    border-radius: 6px 0 0 6px;
+                }
+            }
+            
+            .form-text {
+                font-size: 0.75rem;
+                color: #6b7280;
+                margin-top: 2px;
+            }
+        }
+        
+        // Fund Selection
+        .fund-selection-group {
+             .market-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                
+                &.market-hose { background: #dbeafe; color: #8092ce; }
+                &.market-hnx { background: #dcfce7; color: #166534; }
+                &.market-upcom { background: #ffedd5; color: #c2410c; }
+            }
+        }
+        
+        // Order Type Grid
+        .order-type-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            
+            .order-type-option {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 6px 8px;
+                background: white;
+                border: 1px solid #e5e7eb;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                text-align: left;
+                position: relative;
+                
+                &:hover:not(:disabled) {
+                    border-color: #93c5fd;
+                    background: #f8fafc;
+                }
+                
+                &.active {
+                    border-color: #2563EB;
+                    background: #eff6ff;
+                    
+                    .ot-code {
+                        color: #2563EB;
+                    }
+                }
+                
+                &:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    background: #f3f4f6;
+                    border-color: #f3f4f6;
+                }
+                
+                .ot-code {
+                    font-weight: 700;
+                    font-size: 12px;
+                    color: #1f2937;
+                    margin-bottom: 0;
+                }
+                
+                .ot-desc {
+                    font-size: 10px;
+                    color: #6b7280;
+                }
+                
+                .ot-reason {
+                    margin-top: 2px;
+                    font-size: 10px;
+                    color: #ef4444;
+                    font-weight: 500;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+            }
+        }
+
+        .estimated-total-row {
+            display: flex;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin: 10px 0 0 0;
+            
+            .label {
+                font-weight: 500;
+                color: #64748b;
+                font-size: 0.8rem;
+            }
+            
+            .value {
+                font-weight: 700;
+                color: #2563EB;
+                font-size: 0.9rem;
+            }
+        }
+
+        .btn-submit-normal {
+            width: 100%;
+            padding: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.2);
+            
+            &:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.25);
+            }
+            
+            &:active {
+                transform: translateY(0);
+            }
+        }
+        
+        .normal-order-info-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            
+            h5 {
+                font-size: 0.9rem;
+                color: #b45309;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            
+            ul {
+                margin: 0;
+                padding-left: 20px;
+                
+                li {
+                    color: #92400e;
+                    font-size: 0.85rem;
+                    margin-bottom: 4px;
+                }
+            }
+        }
+        
+        // Fund Search Wrapper
+        .fund-search-wrapper {
+            position: relative;
+            
+            .fund-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 100;
+                margin-top: 4px;
+                
+                .fund-dropdown-item {
+                    padding: 12px 16px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    transition: background 0.15s;
+                    
+                    &:hover {
+                        background: #f3f4f6;
+                    }
+                    
+                    &.active {
+                        background: #eff6ff;
+                    }
+                    
+                    .fund-ticker {
+                        font-weight: 700;
+                        color: #2563EB;
+                        min-width: 60px;
+                    }
+                    
+                    .fund-name {
+                        color: #6b7280;
+                        font-size: 0.9rem;
+                    }
+                }
+            }
+        }
+        
+        // NAV Display Card
+        .nav-display-card {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #fef3f0 0%, #ffe8e0 100%);
+            border-radius: 6px;
+            border: 1px solid rgba(242, 101, 34, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            .nav-icon {
+                width: 28px;
+                height: 28px;
+                background: linear-gradient(135deg, #F26522, #ff8a50);
+                border-radius: 6px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 0.75rem;
+            }
+            
+            .nav-info {
+                flex: 1;
+                
+                .nav-label {
+                    font-size: 0.65rem;
+                    text-transform: uppercase;
+                    font-weight: 600;
+                    color: #6b7280;
+                    display: block;
+                }
+                
+                .nav-value strong {
+                    color: #F26522;
+                    font-size: 0.9rem;
+                }
+            }
+            
+            .market-badge-container {
+                .market-badge {
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    
+                    &.market-hose {
+                        background: #dcfce7;
+                        color: #166534;
+                    }
+                    
+                    &.market-hnx {
+                        background: #fef3c7;
+                        color: #92400e;
+                    }
+                    
+                    &.market-upcom {
+                        background: #e0e7ff;
+                        color: #3730a3;
+                    }
+                }
+            }
+        }
+        
+        // Order Type Grid (Box Buttons)
+        .order-type-section {
+            margin-bottom: 20px;
+        }
+        
+        .order-type-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            
+            .order-type-box {
+                background: #fff;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 10px 8px;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+                text-align: center;
+                
+                &:hover:not(.locked) {
+                    border-color: #93c5fd;
+                    background: #f8fafc;
+                }
+                
+                &.selected {
+                    border-color: #2563EB;
+                    background: #eff6ff;
+                    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+                    
+                    .ot-code {
+                        color: #2563EB;
+                    }
+                }
+                
+                &.locked {
+                    background: #f9fafb;
+                    border-color: #e5e7eb;
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                    
+                    .ot-code {
+                        color: #9ca3af;
+                    }
+                    
+                    .ot-name {
+                        color: #9ca3af;
+                    }
+                }
+                
+                .ot-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                    margin-bottom: 2px;
+                }
+                
+                .ot-code {
+                    font-size: 0.9rem;
+                    font-weight: 700;
+                    color: #374151;
+                }
+                
+                .ot-lock-icon {
+                    color: #9ca3af;
+                    font-size: 0.7rem;
+                }
+                
+                .ot-check-icon {
+                    color: #2563EB;
+                    font-size: 0.8rem;
+                }
+                
+                .ot-name {
+                    font-size: 0.7rem;
+                    color: #6b7280;
+                    margin-bottom: 2px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                
+                .ot-time {
+                    font-size: 0.65rem;
+                    color: #9ca3af;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 2px;
+                    
+                    i {
+                        font-size: 0.6rem;
+                    }
+                }
+                
+                .ot-locked-msg {
+                    font-size: 0.6rem;
+                    color: #ef4444;
+                    margin-top: 2px;
+                }
+            }
+        }
+    }
+}

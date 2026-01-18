@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="fund_management_control.fund_certificate_edit_form" name="Sửa Chứng chỉ quỹ">
+        <t t-call="web.layout">
+            <t t-set="title">Sửa thông tin Chứng chỉ quỹ</t>
+            <t t-call-assets="web.assets_backend" t-js="true"/>
+            <t t-set="head">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+            </t>
+
+            <!-- Header Container for Management -->
+            <div id="headermana-container"></div>
+
+            <div class="fund-management-container">
+                <div class="dashboard-shell">
+                    <div id="sidebarWidget"></div>
+
+                    <main class="dashboard-main">
+                        <div class="form-main-container">
+                            <div class="form-card">
+                                <div class="card-header-gradient">
+                                    <h2 class="h3"><i class="fas fa-edit me-2"></i>Sửa thông tin Chứng chỉ quỹ</h2>
+                                    <p>Cập nhật thông tin chi tiết cho chứng chỉ quỹ.</p>
+                                </div>
+
+                                <form action="/fund_certificate/update" method="POST" enctype="multipart/form-data" id="fundCertificateEditForm" novalidate="1">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" name="cert_id" t-att-value="cert.id"/>
+                                    
+                                    <!-- Section 1: Basic Information -->
+                                    <div class="form-section">
+                                        <div class="section-header">
+                                            <div class="section-icon"><i class="fas fa-info-circle fa-lg text-primary"></i></div>
+                                            <div>
+                                                <h5 class="mb-1">Thông tin cơ bản</h5>
+                                                <small class="text-muted">Cập nhật tên và mã định danh của quỹ.</small>
+                                            </div>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="symbol" class="form-label fw-semibold">Mã quỹ <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control" id="symbol" name="symbol" t-att-value="cert.symbol" required="1" maxlength="10"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="market" class="form-label fw-semibold">Sàn giao dịch <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="market" name="market" required="1">
+                                                    <option value="HOSE" t-att-selected="cert.market == 'HOSE'">HOSE</option>
+                                                    <option value="HNX" t-att-selected="cert.market == 'HNX'">HNX</option>
+                                                    <option value="UPCOM" t-att-selected="cert.market == 'UPCOM'">UPCOM</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="short_name_vn" class="form-label fw-semibold">Tên viết tắt (VN)</label>
+                                                <input type="text" class="form-control" id="short_name_vn" name="short_name_vn" t-att-value="cert.short_name_vn"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="short_name_en" class="form-label fw-semibold">Tên viết tắt (EN)</label>
+                                                <input type="text" class="form-control" id="short_name_en" name="short_name_en" t-att-value="cert.short_name_en"/>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="fund_color" class="form-label fw-semibold">Màu đại diện</label>
+                                                <input type="color" class="form-control form-control-color" id="fund_color" name="fund_color" t-att-value="cert.fund_color"/>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="current_price" class="form-label fw-semibold">Giá hiện tại</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="current_price" name="current_price" t-att-value="cert.current_price"/>
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="reference_price" class="form-label fw-semibold">Giá tham chiếu</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="reference_price" name="reference_price" t-att-value="cert.reference_price"/>
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="ceiling_price" class="form-label fw-semibold">Giá trần</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="ceiling_price" name="ceiling_price" t-att-value="cert.ceiling_price"/>
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="floor_price" class="form-label fw-semibold">Giá sàn</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="floor_price" name="floor_price" t-att-value="cert.floor_price"/>
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="initial_certificate_quantity" class="form-label fw-semibold">Số lượng chứng chỉ quỹ đóng ban đầu</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="initial_certificate_quantity" name="initial_certificate_quantity" t-att-value="cert.initial_certificate_quantity"/>
+                                                    <span class="input-group-text">chứng chỉ</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="initial_certificate_price" class="form-label fw-semibold">Giá chứng chỉ quỹ ban đầu</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="initial_certificate_price" name="initial_certificate_price" t-att-value="cert.initial_certificate_price"/>
+                                                    <span class="input-group-text">VND</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="capital_cost" class="form-label fw-semibold">Chi phí vốn</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" class="form-control" id="capital_cost" name="capital_cost" t-att-value="cert.capital_cost"/>
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 2: Timing Information -->
+                                    <div class="form-section">
+                                        <div class="section-header">
+                                            <div class="section-icon"><i class="fas fa-calendar-alt fa-lg text-info"></i></div>
+                                            <div>
+                                                <h5 class="mb-1">Thông tin thời gian</h5>
+                                                <small class="text-muted">Cập nhật lịch giao dịch và các thời hạn.</small>
+                                            </div>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label for="inception_date" class="form-label fw-semibold">Thời gian đóng sổ lệnh <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" id="inception_date" name="inception_date" t-att-value="cert.inception_date and cert.inception_date.strftime('%Y-%m-%dT%H:%M')" required="1"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="closure_date" class="form-label fw-semibold">Ngày đóng sổ lệnh <span class="text-danger">*</span></label>
+                                                <input type="date" class="form-control" id="closure_date" name="closure_date" t-att-value="cert.closure_date and cert.closure_date.strftime('%Y-%m-%d')" required="1"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="receive_money_time" class="form-label fw-semibold">Thời điểm ghi nhận tiền <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" class="form-control" id="receive_money_time" name="receive_money_time" t-att-value="cert.receive_money_time and cert.receive_money_time.strftime('%Y-%m-%dT%H:%M')" required="1"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="payment_deadline" class="form-label fw-semibold">Thời hạn thanh toán bán <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="payment_deadline" name="payment_deadline" t-att-value="cert.payment_deadline" required="1"/>
+                                                    <span class="input-group-text">ngày</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="redemption_time" class="form-label fw-semibold">Thời gian xử lý hoán đổi <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="redemption_time" name="redemption_time" t-att-value="cert.redemption_time" required="1"/>
+                                                    <span class="input-group-text">ngày</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="report_website" class="form-label fw-semibold">Website báo cáo <span class="text-danger">*</span></label>
+                                                <input type="url" class="form-control" id="report_website" name="report_website" t-att-value="cert.report_website" required="1"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Section 3: Product Classification -->
+                                    <div class="form-section">
+                                        <div class="section-header">
+                                            <div class="section-icon"><i class="fas fa-sitemap fa-lg text-warning"></i></div>
+                                            <div>
+                                                <h5 class="mb-1">Phân loại sản phẩm</h5>
+                                                <small class="text-muted">Cập nhật các thuộc tính của quỹ.</small>
+                                            </div>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-md-3">
+                                                <label for="fund_type" class="form-label fw-semibold">Loại quỹ <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="fund_type" name="fund_type" required="1">
+                                                    <t t-foreach="fund_types" t-as="ft">
+                                                        <option t-att-value="ft[0]" t-esc="ft[1]" t-att-selected="ft[0] == cert.fund_type"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="risk_level" class="form-label fw-semibold">Mức độ rủi ro <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="risk_level" name="risk_level" required="1">
+                                                    <t t-foreach="risk_levels" t-as="rl">
+                                                        <option t-att-value="rl[0]" t-esc="rl[1]" t-att-selected="rl[0] == cert.risk_level"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="product_type" class="form-label fw-semibold">Loại sản phẩm <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="product_type" name="product_type" required="1">
+                                                    <t t-foreach="product_types" t-as="pt">
+                                                        <option t-att-value="pt[0]" t-esc="pt[1]" t-att-selected="pt[0] == cert.product_type"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label for="product_status" class="form-label fw-semibold">Trạng thái <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="product_status" name="product_status" required="1">
+                                                    <t t-foreach="product_statuses" t-as="ps">
+                                                        <option t-att-value="ps[0]" t-esc="ps[1]" t-att-selected="ps[0] == cert.product_status"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 4: Additional Information -->
+                                    <div class="form-section">
+                                        <div class="section-header">
+                                            <div class="section-icon"><i class="fas fa-puzzle-piece fa-lg text-success"></i></div>
+                                            <div>
+                                                <h5 class="mb-1">Thông tin bổ sung</h5>
+                                                <small class="text-muted">Cập nhật mô tả, hình ảnh và lịch giao dịch.</small>
+                                            </div>
+                                        </div>
+                                        <div class="row g-3">
+                                            <div class="col-lg-7">
+                                                <label for="fund_description" class="form-label fw-semibold">Mô tả chi tiết quỹ</label>
+                                                <textarea class="form-control" id="fund_description" name="fund_description" rows="12" t-esc="cert.fund_description"></textarea>
+                                            </div>
+                                            <div class="col-lg-5">
+                                                <div class="mb-3">
+                                                    <label for="fund_image" class="form-label fw-semibold">Thay đổi hình ảnh đại diện</label>
+                                                    <input class="form-control" type="file" id="fund_image" name="fund_image" accept="image/png, image/jpeg"/>
+                                                    <small class="text-muted">Để trống nếu không muốn thay đổi ảnh hiện tại.</small>
+                                                </div>
+                                                <div>
+                                                    <label class="form-label fw-semibold mb-2">Lịch giao dịch trong tuần</label>
+                                                    <div class="row g-2 trading-days-grid">
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="monday" name="monday" t-att-checked="cert.monday and 'checked'"/><label class="form-check-label w-100" for="monday">Thứ Hai</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="tuesday" name="tuesday" t-att-checked="cert.tuesday and 'checked'"/><label class="form-check-label w-100" for="tuesday">Thứ Ba</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="wednesday" name="wednesday" t-att-checked="cert.wednesday and 'checked'"/><label class="form-check-label w-100" for="wednesday">Thứ Tư</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="thursday" name="thursday" t-att-checked="cert.thursday and 'checked'"/><label class="form-check-label w-100" for="thursday">Thứ Năm</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="friday" name="friday" t-att-checked="cert.friday and 'checked'"/><label class="form-check-label w-100" for="friday">Thứ Sáu</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="saturday" name="saturday" t-att-checked="cert.saturday and 'checked'"/><label class="form-check-label w-100" for="saturday">Thứ Bảy</label></div></div>
+                                                        <div class="col-6"><div class="form-check"><input class="form-check-input" type="checkbox" id="sunday" name="sunday" t-att-checked="cert.sunday and 'checked'"/><label class="form-check-label w-100" for="sunday">Chủ Nhật</label></div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Section 5: Action Buttons -->
+                                    <div class="form-section">
+                                        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                                            <a href="/fund_certificate_list" class="btn btn-form-secondary d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-times me-2"></i>Hủy bỏ
+                                            </a>
+                                            <button type="submit" class="btn btn-form-primary d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

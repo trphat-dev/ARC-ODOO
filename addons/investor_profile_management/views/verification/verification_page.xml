@@ -1,0 +1,39 @@
+<odoo>
+  <template id="investor_profile_management.verification_page" name="Verification Completion">
+    <t t-call="web.layout">
+      <t t-set="title">Xác thực tài khoản</t>
+
+      <t t-call-assets="web.assets_frontend" t-js="true"/>
+      <t t-set="head">
+        <!-- Google Fonts: Inter & Playfair Display -->
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+        
+        <!-- Bootstrap 5 -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+        
+        <!-- Font Awesome 6 -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+        
+        <!-- Meta viewport for responsive -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+        <meta name="theme-color" content="#FF8C42"/>
+      </t>
+
+      <!-- Header Container -->
+      <div id="header-container"></div>
+
+      <!-- OWL Component Container -->
+      <div id="verificationWidget" class="w-100" style="display: none;">
+        <!-- OWL component will be rendered here -->
+      </div>
+
+      <!-- Footer Container -->
+      <div id="footer-container"></div>
+
+      <!-- Bootstrap JS -->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </t>
+  </template>
+</odoo>

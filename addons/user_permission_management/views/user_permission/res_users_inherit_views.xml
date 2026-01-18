@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit res.users form view to add permission management -->
+    <record id="view_users_form_inherit_permission" model="ir.ui.view">
+        <field name="name">res.users.form.inherit.permission</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <!-- Add permission type field in header or after name -->
+            <field name="name" position="after">
+                <field name="permission_type" widget="badge" 
+                       decoration-info="permission_type == 'system_admin'"
+                       decoration-warning="permission_type == 'investor_user'"
+                       decoration-success="permission_type == 'fund_operator'"
+                       readonly="1"
+                       optional="hide"/>
+            </field>
+            
+            <!-- Add permission management tab in notebook -->
+            <xpath expr="//notebook" position="inside">
+                <page string="Quản lý Phân quyền" name="permission_management" groups="base.group_system">
+                    <group>
+                        <group string="Phân quyền">
+                            <field name="editable_permission_type" widget="radio" 
+                                   options="{'horizontal': true}"
+                                   required="0"
+                                   placeholder="Chọn loại quyền cho user này"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Thông tin Phân quyền Chi tiết">
+                            <field name="permission_management_ids" nolabel="1" context="{'default_user_id': id}">
+                                <list>
+                                    <field name="permission_type" widget="badge" 
+                                           decoration-info="permission_type == 'system_admin'"
+                                           decoration-warning="permission_type == 'investor_user'"
+                                           decoration-success="permission_type == 'fund_operator'"/>
+                                    <field name="is_market_maker" widget="boolean_toggle" 
+                                           invisible="permission_type != 'investor_user'"
+                                           string="Nhà tạo lập"/>
+                                    <field name="phone"/>
+                                    <field name="notes"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="create_date" optional="hide"/>
+                                </list>
+                                <form>
+                                    <sheet>
+                                        <group>
+                                            <group>
+                                                <field name="permission_type" widget="radio" 
+                                                       options="{'horizontal': true}"/>
+                                                <field name="is_market_maker" 
+                                                       invisible="permission_type != 'investor_user'"
+                                                       help="Bật tùy chọn này để cho phép Portal User (Nhà đầu tư) truy cập trang sổ lệnh (order_matching). Chỉ áp dụng cho Investor User."/>
+                                                <field name="phone"/>
+                                                <field name="active"/>
+                                            </group>
+                                            <group>
+                                                <field name="notes" placeholder="Nhập ghi chú về phân quyền..."/>
+                                            </group>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Lưu ý:</strong> Thay đổi "Phân quyền" ở trên sẽ tự động cập nhật Groups và Permission Management record. 
+                        Bạn có thể chỉnh sửa chi tiết trong danh sách bên dưới.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit res.users list view to add permission type column -->
+    <record id="view_users_tree_inherit_permission" model="ir.ui.view">
+        <field name="name">res.users.tree.inherit.permission</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_tree"/>
+        <field name="arch" type="xml">
+            <field name="login" position="after">
+                <field name="permission_type" widget="badge" 
+                       decoration-info="permission_type == 'system_admin'"
+                       decoration-warning="permission_type == 'investor_user'"
+                       decoration-success="permission_type == 'fund_operator'"
+                       optional="hide"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Inherit res.users search view to add permission type filter -->
+    <record id="view_users_search_inherit_permission" model="ir.ui.view">
+        <field name="name">res.users.search.inherit.permission</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_search"/>
+        <field name="arch" type="xml">
+            <!-- Add filters at the end of search view -->
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="System Admin" name="system_admin" domain="[('permission_type', '=', 'system_admin')]"/>
+                <filter string="Investor User" name="investor_user" domain="[('permission_type', '=', 'investor_user')]"/>
+                <filter string="Fund Operator" name="fund_operator" domain="[('permission_type', '=', 'fund_operator')]"/>
+                <filter string="Chưa phân quyền" name="no_permission" domain="[('permission_type', '=', False)]"/>
+                <separator/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Theo Trạng thái" name="group_active" context="{'group_by': 'active'}"/>
+                    <filter string="Theo Company" name="group_company" context="{'group_by': 'company_id'}"/>
+                    <filter string="Theo Groups" name="group_groups" context="{'group_by': 'groups_id'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cap Config: List/Form/Search/Action/Menu -->
+    <record id="view_nav_cap_config_tree" model="ir.ui.view">
+        <field name="name">nav.cap.config.list</field>
+        <field name="model">nav.cap.config</field>
+        <field name="arch" type="xml">
+            <list string="Chặn trên / Chặn dưới" editable="bottom" create="true" edit="false" delete="true">
+                <field name="cap_upper" widget="monetary" digits="[16,2]" string="Chặn trên"/>
+                <field name="cap_lower" widget="monetary" digits="[16,2]" string="Chặn dưới"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="description" widget="text"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_nav_cap_config_form" model="ir.ui.view">
+        <field name="name">nav.cap.config.form</field>
+        <field name="model">nav.cap.config</field>
+        <field name="arch" type="xml">
+            <form string="Chặn trên / Chặn dưới">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="toggle_active" type="object" class="oe_stat_button" icon="fa-archive">
+                            <field name="active" widget="boolean_button" options='{"terminology": "archive"}'/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>Cấu hình chặn trên / chặn dưới</h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Cấu hình">
+                            <field name="cap_upper" widget="monetary" digits="[16,2]" string="Chặn trên"/>
+                            <field name="cap_lower" widget="monetary" digits="[16,2]" string="Chặn dưới"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Mô tả">
+                            <field name="description" widget="text" placeholder="Nhập mô tả cấu hình chặn..."/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_nav_cap_config_search" model="ir.ui.view">
+        <field name="name">nav.cap.config.search</field>
+        <field name="model">nav.cap.config</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Chặn trên / Chặn dưới">
+                <field name="cap_upper"/>
+                <field name="cap_lower"/>
+                <separator/>
+                <filter string="Đang dùng" name="active_true" domain="[('active','=',True)]"/>
+                <filter string="Ngưng dùng" name="active_false" domain="[('active','=',False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_nav_cap_config" model="ir.actions.act_window">
+        <field name="name">Chặn trên / Chặn dưới</field>
+        <field name="res_model">nav.cap.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{
+            'search_default_active_true': 1,
+            'default_active': True
+        }</field>
+        <field name="views" eval="[(ref('view_nav_cap_config_tree'),'list'), (ref('view_nav_cap_config_form'),'form')]"/>
+    </record>
+
+    <menuitem id="menu_nav_cap_config"
+              name="Chặn trên / Chặn dưới"
+              parent="menu_nav_management_root"
+              action="action_nav_cap_config"
+              sequence="11"/>
+</odoo>
+
+

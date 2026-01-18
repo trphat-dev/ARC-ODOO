@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_investor_profile_user,investor.profile.user,model_investor_profile,base.group_user,1,1,1,1
+access_investor_bank_account_user,investor.bank.account.user,model_investor_bank_account,base.group_user,1,1,1,1
+access_investor_address_user,investor.address.user,model_investor_address,base.group_user,1,1,1,1
+access_status_info_user,status.info.user,model_status_info,base.group_user,1,1,1,1
+access_api_record_user,api.record.user,model_api_record,base.group_user,1,1,1,1
+access_api_record_manager,api.record.manager,model_api_record,base.group_system,1,1,1,1
+access_ekyc_api_config_user,ekyc.api.config.user,model_ekyc_api_config,base.group_user,1,1,1,1
+access_ekyc_api_config_manager,ekyc.api.config.manager,model_ekyc_api_config,base.group_system,1,1,1,1

@@ -1,0 +1,18 @@
+/* Trading Module CSS */
+
+.trading-order-status {
+    font-weight: bold;
+}
+
+.trading-success {
+    color: #28a745;
+}
+
+.trading-error {
+    color: #dc3545;
+}
+
+.trading-warning {
+    color: #ffc107;
+}
+

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_user_permission_management_list" model="ir.ui.view">
+        <field name="name">user.permission.management.list</field>
+        <field name="model">user.permission.management</field>
+        <field name="arch" type="xml">
+            <list string="Quản lý Phân quyền Người dùng" decoration-muted="active == False">
+                <field name="name"/>
+                <field name="login"/>
+                <field name="email"/>
+                <field name="permission_type" widget="badge" 
+                       decoration-info="permission_type == 'system_admin'"
+                       decoration-warning="permission_type == 'investor_user'"
+                       decoration-success="permission_type == 'fund_operator'"/>
+                <field name="is_market_maker" widget="boolean_toggle" 
+                       invisible="permission_type != 'investor_user'"
+                       string="Nhà tạo lập"/>
+                <field name="phone"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="user_id" invisible="1"/>
+                <field name="create_date" optional="hide"/>
+                <field name="write_date" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_user_permission_management_form" model="ir.ui.view">
+        <field name="name">user.permission.management.form</field>
+        <field name="model">user.permission.management</field>
+        <field name="arch" type="xml">
+            <form string="Quản lý Phân quyền Người dùng">
+                <header>
+                    <button name="action_activate" 
+                            string="Kích hoạt" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="active == True"/>
+                    <button name="action_deactivate" 
+                            string="Vô hiệu hóa" 
+                            type="object" 
+                            class="btn-secondary"
+                            invisible="active == False"/>
+                    <field name="active" widget="boolean_button" 
+                           options='{"terminology": "archive"}'/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_user" 
+                                type="object" 
+                                class="oe_stat_button" 
+                                icon="fa-users"
+                                invisible="not user_id">
+                            <field name="user_id" widget="statinfo" string="User Odoo"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group string="Thông tin cơ bản">
+                            <field name="name" readonly="1" 
+                                   invisible="not user_id"
+                                   placeholder="Sẽ được tạo tự động từ User Odoo"/>
+                            <field name="login" required="1" 
+                                   readonly="user_id"
+                                   placeholder="Tên đăng nhập (bắt buộc)"/>
+                            <field name="email" required="1" 
+                                   readonly="user_id"
+                                   placeholder="Email (bắt buộc)"/>
+                            <field name="phone" placeholder="Số điện thoại"/>
+                            <field name="password" widget="password" 
+                                   invisible="user_id"
+                                   placeholder="Nhập mật khẩu cho user mới (tùy chọn)"/>
+                        </group>
+                        <group string="Phân quyền">
+                            <field name="permission_type" required="1" widget="radio" 
+                                   options="{'horizontal': true}"/>
+                            <field name="is_market_maker" 
+                                   invisible="permission_type != 'investor_user'"
+                                   help="Bật tùy chọn này để cho phép Portal User (Nhà đầu tư) truy cập trang sổ lệnh (order_matching). Chỉ áp dụng cho Investor User."/>
+                            <field name="user_id" readonly="1" 
+                                   invisible="not user_id"
+                                   options="{'no_create': True, 'no_create_edit': True}"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info" role="alert" 
+                         invisible="user_id">
+                        <strong>Lưu ý:</strong> Khi tạo mới, User Odoo sẽ được tạo tự động dựa trên thông tin Login, Email và Permission Type. 
+                        Vui lòng đảm bảo Login và Email chưa được sử dụng trong hệ thống.
+                    </div>
+                    <notebook>
+                        <page string="Ghi chú" name="notes">
+                            <group>
+                                <field name="notes" placeholder="Nhập ghi chú về người dùng..." nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Thông tin Audit" name="audit">
+                            <group>
+                                <group string="Thông tin tạo">
+                                    <field name="create_uid" readonly="1"/>
+                                    <field name="create_date" readonly="1"/>
+                                </group>
+                                <group string="Thông tin cập nhật">
+                                    <field name="write_uid" readonly="1"/>
+                                    <field name="write_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_user_permission_management_search" model="ir.ui.view">
+        <field name="name">user.permission.management.search</field>
+        <field name="model">user.permission.management</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Phân quyền Người dùng">
+                <field name="name" string="Tên"/>
+                <field name="login" string="Tên đăng nhập"/>
+                <field name="email" string="Email"/>
+                <field name="phone" string="Số điện thoại"/>
+                <field name="user_id" string="User Odoo"/>
+                <filter string="Đang hoạt động" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Vô hiệu hóa" name="inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter string="System Admin" name="system_admin" domain="[('permission_type', '=', 'system_admin')]"/>
+                <filter string="Investor User" name="investor_user" domain="[('permission_type', '=', 'investor_user')]"/>
+                <filter string="Fund Operator" name="fund_operator" domain="[('permission_type', '=', 'fund_operator')]"/>
+                <group expand="0" string="Nhóm">
+                    <filter string="Theo Loại quyền" name="group_permission_type" context="{'group_by': 'permission_type'}"/>
+                    <filter string="Theo Trạng thái" name="group_active" context="{'group_by': 'active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Backend List View - Hiển thị tất cả users từ res.users -->
+    <record id="action_user_permission_management_backend" model="ir.actions.act_window">
+        <field name="name">Quản lý Phân quyền Người dùng</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Quản lý phân quyền người dùng
+            </p>
+            <p>
+                Hiển thị tất cả users trong hệ thống để dễ dàng phân quyền. 
+                Bạn có thể tạo permission record cho user chưa có phân quyền hoặc chỉnh sửa phân quyền cho user đã có.
+            </p>
+        </field>
+    </record>
+
+    <!-- Action to view res.users (safe version without domain issues) -->
+    <record id="action_view_res_users_safe" model="ir.actions.act_window">
+        <field name="name">Users</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+    </record>
+
+</odoo>
+

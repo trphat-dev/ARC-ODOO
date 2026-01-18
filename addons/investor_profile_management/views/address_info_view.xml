@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Address Tree View -->
+    <record id="view_investor_address_tree" model="ir.ui.view">
+        <field name="name">investor.address.list</field>
+        <field name="model">investor.address</field>
+        <field name="type">list</field>
+        <field name="arch" type="xml">
+            <list string="Address Information">
+                <field name="investor_id"/>
+                <field name="street"/>
+                <field name="state_id"/>
+                <field name="country_id"/>
+                <field name="is_default"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Address Form View -->
+    <record id="view_investor_address_form" model="ir.ui.view">
+        <field name="name">investor.address.form</field>
+        <field name="model">investor.address</field>
+        <field name="arch" type="xml">
+            <form string="Address">
+                <sheet>
+                    <group>
+                         <field name="investor_id" string="Chọn nhà đầu tư" required="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Thông tin chi tiết địa chỉ">
+                            <group>
+                                <group>
+                                    <field name="street" string="Số nhà và tên đường"/>
+                                    <field name="district" string="Quận/Huyện"/>
+                                    <field name="ward" string="Phường/Xã"/>
+                                </group>
+                                <group>
+                                    <field name="country_id" string="Quốc gia"/>
+                                    <field name="state_id" string="Tỉnh/Thành"/>
+                                    <field name="zip" string="Mã bưu chính"/>
+                                    <field name="is_default" string="Địa chỉ mặc định"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Address Search View -->
+    <record id="view_investor_address_search" model="ir.ui.view">
+        <field name="name">investor.address.search</field>
+        <field name="model">investor.address</field>
+        <field name="arch" type="xml">
+            <search string="Search Address">
+                <field name="investor_id"/>
+                <field name="street"/>
+                <field name="state_id"/>
+                <field name="country_id"/>
+                <separator/>
+                <filter string="Default Addresses" name="default" domain="[('is_default', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Investor" name="group_by_investor" context="{'group_by': 'investor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Address Action -->
+    <record id="action_investor_address" model="ir.actions.act_window">
+        <field name="name">Address Information</field>
+        <field name="res_model">investor.address</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_investor_address_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new address
+            </p>
+        </field>
+    </record>
+</odoo>

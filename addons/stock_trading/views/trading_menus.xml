@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Menu chính -->
+    <menuitem id="menu_trading_root"
+              name="Stock Trading"
+              sequence="100"
+              web_icon="stock_trading,static/description/icon.png"/>
+    
+    <!-- Configuration -->
+    <menuitem id="menu_trading_config"
+              name="Configuration"
+              parent="menu_trading_root"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_config_list"
+              name="API Configuration"
+              parent="menu_trading_config"
+              action="action_trading_config"
+              sequence="10"/>
+    
+    <!-- Orders -->
+    <menuitem id="menu_trading_orders"
+              name="Orders"
+              parent="menu_trading_root"
+              sequence="20"/>
+    
+    <menuitem id="menu_trading_orders_list"
+              name="Trading Orders"
+              parent="menu_trading_orders"
+              action="action_trading_order"
+              sequence="10"/>
+    
+    <!-- Account & Position -->
+    <menuitem id="menu_trading_account"
+              name="Account &amp; Position"
+              parent="menu_trading_root"
+              sequence="30"/>
+    
+    <menuitem id="menu_trading_account_balance"
+              name="Account Balance"
+              parent="menu_trading_account"
+              action="action_trading_account_balance"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_position"
+              name="Position"
+              parent="menu_trading_account"
+              action="action_trading_position"
+              sequence="20"/>
+    
+    <menuitem id="menu_trading_max_quantity"
+              name="Max Quantity"
+              parent="menu_trading_account"
+              action="action_trading_max_quantity"
+              sequence="30"/>
+    
+    <!-- Cash Management -->
+    <menuitem id="menu_trading_cash"
+              name="Cash Management"
+              parent="menu_trading_root"
+              sequence="40"/>
+    
+    <menuitem id="menu_trading_cash_cia"
+              name="Cash In Advance"
+              parent="menu_trading_cash"
+              action="action_trading_cash_cia"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_cash_transfer"
+              name="Cash Transfer"
+              parent="menu_trading_cash"
+              action="action_trading_cash_transfer"
+              sequence="20"/>
+    
+    <menuitem id="menu_trading_cash_transfer_history"
+              name="Transfer History"
+              parent="menu_trading_cash"
+              action="action_trading_cash_transfer_history"
+              sequence="30"/>
+    
+    <!-- Online Right Subscription -->
+    <menuitem id="menu_trading_ors"
+              name="Online Right Subscription"
+              parent="menu_trading_root"
+              sequence="50"/>
+    
+    <menuitem id="menu_trading_ors_list"
+              name="ORS Registration"
+              parent="menu_trading_ors"
+              action="action_trading_ors"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_ors_dividend"
+              name="ORS Dividend"
+              parent="menu_trading_ors"
+              action="action_trading_ors_dividend"
+              sequence="20"/>
+    
+    <!-- Stock Transfer -->
+    <menuitem id="menu_trading_stock_transfer"
+              name="Stock Transfer"
+              parent="menu_trading_root"
+              sequence="60"/>
+    
+    <menuitem id="menu_trading_stock_transfer_list"
+              name="Stock Transfer"
+              parent="menu_trading_stock_transfer"
+              action="action_trading_stock_transfer"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_stock_transferable"
+              name="Transferable Stocks"
+              parent="menu_trading_stock_transfer"
+              action="action_trading_stock_transferable"
+              sequence="20"/>
+    
+    <menuitem id="menu_trading_stock_transfer_history"
+              name="Transfer History"
+              parent="menu_trading_stock_transfer"
+              action="action_trading_stock_transfer_history"
+              sequence="30"/>
+    
+    <!-- History & Reports -->
+    <menuitem id="menu_trading_history"
+              name="History &amp; Reports"
+              parent="menu_trading_root"
+              sequence="70"/>
+    
+    <menuitem id="menu_trading_order_history"
+              name="Order History"
+              parent="menu_trading_history"
+              action="action_trading_order_history"
+              sequence="10"/>
+    
+    <menuitem id="menu_trading_order_book"
+              name="Order Book"
+              parent="menu_trading_history"
+              action="action_trading_order_book"
+              sequence="20"/>
+    
+    <menuitem id="menu_trading_rate_limit"
+              name="Rate Limit"
+              parent="menu_trading_history"
+              action="action_trading_rate_limit"
+              sequence="30"/>
+</odoo>
+

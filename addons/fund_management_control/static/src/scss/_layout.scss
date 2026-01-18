@@ -1,0 +1,61 @@
+// Imports handled by manifest
+
+body {
+    background-color: $bg-body;
+    font-family: $font-family-base;
+    color: $text-primary;
+    -webkit-font-smoothing: antialiased;
+}
+
+.dashboard-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.dashboard-main {
+    flex: 1;
+    overflow-x: hidden;
+    padding: $spacing-base * 1.5;
+    background-color: $bg-body;
+}
+
+.fund-management-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+// Page Header
+.page-header {
+    margin-bottom: $spacing-base * 2;
+    
+    h1 {
+        font-weight: 700;
+        color: $primary-color;
+        margin-bottom: 0.25rem;
+    }
+    
+    .breadcrumb {
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        
+        .breadcrumb-item {
+            font-size: 0.875rem;
+            
+            a {
+                color: $text-secondary;
+                text-decoration: none;
+                transition: color 0.2s;
+                
+                &:hover {
+                    color: $secondary-color;
+                }
+            }
+            
+            &.active {
+                color: $secondary-color;
+                font-weight: 500;
+            }
+        }
+    }
+}

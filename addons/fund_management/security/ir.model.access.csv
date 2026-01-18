@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fund_signed_contract,fund.signed.contract,model_fund_signed_contract,,1,1,1,1
+access_portfolio_investment,portfolio.investment,model_portfolio_investment,,1,1,1,1
+access_portfolio_fund,portfolio.fund,model_portfolio_fund,,1,1,1,1
+access_portfolio_transaction,portfolio.transaction,model_portfolio_transaction,,1,1,1,1
+access_portfolio_account_balance,portfolio.account_balance,model_portfolio_account_balance,,1,1,1,1
+access_portfolio_balance_history,portfolio.balance_history,model_portfolio_balance_history,,1,1,1,1
+access_portfolio_comparison,portfolio.comparison,model_portfolio_comparison,,1,1,1,1

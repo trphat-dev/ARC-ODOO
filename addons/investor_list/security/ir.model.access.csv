@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_investor_list_user,investor.list.user,model_investor_list,base.group_user,1,1,1,0
+access_investor_list_manager,investor.list.manager,model_investor_list,base.group_system,1,1,1,1

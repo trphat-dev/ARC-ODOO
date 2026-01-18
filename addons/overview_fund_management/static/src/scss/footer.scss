@@ -1,0 +1,176 @@
+// Footer Component Styles
+// =========================
+
+.hd-footer {
+    background: #f5f0e8;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    margin-top: auto;
+    
+    .footer-main {
+        padding: 40px 24px;
+        
+        @media (max-width: 991px) {
+            padding: 30px 16px;
+        }
+    }
+    
+    // Brand Section
+    .footer-brand {
+        margin-bottom: 16px;
+        
+        .footer-logo {
+            height: 40px;
+            margin-bottom: 4px;
+        }
+        
+        .footer-slogan {
+            font-size: 0.65rem;
+            color: #666;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+    }
+    
+    // Company Info
+    .footer-company-info {
+        h6 {
+            font-size: 0.9rem;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.5;
+        }
+    }
+    
+    .footer-contact {
+        margin-top: 16px;
+        
+        .text-primary {
+            color: #f97316 !important;
+        }
+        
+        p {
+            font-size: 0.8rem;
+            color: #666;
+            
+            a {
+                color: #f97316;
+                text-decoration: none;
+                
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
+        }
+    }
+    
+    // Section Headings
+    .footer-heading {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        position: relative;
+    }
+    
+    // Links
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        
+        li {
+            margin-bottom: 10px;
+            
+            a {
+                font-size: 0.85rem;
+                color: #666;
+                text-decoration: none;
+                transition: color 0.2s ease;
+                
+                &:hover {
+                    color: #f97316;
+                }
+            }
+        }
+    }
+    
+    // Social Icons
+    .footer-social {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        
+        .social-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            
+            &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            }
+            
+            &.facebook {
+                background: #1877f2;
+            }
+            
+            &.youtube {
+                background: #ff0000;
+            }
+            
+            &.zalo {
+                background: #0068ff;
+                font-size: 10px;
+                font-weight: bold;
+            }
+        }
+    }
+    
+    // Footer Bottom
+    .footer-bottom {
+        padding: 16px 24px;
+        background: #f5f0e8;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        
+        p {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .footer-policy-link {
+            font-size: 0.8rem;
+            color: #666;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            
+            &:hover {
+                color: #f97316;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            text-align: center;
+            
+            .col-md-4 {
+                margin-bottom: 8px;
+                
+                &.text-end {
+                    text-align: center !important;
+                }
+            }
+        }
+    }
+}

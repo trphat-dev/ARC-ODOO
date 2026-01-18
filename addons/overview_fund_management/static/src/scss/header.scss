@@ -1,0 +1,554 @@
+
+
+/* Mixins & Variables */
+/* Mixins & Variables */
+/* Mixins & Variables */
+/* Mixins & Variables */
+$primary-color: #f97316;    // Orange accent
+$primary-hover: #ea580c;
+$bg-header: #ffffff;        // Solid White
+$bg-scrolled: rgba(255, 255, 255, 0.98);
+$header-gradient: linear-gradient(135deg, #b9ceea 0%, #e9caa4 100%); // New Gradient
+$text-primary: #0f172a;     // Slate-900 (Almost Black) for maximum contrast
+$text-secondary: #334155;   // Slate-700 for clearer secondary text
+$border-color: rgba(226, 232, 240, 0.8); // Light border
+
+$shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+$shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+$radius-md: 0.75rem;
+$radius-lg: 1rem;
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$header-height: 80px;
+$z-index-fixed: 1030;
+
+/* Main Header Container */
+.hd-header-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: $z-index-fixed;
+    background: $header-gradient;
+    // backdrop-filter: blur(12px); // Removed blur for cleaner white look or keep if desired. Let's keep a subtle one if transparency is used, but for solid white it's redundant. let's re-add transparency to bg if using blur.
+    // actually user said "màu dưới trên phía trắng" which might imply clean white. Let's stick to solid white for best contrast with the dark slate text.
+    border-bottom: 1px solid $border-color;
+    box-shadow: $shadow-sm;
+    height: $header-height;
+    display: flex;
+    align-items: center;
+    transition: $transition;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+
+    /* Pattern Overlay */
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        // CSS-only Wave/Scale Pattern (No URL)
+        background-color: transparent;
+        background-image: 
+            radial-gradient(circle at 100% 150%, rgba(255, 255, 255, 0.4) 24%, transparent 25%),
+            radial-gradient(circle at 0% 150%, rgba(255, 255, 255, 0.4) 24%, transparent 25%),
+            radial-gradient(circle at 50% -50%, rgba(255, 255, 255, 0.4) 24%, transparent 25%);
+        background-size: 40px 20px;
+        opacity: 0.4; // Adjusted for visibility of the gradient intersection
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    &.scrolled {
+        background: $header-gradient; // Use same gradient
+        box-shadow: $shadow-md;
+        height: 70px; // Shrink slightly on scroll
+    }
+
+    /* Navbar Brand */
+    .navbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0;
+        margin-right: 3rem;
+        
+        img {
+            height: 64px; // Increased to 64px for visibility
+            width: auto;
+            object-fit: contain;
+            transition: $transition;
+            // No filter, keep original logo colors
+        }
+
+        .brand-text {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: $text-primary; // Uses Dark Slate #2c3344
+            letter-spacing: -0.5px;
+            
+            span {
+                color: $primary-color;
+            }
+        }
+    }
+    
+    &.scrolled .navbar-brand img {
+        height: 50px; // Maintain visibility on scroll
+    }
+
+    /* Navigation Menu */
+    .nav-menu {
+        display: flex;
+        align-items: center;
+        gap: 2rem; // Increased gap for cleaner look
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        margin-left: auto;
+        margin-right: auto; // Center the nav
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: $text-secondary; // Muted white
+            transition: $transition;
+            text-decoration: none;
+            white-space: nowrap;
+            position: relative;
+
+            i {
+                font-size: 1.1em;
+                display: none; // Hide icons for cleaner top-level menu as per request image style, or keep if preferred. Let's keep icons but make them subtle.
+                opacity: 0.7;
+            }
+
+            // Underline effect
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: -4px;
+                left: 0;
+                width: 0;
+                height: 2px;
+                background: $primary-color;
+                transition: $transition;
+                opacity: 0;
+            }
+
+            &:hover {
+                color: $text-primary;
+                
+                &::after {
+                    width: 100%;
+                    opacity: 1;
+                }
+                
+                i {
+                    opacity: 1;
+                    color: $primary-color;
+                }
+            }
+
+            &.active {
+                color: $text-primary;
+                font-weight: 600;
+
+                &::after {
+                    width: 100%;
+                    opacity: 1;
+                }
+                
+                i {
+                    opacity: 1;
+                    color: $primary-color;
+                }
+            }
+        }
+    }
+
+    /* Right Actions */
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-left: 0; // Reset margin since nav is centered
+
+        /* Notification Bell */
+        .notification-btn {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: rgba(255, 255, 255, 0.9); // White background for clarity
+            color: $text-secondary;
+            transition: $transition;
+            cursor: pointer;
+
+            &:hover {
+                background: #f1f5f9;
+                color: $primary-color;
+                border-color: rgba(249, 115, 22, 0.2);
+            }
+
+            &.has-new {
+                &::after {
+                    content: '';
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 8px;
+                    height: 8px;
+                    background: #ef4444;
+                    border-radius: 50%;
+                    border: 2px solid #ffffff;
+                }
+            }
+            
+            .badge-count {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ef4444;
+                color: white;
+                font-size: 0.65rem;
+                padding: 0.15rem 0.35rem;
+                border-radius: 1rem;
+                border: 2px solid #ffffff;
+                min-width: 18px;
+                text-align: center;
+            }
+        }
+
+        /* User Profile */
+        .user-dropdown-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.375rem 0.5rem 0.375rem 0.375rem;
+            border-radius: 2rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            background: #ffffff;
+            transition: $transition;
+            cursor: pointer;
+            text-decoration: none;
+
+            &:hover {
+                border-color: rgba(249, 115, 22, 0.3);
+                background: #f8fafc;
+                box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.05);
+            }
+
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, $primary-color, #c2410c);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #ffffff;
+                font-size: 0.875rem;
+                flex-shrink: 0;
+                border: none;
+            }
+
+            .user-info {
+                display: flex;
+                flex-direction: column;
+                margin-right: 0.5rem;
+                
+                .user-name {
+                    font-size: 0.875rem;
+                    font-weight: 600;
+                    color: $text-primary;
+                    line-height: 1.2;
+                }
+                
+                .user-role {
+                    font-size: 0.75rem;
+                    color: $text-secondary;
+                    line-height: 1.2;
+                }
+            }
+            
+            i.fa-chevron-down {
+                color: $text-secondary;
+                font-size: 0.75rem;
+                padding-right: 0.5rem;
+                transition: $transition;
+            }
+            
+            &:hover i.fa-chevron-down {
+                color: $primary-color;
+            }
+        }
+        
+        .login-btn {
+            background: $primary-color;
+            color: $text-primary;
+            font-weight: 600;
+            padding: 0.6rem 1.5rem;
+            border-radius: 2rem;
+            border: none;
+            box-shadow: 0 4px 12px -2px rgba(249, 115, 22, 0.4);
+            transition: $transition;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            &:hover {
+                background: $primary-hover;
+                transform: translateY(-1px);
+                box-shadow: 0 6px 16px -2px rgba(249, 115, 22, 0.5);
+            }
+        }
+        
+        /* Mobile Toggle */
+        .mobile-toggle-btn {
+            display: none; // Hidden on desktop
+            background: transparent;
+            border: none;
+            color: $text-primary;
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            
+            &:hover {
+                color: $primary-color;
+            }
+        }
+    }
+}
+
+/* Dropdown Menus */
+.hd-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    min-width: 280px;
+    background: #ffffff;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    padding: 0.5rem;
+    display: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: $transition;
+    z-index: $z-index-fixed + 10;
+    
+    &.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .dropdown-header {
+        padding: 1rem 1rem;
+        background: linear-gradient(135deg, #b9ceea 0%, #e9caa4 100%); // Match header gradient
+        border-radius: $radius-lg $radius-lg 0 0; // Rounded top corners
+        margin-bottom: 0;
+        
+        h6 {
+            color: $text-primary;
+            font-weight: 600;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        small, .small {
+            color: $text-secondary;
+            display: block; // Ensure it breaks line
+            margin-top: 0.25rem;
+        }
+        
+        .fw-bold {
+            color: $text-primary;
+        }
+        
+        i.text-primary {
+            color: $primary-color !important;
+        }
+    }
+    
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: $text-secondary;
+        border-radius: $radius-md;
+        transition: all 0.2s;
+        text-decoration: none;
+        
+        i {
+            width: 20px;
+            color: $text-secondary;
+            transition: color 0.2s;
+        }
+        
+        &:hover {
+            background: #f8fafc;
+            color: $primary-color;
+            
+            i {
+                color: $primary-color;
+            }
+        }
+        
+        &.text-danger:hover {
+            color: #ef4444;
+            background: #fef2f2;
+            
+            i {
+                color: #ef4444;
+            }
+        }
+    }
+}
+
+/* Notification List Specifics */
+.notification-dropdown {
+    width: 450px; // Increased width to prevent squeezing
+    background: #ffffff;
+    
+    .notif-header {
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+        
+        h6 { color: $text-primary; }
+    }
+    
+    .notif-list {
+        .notif-item {
+            border-bottom: 1px solid #f1f5f9;
+            
+            &.unread {
+                background: #fff7ed; // Orange-50
+                
+                &::before {
+                    background: $primary-color;
+                }
+            }
+            
+            &:hover {
+                background: #f8fafc;
+            }
+            
+            .notif-title {
+                color: $text-primary;
+            }
+            
+            .notif-desc {
+                color: $text-secondary;
+                
+                strong {
+                    color: $text-primary;
+                }
+            }
+            
+            .notif-meta {
+                color: #94a3b8;
+            }
+        }
+        
+        .empty-state {
+            color: $text-secondary;
+            i { color: #cbd5e1; }
+        }
+    }
+    
+    .notif-footer {
+        border-top: 1px solid #f1f5f9;
+        background: #f8fafc;
+        
+        a { color: $primary-color; }
+    }
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 991.98px) {
+    .hd-header-wrapper {
+        justify-content: space-between;
+        padding: 0 1rem;
+
+        .nav-menu {
+            position: absolute;
+            top: $header-height;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            flex-direction: column;
+            align-items: stretch;
+            padding: 1rem;
+            box-shadow: $shadow-lg;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            transform: translateY(-150%);
+            transition: transform 0.3s ease-in-out;
+            z-index: -1;
+            
+            &.show {
+                transform: translateY(0);
+                display: flex;
+            }
+
+            .nav-link {
+                padding: 1rem;
+                display: flex;
+                
+                i { display: inline-block; margin-right: 10px; } // Show icons in mobile menu
+                
+                &:hover, &.active {
+                    background: #f8fafc;
+                    color: $primary-color;
+                    
+                    &::after { display: none; } // No underline in vertical menu
+                }
+            }
+        }
+
+        .header-actions {
+            margin-left: 0;
+            
+            .user-dropdown-btn {
+                .user-info { display: none; }
+                i.fa-chevron-down { display: none; }
+                padding: 0.25rem;
+                border: none;
+                background: transparent;
+            }
+
+            .mobile-toggle-btn {
+                display: block; // Show hamburger on mobile
+                color: $text-primary;
+            }
+        }
+    }
+}
+
+/* Spacer for fixed header */
+.header-spacer {
+    height: $header-height;
+    width: 100%;
+    // If the page background is also dark, this might be needed or not. 
+    // Assuming page content starts below.
+}
+

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cron: Sync Account Balances -->
+    <record id="ir_cron_trading_sync_balances" model="ir.cron">
+        <field name="name">Trading: Sync Account Balances</field>
+        <field name="model_id" ref="model_trading_account_balance"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sync_balances()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Cron: Sync Positions -->
+    <record id="ir_cron_trading_sync_positions" model="ir.cron">
+        <field name="name">Trading: Sync Positions</field>
+        <field name="model_id" ref="model_trading_position"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sync_positions()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Cron: Get Max Quantities -->
+    <record id="ir_cron_trading_get_max_quantities" model="ir.cron">
+        <field name="name">Trading: Get Max Quantities</field>
+        <field name="model_id" ref="model_trading_max_quantity"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_get_max_quantities()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+    <!-- Cron: Sync Order Status -->
+    <record id="ir_cron_trading_sync_order_status" model="ir.cron">
+        <field name="name">Trading: Sync Order Status</field>
+        <field name="model_id" ref="model_trading_order"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sync_order_status()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>
+
+

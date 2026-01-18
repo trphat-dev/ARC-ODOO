@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List view: Trading Orders đã gửi lên sàn (api_order_id != False) -->
+    <record id="view_trading_order_sent_list" model="ir.ui.view">
+        <field name="name">trading.order.sent.list</field>
+        <field name="model">trading.order</field>
+        <field name="arch" type="xml">
+            <list string="Lệnh đã lên sàn" decoration-info="state in ('pending','submitted')" decoration-success="state in ('filled','partially_filled')" decoration-danger="state in ('rejected','error')">
+                <field name="name" string="Mã lệnh"/>
+                <field name="user_id" string="Người dùng"/>
+                <field name="account" string="Tài khoản"/>
+                <field name="instrument_code" string="Mã CK"/>
+                <field name="market" string="Thị trường"/>
+                <field name="buy_sell" string="M/B"/>
+                <field name="order_type_detail" string="Loại lệnh"/>
+                <field name="quantity" string="Khối lượng"/>
+                <field name="state" string="Trạng thái" widget="badge"/>
+                <field name="api_order_id" string="API Order ID"/>
+                <field name="submitted_at" string="Thời điểm gửi"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form view (tham khảo nhanh) -->
+    <record id="view_trading_order_sent_form" model="ir.ui.view">
+        <field name="name">trading.order.sent.form</field>
+        <field name="model">trading.order</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết lệnh đã lên sàn">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="user_id"/>
+                            <field name="account"/>
+                            <field name="instrument_id"/>
+                            <field name="instrument_code"/>
+                        </group>
+                        <group>
+                            <field name="market"/>
+                            <field name="buy_sell"/>
+                            <field name="order_type_detail"/>
+                            <field name="quantity"/>
+                            <field name="state"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="api_order_id"/>
+                        <field name="submitted_at"/>
+                        <field name="api_response" widget="text"/>
+                        <field name="error_message" widget="text"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action: lọc chỉ các lệnh đã gửi (api_order_id != False) -->
+    <record id="action_trading_order_sent" model="ir.actions.act_window">
+        <field name="name">Lệnh đã lên sàn</field>
+        <field name="res_model">trading.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[("api_order_id","!=",False)]</field>
+        <field name="view_ids" eval="[(5, 0, 0), (0, 0, {'view_mode': 'list', 'view_id': ref('view_trading_order_sent_list')}), (0, 0, {'view_mode': 'form', 'view_id': ref('view_trading_order_sent_form')})]"/>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Menu: đặt dưới Order Matching root -->
+    <menuitem id="menu_trading_order_sent"
+              name="Lệnh đã lên sàn"
+              parent="menu_order_matching_root"
+              action="action_trading_order_sent"
+              sequence="50"/>
+</odoo>

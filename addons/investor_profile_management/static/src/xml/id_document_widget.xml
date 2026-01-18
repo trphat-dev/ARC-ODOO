@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="investor_profile_management.id_document_widget_template">
+        <div id="id_document_widget_container"></div>
+    </t>
+</templates>

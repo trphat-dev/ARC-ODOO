@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Main Menu -->
+        <menuitem id="menu_fund_management_dashboard_root"
+            name="Fund Management Dashboard"
+            web_icon="fund_management_dashboard,static/description/icon.png"
+            sequence="5"/>
+
+        <!-- Dashboard Menu -->
+        <menuitem id="menu_fund_management_dashboard"
+            name="Dashboard Tổng Quan"
+            parent="menu_fund_management_dashboard_root"
+            action="action_fund_management_dashboard"
+            sequence="10"/>
+
+        <!-- Dashboard Daily Menu -->
+        <menuitem id="menu_fund_dashboard_daily"
+            name="Dashboard Hàng Ngày"
+            parent="menu_fund_management_dashboard_root"
+            action="action_fund_dashboard_daily"
+            sequence="20"/>
+    </data>
+</odoo>
+

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Comparison List View -->
+        <record id="view_portfolio_comparison_list" model="ir.ui.view">
+            <field name="name">portfolio.comparison.list</field>
+            <field name="model">portfolio.comparison</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="user_id"/>
+                    <field name="fund_ids" widget="text"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Comparison Form View -->
+        <record id="view_portfolio_comparison_form" model="ir.ui.view">
+            <field name="name">portfolio.comparison.form</field>
+            <field name="model">portfolio.comparison</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Fund Comparison">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="user_id"/>
+                                <field name="fund_ids" widget="text" placeholder="JSON array of fund IDs"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
+

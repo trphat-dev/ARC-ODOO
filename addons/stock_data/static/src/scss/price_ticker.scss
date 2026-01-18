@@ -1,0 +1,156 @@
+/**
+ * Price Ticker Widget Styles
+ * Real-time price display with change animations
+ */
+
+// Variables
+$color-up: #00c853;
+$color-down: #ff1744;
+$color-unchanged: #757575;
+
+// Main Widget Container
+.price-ticker-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: "Roboto Mono", monospace;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: rgba(128, 128, 128, 0.05);
+
+  // Direction States
+  &.up {
+    color: $color-up;
+    background: rgba($color-up, 0.1);
+
+    .price-indicator {
+      color: $color-up;
+    }
+
+    .price-change {
+      color: $color-up;
+    }
+  }
+
+  &.down {
+    color: $color-down;
+    background: rgba($color-down, 0.1);
+
+    .price-indicator {
+      color: $color-down;
+    }
+
+    .price-change {
+      color: $color-down;
+    }
+  }
+
+  &.unchanged {
+    color: $color-unchanged;
+  }
+
+  // Flash Animations
+  &.flash-up {
+    animation: pulse-green 0.5s ease-out;
+  }
+
+  &.flash-down {
+    animation: pulse-red 0.5s ease-out;
+  }
+
+  // Price Value
+  .price-value {
+    font-size: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  // Direction Indicator
+  .price-indicator {
+    font-size: 12px;
+    margin-left: -2px;
+  }
+
+  // Change Percent
+  .price-change {
+    font-size: 12px;
+    opacity: 0.9;
+  }
+
+  // Update Time
+  .price-time {
+    font-size: 11px;
+    opacity: 0.6;
+    font-weight: 400;
+    margin-left: 4px;
+
+    .fa {
+      margin-right: 3px;
+    }
+  }
+}
+
+// Keyframe Animations
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba($color-up, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba($color-up, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($color-up, 0);
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-red {
+  0% {
+    box-shadow: 0 0 0 0 rgba($color-down, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba($color-down, 0);
+    transform: scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($color-down, 0);
+    transform: scale(1);
+  }
+}
+
+// List View Enhancements
+.o_list_view {
+  .price-ticker-widget {
+    min-width: 120px;
+  }
+}
+
+// Kanban View Enhancements
+.o_kanban_view {
+  .price-ticker-widget {
+    font-size: 16px;
+    padding: 6px 12px;
+  }
+}
+
+// Dark Mode Support
+.o_dark {
+  .price-ticker-widget {
+    &.up {
+      background: rgba($color-up, 0.15);
+    }
+
+    &.down {
+      background: rgba($color-down, 0.15);
+    }
+
+    &.unchanged {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  }
+}

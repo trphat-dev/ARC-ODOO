@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View - Danh sách lệnh thỏa thuận -->
+    <record id="view_transaction_matched_orders_list" model="ir.ui.view">
+        <field name="name">transaction.matched.orders.list</field>
+        <field name="model">transaction.matched.orders</field>
+        <field name="arch" type="xml">
+            <list string="Danh sách lệnh thỏa thuận" default_order="match_date desc">
+                <field name="name" string="Mã thỏa thuận"/>
+                <field name="match_date" string="Ngày khớp"/>
+                <field name="fund_id" string="Quỹ"/>
+                <field name="matched_quantity" string="Số lượng"/>
+                <field name="matched_price" string="Giá khớp"/>
+                <field name="total_value" string="Thành tiền" widget="monetary"/>
+                <field name="buy_user_id" string="Người mua"/>
+                <field name="sell_user_id" string="Người bán"/>
+                <field name="match_type" string="Loại khớp"/>
+                <field name="status" widget="badge" 
+                       decoration-info="status == 'draft'" 
+                       decoration-success="status == 'done'" 
+                       decoration-danger="status == 'cancelled'"
+                       string="Trạng thái"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View - Chi tiết lệnh thỏa thuận -->
+    <record id="view_transaction_matched_orders_form" model="ir.ui.view">
+        <field name="name">transaction.matched.orders.form</field>
+        <field name="model">transaction.matched.orders</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết lệnh thỏa thuận">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <!-- Thông tin chung -->
+                    <group>
+                        <group>
+                            <field name="match_date" string="Ngày khớp"/>
+                            <field name="fund_id" string="Quỹ"/>
+                            <field name="match_type" string="Loại khớp"/>
+                        </group>
+                        <group>
+                            <field name="matched_quantity" string="Số lượng khớp"/>
+                            <field name="matched_price" string="Giá khớp"/>
+                            <field name="total_value" string="Tổng giá trị" widget="monetary"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Thông tin lệnh mua -->
+                    <notebook>
+                        <page string="Lệnh mua">
+                            <group>
+                                <group>
+                                    <field name="buy_order_id" string="Lệnh mua"/>
+                                    <field name="buy_user_id" string="Người mua"/>
+                                    <field name="buy_units" string="Tổng số lượng"/>
+                                    <field name="buy_price" string="Giá mua"/>
+                                    <field name="buy_remaining_units" string="Số lượng còn lại"/>
+                                </group>
+                                <group>
+                                    <field name="buy_term_months" string="Kỳ hạn (tháng)"/>
+                                    <field name="buy_interest_rate" string="Lãi suất (%)"/>
+                                    <field name="buy_in_time" string="Thời gian vào"/>
+                                    <field name="buy_out_time" string="Thời gian ra"/>
+                                    <field name="buy_source" string="Nguồn"/>
+                                </group>
+                            </group>
+                            <!-- Hiển thị tất cả executions của lệnh mua -->
+                            <group string="Lịch sử khớp lệnh mua" invisible="not buy_order_id">
+                                <field name="buy_executions" readonly="1" nolabel="1">
+                                    <list string="Executions của lệnh mua" default_order="match_date desc">
+                                        <field name="name" string="Mã execution"/>
+                                        <field name="match_date" string="Ngày khớp"/>
+                                        <field name="matched_quantity" string="Số lượng khớp"/>
+                                        <field name="matched_price" string="Giá khớp"/>
+                                        <field name="total_value" string="Thành tiền" widget="monetary"/>
+                                        <field name="sell_order_id" string="Lệnh bán đối ứng"/>
+                                        <field name="sell_user_id" string="Người bán"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+                        
+                        <!-- Thông tin lệnh bán -->
+                        <page string="Lệnh bán">
+                            <group>
+                                <group>
+                                    <field name="sell_order_id" string="Lệnh bán"/>
+                                    <field name="sell_user_id" string="Người bán"/>
+                                    <field name="sell_units" string="Tổng số lượng"/>
+                                    <field name="sell_price" string="Giá bán"/>
+                                    <field name="sell_remaining_units" string="Số lượng còn lại"/>
+                                </group>
+                                <group>
+                                    <field name="sell_term_months" string="Kỳ hạn (tháng)"/>
+                                    <field name="sell_interest_rate" string="Lãi suất (%)"/>
+                                    <field name="sell_in_time" string="Thời gian vào"/>
+                                    <field name="sell_out_time" string="Thời gian ra"/>
+                                    <field name="sell_source" string="Nguồn"/>
+                                </group>
+                            </group>
+                            <!-- Hiển thị tất cả executions của lệnh bán -->
+                            <group string="Lịch sử khớp lệnh bán" invisible="not sell_order_id">
+                                <field name="sell_executions" readonly="1" nolabel="1">
+                                    <list string="Executions của lệnh bán" default_order="match_date desc">
+                                        <field name="name" string="Mã execution"/>
+                                        <field name="match_date" string="Ngày khớp"/>
+                                        <field name="matched_quantity" string="Số lượng khớp"/>
+                                        <field name="matched_price" string="Giá khớp"/>
+                                        <field name="total_value" string="Thành tiền" widget="monetary"/>
+                                        <field name="buy_order_id" string="Lệnh mua đối ứng"/>
+                                        <field name="buy_user_id" string="Người mua"/>
+                                    </list>
+                                </field>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_transaction_matched_orders_search" model="ir.ui.view">
+        <field name="name">transaction.matched.orders.search</field>
+        <field name="model">transaction.matched.orders</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm lệnh thỏa thuận">
+                <field name="name" string="Mã thỏa thuận"/>
+                <field name="fund_id" string="Quỹ"/>
+                <field name="buy_user_id" string="Người mua"/>
+                <field name="sell_user_id" string="Người bán"/>
+                <field name="buy_order_id" string="Lệnh mua"/>
+                <field name="sell_order_id" string="Lệnh bán"/>
+                <field name="match_type" string="Loại khớp"/>
+                <filter string="Draft" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Done" name="done" domain="[('status', '=', 'done')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Trạng thái" name="status" context="{'group_by': 'status'}"/>
+                    <filter string="Ngày khớp" name="match_date" context="{'group_by': 'match_date:day'}"/>
+                    <filter string="Quỹ" name="group_fund" context="{'group_by': 'fund_id'}"/>
+                    <filter string="Người mua" name="group_buy_user" context="{'group_by': 'buy_user_id'}"/>
+                    <filter string="Người bán" name="group_sell_user" context="{'group_by': 'sell_user_id'}"/>
+                    <filter string="Loại khớp" name="group_match_type" context="{'group_by': 'match_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_transaction_matched_orders" model="ir.actions.act_window">
+        <field name="name">Danh sách lệnh thỏa thuận</field>
+        <field name="res_model">transaction.matched.orders</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_transaction_matched_orders_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_transaction_matched_orders_form')})]"/>
+        <field name="search_view_id" ref="view_transaction_matched_orders_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có lệnh thỏa thuận nào
+            </p>
+            <p>
+                Các lệnh thỏa thuận (execution records) sẽ hiển thị ở đây sau khi thực hiện khớp lệnh.
+                Mỗi bản ghi đại diện cho một lần khớp lệnh giữa người mua và người bán.
+            </p>
+        </field>
+    </record>
+
+</odoo>
+

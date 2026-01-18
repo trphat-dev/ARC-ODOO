@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Stock Board Client Action -->
+    <record id="action_stock_board" model="ir.actions.client">
+        <field name="name">Bảng Giá Chứng Khoán</field>
+        <field name="tag">stock_data.stock_board</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menu Item for Stock Board -->
+    <menuitem id="menu_stock_board" name="Bảng Giá" action="action_stock_board" parent="stock_data.menu_stock_data_root" sequence="1"/>
+</odoo>

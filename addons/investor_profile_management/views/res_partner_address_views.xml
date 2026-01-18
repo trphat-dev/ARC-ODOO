@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit Partner Form View -->
+    <record id="view_partner_form_inherit_address" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.address</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Addresses" name="addresses">
+                    <field name="address_ids" widget="one2many" context="{'default_partner_id': id}">
+                        <list>
+                            <field name="investor_id"/>
+                            <field name="address_type" widget="badge"/>
+                            <field name="street"/>
+                            <field name="district"/>
+                            <field name="ward"/>
+                            <field name="state_id"/>
+                            <field name="country_id"/>
+                            <field name="is_default" widget="boolean_toggle"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Address List View -->
+    <record id="view_investor_address_list" model="ir.ui.view">
+        <field name="name">investor.address.list</field>
+        <field name="model">investor.address</field>
+        <field name="arch" type="xml">
+            <list string="Addresses">
+                <field name="investor_id"/>
+                <field name="address_type" widget="badge"/>
+                <field name="street"/>
+                <field name="district"/>
+                <field name="ward"/>
+                <field name="state_id"/>
+                <field name="country_id"/>
+                <field name="is_default" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Address Form View -->
+    <record id="view_investor_address_form" model="ir.ui.view">
+        <field name="name">investor.address.form</field>
+        <field name="model">investor.address</field>
+        <field name="arch" type="xml">
+            <form string="Address">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="investor_id" placeholder="Select Investor" required="1" class="oe_required"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Address Information">
+                            <field name="address_type" widget="radio" required="1" class="oe_required"/>
+                            <field name="street" required="1" class="oe_required"/>
+                            <field name="district"/>
+                            <field name="ward"/>
+                            <field name="state_id"/>
+                            <field name="country_id"/>
+                            <field name="zip"/>
+                            <field name="is_default" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Address Search View -->
+    <record id="view_investor_address_search" model="ir.ui.view">
+        <field name="name">investor.address.search</field>
+        <field name="model">investor.address</field>
+        <field name="arch" type="xml">
+            <search string="Search Addresses">
+                <field name="investor_id"/>
+                <field name="street"/>
+                <field name="district"/>
+                <field name="ward"/>
+                <field name="state_id"/>
+                <field name="country_id"/>
+                <group expand="0" string="Group By">
+                    <filter string="Investor" name="group_by_investor" context="{'group_by':'investor_id'}"/>
+                    <filter string="Address Type" name="group_by_type" context="{'group_by':'address_type'}"/>
+                    <filter string="State" name="group_by_state" context="{'group_by':'state_id'}"/>
+                    <filter string="Country" name="group_by_country" context="{'group_by':'country_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Address Action -->
+    <record id="action_investor_address" model="ir.actions.act_window">
+        <field name="name">Addresses</field>
+        <field name="res_model">investor.address</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_investor_address_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new address
+            </p>
+        </field>
+    </record>
+</odoo> 

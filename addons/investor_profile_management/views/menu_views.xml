@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!-- Investor Profile Action -->
+    <record id="action_investor_profile" model="ir.actions.act_window">
+        <field name="name">Personal Information</field>
+        <field name="res_model">investor.profile</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first investor profile
+            </p>
+        </field>
+    </record>
+
+    <!-- Bank Account Action -->
+    <record id="action_investor_bank_account" model="ir.actions.act_window">
+        <field name="name">Bank Account Information</field>
+        <field name="res_model">investor.bank.account</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new bank account
+            </p>
+        </field>
+    </record>
+
+    <!-- Address Action -->
+    <record id="action_investor_address" model="ir.actions.act_window">
+        <field name="name">Address Information</field>
+        <field name="res_model">investor.address</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new address
+            </p>
+        </field>
+    </record>
+
+    <!-- Status Info Action -->
+    <record id="action_status_info" model="ir.actions.act_window">
+        <field name="name">Profile Status</field>
+        <field name="res_model">status.info</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new profile status
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_investor_root" 
+              name="Investor Profile Management" 
+              sequence="10"/>
+
+    <menuitem id="menu_status_info" 
+              name="Profile Status" 
+              parent="menu_investor_root" 
+              action="action_status_info" 
+              sequence="10"/>
+
+    <menuitem id="menu_investor_profile" 
+              name="Investor Profiles" 
+              parent="menu_investor_root" 
+              action="action_investor_profile" 
+              sequence="20"/>
+
+    <menuitem id="menu_investor_bank_account" 
+              name="Bank Accounts" 
+              parent="menu_investor_root" 
+              action="action_investor_bank_account" 
+              sequence="30"/>
+
+    <menuitem id="menu_investor_address" 
+              name="Addresses" 
+              parent="menu_investor_root" 
+              action="action_investor_address" 
+              sequence="40"/>
+    </data>
+</odoo>

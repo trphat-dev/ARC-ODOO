@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default VNPT eKYC API Configuration -->
+    <record id="ekyc_api_config_default" model="ekyc.api.config">
+        <field name="name">Default Configuration</field>
+        <field name="token_id">4454b0b5-cb14-62fa-e063-62199f0ab40b</field>
+        <field name="token_key">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALlzLZ/MkL89AA1a34lamXMce/GLbfCdltABRhpPjve+v5wy9amxCY0nyuGnLdMfOiVqCmTwUaRp5jKnlChV9NECAwEAAQ==</field>
+        <field name="access_token">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0cmFuc2FjdGlvbl9pZCI6IjE4ZDExYWQzLWI0MzUtNGJiZS1iY2Q1LTVkMDg5ZDYxMzlhNCIsInN1YiI6ImZhNzhmNWQ5LWM5MTYtMTFmMC1hNzY5LTg1NjY4N2U5ODMwYSIsImF1ZCI6WyJyZXN0c2VydmljZSJdLCJ1c2VyX25hbWUiOiJuaGFudnYyazRAZ21haWwuY29tIiwic2NvcGUiOlsicmVhZCJdLCJpc3MiOiJodHRwczovL2xvY2FsaG9zdCIsIm5hbWUiOiJuaGFudnYyazRAZ21haWwuY29tIiwiZXhwIjoxNzY0MzE0OTExLCJ1dWlkX2FjY291bnQiOiJmYTc4ZjVkOS1jOTE2LTExZjAtYTc2OS04NTY2ODdlOTgzMGEiLCJhdXRob3JpdGllcyI6WyJVU0VSIl0sImp0aSI6IjBkNDkxZmZmLWY3ZTUtNGU4ZS05NTQxLTZiOWZmNzFhZGExYiIsImNsaWVudF9pZCI6ImNsaWVudGFwcCJ9.RpKpFlNky_KVOsWPx4EEWFdvWHUrJdnqsT6Ja9jeE8hrKRzwqfBEomKsu9ekwepIBZVeabtawQ7P0K-5oDHaOf1C-PSvnaYRXjgJWgnOlOUfTA2OLBsaHwuuYRH9XK228LdgV82DzvxY3_PbmGkXJxLbwgCQMXTVE5A98Y7jE01pktZbKjBYUjVEQIK2rL-51klhLKZ0WKt2RkX8BLTGu0G4C5YqbAPZUHt3bOByyqYzFg4qJqIOq-wo2XD47OnJbYdF5DTgdmE6YRoYhU6Id1-XPUl3H48Ds2U6OYjLDZJKBATi_k01Cs56X-SQfTX3aChme2HLsJYxwdrs4XeUHQ</field>
+        <field name="public_key_ca">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIMTEFLtDPRRl9oJw8li/MnajhlrTyQN6b8N34g9zwYPvfEutL0ClPFxaZJp89KhxEBLdBoJb/5Wo+ZhMdDZI58CAwEAAQ==</field>
+        <field name="base_url">https://api.idg.vnpt.vn</field>
+        <field name="is_active" eval="True"/>
+    </record>
+</odoo>
+

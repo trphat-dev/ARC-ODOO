@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Main Menu -->
+        <menuitem id="menu_nav_management_root"
+            name="NAV Management"
+            web_icon="nav_management,static/description/icon.png"
+            sequence="10"/>
+    </data>
+</odoo>

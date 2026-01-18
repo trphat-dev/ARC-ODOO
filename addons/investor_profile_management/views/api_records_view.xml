@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- API Records List View -->
+    <record id="view_api_records_list" model="ir.ui.view">
+        <field name="name">api.records.list</field>
+        <field name="model">api.record</field>
+        <field name="arch" type="xml">
+            <list string="Bản ghi API" decoration-success="status == 'success'" decoration-danger="status == 'error'" decoration-warning="status == 'timeout'">
+                <field name="endpoint" string="Endpoint"/>
+                <field name="method" string="Method" widget="badge"/>
+                <field name="api_type" string="Loại API" widget="badge"/>
+                <field name="response_status" string="Status Code" widget="integer"/>
+                <field name="status" string="Trạng thái" widget="badge" decoration-success="status == 'success'" decoration-danger="status == 'error'"/>
+                <field name="duration_ms" string="Thời gian (ms)" widget="float"/>
+                <field name="user_id" string="Người dùng"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="request_timestamp" string="Thời gian" widget="datetime"/>
+                <field name="error_message" string="Lỗi" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- API Records Form View -->
+    <record id="view_api_records_form" model="ir.ui.view">
+        <field name="name">api.records.form</field>
+        <field name="model">api.record</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết Bản ghi API">
+                <header>
+                    <button name="action_retry" string="Thử lại" type="object" class="btn-secondary" icon="fa-refresh"/>
+                    <button name="action_view_related_profile" string="Xem Hồ sơ" type="object" class="btn-primary" 
+                            icon="fa-user" invisible="not investor_profile_id"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="endpoint" placeholder="API Endpoint" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin Request">
+                            <field name="method" widget="radio" readonly="1"/>
+                            <field name="api_type" widget="radio" readonly="1"/>
+                            <field name="request_timestamp" widget="datetime" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                        </group>
+                        <group string="Thông tin Response">
+                            <field name="response_status" widget="integer" readonly="1"/>
+                            <field name="status" widget="radio" readonly="1"/>
+                            <field name="response_timestamp" widget="datetime" readonly="1"/>
+                            <field name="duration_ms" widget="float" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Liên kết">
+                            <field name="partner_id" readonly="1"/>
+                            <field name="investor_profile_id" readonly="1"/>
+                        </group>
+                        <group string="Thông tin khác">
+                            <field name="retry_count" widget="integer" readonly="1"/>
+                            <field name="is_retry" widget="boolean" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Request" name="request">
+                            <group>
+                                <field name="formatted_request" nolabel="1" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Response" name="response">
+                            <group>
+                                <field name="formatted_response" nolabel="1" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="Raw Data" name="raw_data">
+                            <group>
+                                <group string="Request Headers">
+                                    <field name="request_headers" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <group string="Request Data">
+                                    <field name="request_data" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <group string="Request Params">
+                                    <field name="request_params" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="Response Headers">
+                                    <field name="response_headers" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <group string="Response Data">
+                                    <field name="response_data" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                                <group string="Error Message">
+                                    <field name="error_message" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Ghi chú" name="notes">
+                            <field name="notes" nolabel="1" placeholder="Thêm ghi chú về bản ghi này..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- API Records Search View -->
+    <record id="view_api_records_search" model="ir.ui.view">
+        <field name="name">api.records.search</field>
+        <field name="model">api.record</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Bản ghi API">
+                <field name="endpoint" string="Endpoint"/>
+                <field name="method"/>
+                <field name="api_type"/>
+                <field name="user_id" string="Người dùng"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="investor_profile_id" string="Hồ sơ"/>
+                <separator/>
+                <filter string="Thành công" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Lỗi" name="error" domain="[('status', '=', 'error')]"/>
+                <filter string="Timeout" name="timeout" domain="[('status', '=', 'timeout')]"/>
+                <filter string="Đang chờ" name="pending" domain="[('status', '=', 'pending')]"/>
+                <separator/>
+                <filter string="VNPT eKYC" name="ekyc" domain="[('api_type', '=', 'ekyc')]"/>
+                <filter string="Odoo Internal" name="odoo" domain="[('api_type', '=', 'odoo')]"/>
+                <filter string="External API" name="external" domain="[('api_type', '=', 'external')]"/>
+                <separator/>
+                <filter string="Có lỗi" name="has_error" domain="[('error_message', '!=', False)]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Trạng thái" name="group_by_status" context="{'group_by': 'status'}"/>
+                    <filter string="Loại API" name="group_by_api_type" context="{'group_by': 'api_type'}"/>
+                    <filter string="Method" name="group_by_method" context="{'group_by': 'method'}"/>
+                    <filter string="Người dùng" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Ngày" name="group_by_date" context="{'group_by': 'request_timestamp:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- API Records Kanban View -->
+    <record id="view_api_records_kanban" model="ir.ui.view">
+        <field name="name">api.records.kanban</field>
+        <field name="model">api.record</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_small_column">
+                <field name="endpoint"/>
+                <field name="method"/>
+                <field name="status"/>
+                <field name="response_status"/>
+                <field name="api_type"/>
+                <field name="duration_ms"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="row">
+                                    <div class="col-12">
+                                        <strong><field name="endpoint"/></strong>
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-6">
+                                        <field name="method" widget="badge"/>
+                                        <field name="api_type" widget="badge"/>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <field name="response_status" widget="integer"/>
+                                        <span t-if="record.duration_ms.raw_value"> - <field name="duration_ms"/>ms</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- API Records Action -->
+    <record id="action_api_records" model="ir.actions.act_window">
+        <field name="name">Bản ghi API</field>
+        <field name="res_model">api.record</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+                                       (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_api_records_kanban')}),
+                                       (0, 0, {'view_mode': 'list', 'view_id': ref('view_api_records_list')}),
+                                       (0, 0, {'view_mode': 'form', 'view_id': ref('view_api_records_form')})]"/>
+        <field name="search_view_id" ref="view_api_records_search"/>
+        <field name="context">{'search_default_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có bản ghi API nào
+            </p>
+            <p>
+                Các bản ghi API sẽ được tự động tạo khi có request đến các API eKYC hoặc API khác.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for API Records -->
+    <menuitem id="menu_api_records" 
+              name="Bản ghi API" 
+              parent="menu_investor_root" 
+              action="action_api_records" 
+              sequence="15"/>
+</odoo>
+

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Cron job để tự động tạo tồn kho hàng ngày - chạy mỗi giờ để kiểm tra -->
+        <record id="nav_daily_inventory_cron" model="ir.cron">
+            <field name="name">NAV Management - Auto create daily inventory</field>
+            <field name="model_id" ref="model_nav_daily_inventory"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_auto_create_daily_inventory()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">minutes</field>
+            <field name="active" eval="True"/>
+            <field name="user_id" ref="base.user_root"/>
+        </record>
+    </data>
+</odoo>

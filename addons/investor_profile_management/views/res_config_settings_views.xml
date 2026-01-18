@@ -1,0 +1,70 @@
+<odoo>
+    <record id="view_res_config_settings_investor_profile_ekyc" model="ir.ui.view">
+        <field name="name">res.config.settings.investor.profile.ekyc</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form[@class='oe_form_configuration']" position="inside">
+                <block title="VNPT eKYC" id="vnpt_ekyc_settings">
+                    <setting string="Cấu hình kết nối VNPT eKYC" 
+                             help="Thiết lập thông tin token và endpoint để hệ thống tự động gọi API VNPT eKYC.">
+                        <div class="content-group">
+                            <div class="row mt16">
+                                <label string="Base URL" for="ekyc_base_url" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_base_url" placeholder="https://api.vnpt.com.vn/ekyc" class="col-lg-9"/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Token Endpoint" for="ekyc_token_endpoint" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_token_endpoint" placeholder="https://.../oauth/token" class="col-lg-9"/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Token ID" for="ekyc_token_id" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_token_id" class="col-lg-9"/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Token Key" for="ekyc_token_key" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_token_key" password="True" class="col-lg-9"/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Public Key CA" for="ekyc_public_key_ca" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_public_key_ca" widget="text" class="col-lg-9" 
+                                       placeholder="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB..."/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Access Token" for="ekyc_access_token" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_access_token" readonly="1" class="col-lg-9" widget="text"/>
+                            </div>
+                            <div class="row mt16">
+                                <label string="Token Expiration" for="ekyc_token_expiration" class="col-lg-3 o_light_label"/>
+                                <field name="ekyc_token_expiration" readonly="1" class="col-lg-9"/>
+                            </div>
+                            <div class="row mt16">
+                                <div class="col-lg-9 offset-lg-3">
+                                    <button type="object"
+                                            name="action_update_ekyc_tokens"
+                                            string="Cập nhật Tokens tự động"
+                                            class="btn btn-secondary"
+                                            help="Tự động cập nhật Token ID, Token Key, Access Token và Public Key CA từ cấu hình mặc định"/>
+                                    <button type="object"
+                                            name="action_generate_ekyc_token"
+                                            string="Lấy Access Token"
+                                            class="btn btn-primary"/>
+                                </div>
+                            </div>
+                            <div class="row mt16">
+                                <div class="col-lg-9 offset-lg-3">
+                                    <button type="object"
+                                            name="action_create_sample_api_records"
+                                            string="Tạo bản ghi API mẫu"
+                                            class="btn btn-info"
+                                            help="Tạo các bản ghi API mẫu để test và demo"/>
+                                </div>
+                            </div>
+                        </div>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

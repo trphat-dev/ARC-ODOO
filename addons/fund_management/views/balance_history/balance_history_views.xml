@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Balance History List View -->
+        <record id="view_portfolio_balance_history_list" model="ir.ui.view">
+            <field name="name">portfolio.balance_history.list</field>
+            <field name="model">portfolio.balance_history</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="user_id"/>
+                    <field name="balance" widget="monetary"/>
+                    <field name="change" widget="monetary"/>
+                    <field name="change_type"/>
+                    <field name="created_at" widget="datetime"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Balance History Form View -->
+        <record id="view_portfolio_balance_history_form" model="ir.ui.view">
+            <field name="name">portfolio.balance_history.form</field>
+            <field name="model">portfolio.balance_history</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Balance History">
+                    <sheet>
+                        <group>
+                            <group>
+                                <field name="user_id"/>
+                                <field name="balance" widget="monetary"/>
+                                <field name="change" widget="monetary"/>
+                                <field name="change_type"/>
+                            </group>
+                            <group>
+                                <field name="created_at" widget="datetime"/>
+                            </group>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+    </data>
+</odoo>
+

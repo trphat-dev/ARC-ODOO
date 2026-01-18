@@ -1,0 +1,172 @@
+<odoo>
+  <template id="signature_modal_template" name="Signature Modal Template">
+    <div class="modal fade" id="signatureModal" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered">
+        <div class="modal-content signature-modal-content">
+          <!-- Header -->
+          <div class="modal-header signature-modal-header">
+            <div class="d-flex align-items-center w-100">
+              <div class="signature-modal-icon">
+                <i class="fas fa-file-signature"></i>
+              </div>
+              <div class="flex-grow-1 ms-3">
+                <h4 class="modal-title mb-0" id="signatureModalLabel">
+                  Xác nhận và ký hợp đồng đầu tư
+                </h4>
+                <p class="mb-0">Vui lòng xem xét và chọn phương thức ký tên</p>
+              </div>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body signature-modal-body p-0">
+            <div class="row g-0">
+              <!-- Left Column: PDF Viewer -->
+              <div class="col-lg-6 signature-pdf-section">
+                <div class="pdf-header">
+                  <div class="pdf-icon">
+                    <i class="fas fa-file-pdf"></i>
+                  </div>
+                  <div>
+                    <h6>Hợp đồng đầu tư</h6>
+                    <small>Vui lòng xem xét kỹ trước khi ký</small>
+                  </div>
+                </div>
+                
+                <div class="pdf-viewer-card">
+                  <embed 
+                    id="contract-pdf-viewer"
+                    src="/fund_management/static/src/pdf/terms2.pdf#toolbar=1&amp;navpanes=0&amp;scrollbar=1"
+                    type="application/pdf" />
+                </div>
+                
+                <div class="pdf-notice">
+                  <i class="fas fa-info-circle"></i>
+                  <div>
+                    <strong>Lưu ý quan trọng</strong>
+                    <span>Vui lòng đọc kỹ toàn bộ hợp đồng trước khi ký. Hợp đồng đã ký có giá trị pháp lý.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Column: Signature Options -->
+              <div class="col-lg-6 signature-options-section">
+                <div class="options-header">
+                  <div class="options-icon">
+                    <i class="fas fa-signature"></i>
+                  </div>
+                  <div>
+                    <h5>Chọn phương thức ký tên</h5>
+                    <small>Chọn một trong hai phương thức bên dưới</small>
+                  </div>
+                </div>
+                
+                <!-- Signature Type Cards -->
+                <div class="d-flex flex-column gap-3 mb-4">
+                  <div class="signature-type-card active" data-target="hand-sign">
+                    <div class="card-content">
+                      <div class="card-icon hand">
+                        <i class="fas fa-pen-fancy"></i>
+                      </div>
+                      <div class="card-text">
+                        <h6>Ký tay</h6>
+                        <small>Ký tên bằng tay trên màn hình</small>
+                      </div>
+                      <i class="fas fa-chevron-right card-arrow"></i>
+                    </div>
+                  </div>
+                  
+                  <div class="signature-type-card" data-target="digital-sign">
+                    <div class="card-content">
+                      <div class="card-icon digital">
+                        <i class="fas fa-certificate"></i>
+                      </div>
+                      <div class="card-text">
+                        <h6>Ký số</h6>
+                        <small>Ký số tự động bằng chứng thư số</small>
+                      </div>
+                      <i class="fas fa-chevron-right card-arrow"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content signature-tab-content" id="signatureTabContent">
+                  <!-- TAB KÝ TAY -->
+                  <div class="tab-pane fade show active" id="hand-sign" role="tabpanel">
+                    <div class="signature-hand-section">
+                      <div class="signature-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Vui lòng ký tên vào ô bên dưới bằng chuột hoặc ngón tay</span>
+                      </div>
+                      
+                      <div class="signature-canvas-wrapper">
+                        <canvas 
+                          id="signature-pad"
+                          width="800" 
+                          height="200">
+                        </canvas>
+                      </div>
+                      
+                      <div class="signature-actions">
+                        <button type="button" class="signature-btn clear" id="clear-signature">
+                          <i class="fas fa-eraser"></i>Xóa chữ ký
+                        </button>
+                        <button type="button" class="signature-btn submit" id="submit-signature-hand">
+                          <i class="fas fa-check"></i>Xác nhận ký tay
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- TAB KÝ SỐ -->
+                  <div class="tab-pane fade" id="digital-sign" role="tabpanel">
+                    <div class="signature-digital-section">
+                      <div class="digital-info">
+                        <i class="fas fa-shield-alt"></i>
+                        <div>
+                          <strong>Ký số an toàn</strong>
+                          <p>Hệ thống sẽ thực hiện ký số tài liệu bằng chứng thư số của bạn. Tài liệu sẽ được ký số tự động và có giá trị pháp lý.</p>
+                        </div>
+                      </div>
+                      
+                      <div class="digital-features">
+                        <div class="digital-feature-item">
+                          <i class="fas fa-check-circle"></i>
+                          <span>Bảo mật cao, mã hóa an toàn</span>
+                        </div>
+                        <div class="digital-feature-item">
+                          <i class="fas fa-check-circle"></i>
+                          <span>Có giá trị pháp lý đầy đủ</span>
+                        </div>
+                        <div class="digital-feature-item">
+                          <i class="fas fa-check-circle"></i>
+                          <span>Xử lý nhanh chóng, tự động</span>
+                        </div>
+                      </div>
+                      
+                      <button type="button" class="signature-btn digital" id="submit-signature-digital">
+                        <i class="fas fa-lock"></i>Ký số ngay
+                      </button>
+                      <div id="digital-sign-status" class="mt-3 text-center"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer signature-modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              <i class="fas fa-times me-1"></i>Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+</odoo>
+
+

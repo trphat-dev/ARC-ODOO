@@ -1,0 +1,347 @@
+// Transaction Management - Premium Styles
+// ==========================================
+
+// SCSS Variables (Matching Asset Management Theme)
+$tm-primary: #F26522;
+$tm-primary-dark: #d9581b;
+$tm-primary-light: rgba(242, 101, 34, 0.1);
+$tm-success: #10B981;
+$tm-danger: #EF4444;
+$tm-warning: #F59E0B;
+$tm-info: #3B82F6;
+
+$tm-bg-main: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+$tm-bg-card: #ffffff;
+$tm-text-primary: #1e293b;
+$tm-text-secondary: #64748b;
+$tm-text-muted: #94a3b8;
+
+$tm-border: #e2e8f0;
+$tm-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+$tm-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06);
+$tm-radius-lg: 16px;
+$tm-radius-pill: 9999px;
+$tm-transition: 0.25s ease;
+
+// Animation
+@keyframes tm-fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tm-scope {
+  font-family: 'Inter', sans-serif;
+  color: $tm-text-primary;
+}
+
+.tm-container {
+  background: $tm-bg-main;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: $tm-text-primary;
+  
+  .tm-scope {
+    width: 100%;
+  }
+
+  // ============================================
+  // CARDS
+  // ============================================
+  .tm-card {
+    background: $tm-bg-card;
+    border-radius: $tm-radius-lg;
+    border: 1px solid $tm-border;
+    box-shadow: $tm-shadow-card;
+    padding: 1.5rem;
+    height: 100%;
+    transition: $tm-transition;
+    animation: tm-fadeIn 0.5s ease-out;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border-color: rgba($tm-primary, 0.2);
+    }
+    
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: $tm-text-primary;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      
+      i {
+        color: $tm-primary;
+      }
+    }
+  }
+
+  // ============================================
+  // TABLES
+  // ============================================
+  .tm-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    
+    thead {
+      th {
+        background: #f1f5f9;
+        color: $tm-text-secondary;
+        font-weight: 600;
+        font-size: 0.7rem; // Further reduced from 0.75rem
+        // text-transform: uppercase; // Removed per user request
+        letter-spacing: 0.5px;
+        padding: 0.5rem 0.25rem; // Further reduced from 0.75rem 0.5rem
+        border-bottom: 2px solid $tm-border;
+        white-space: nowrap;
+        text-align: center;
+        
+        &:first-child {
+          border-top-left-radius: 12px;
+          border-bottom-left-radius: 12px; 
+        }
+        &:last-child {
+          border-top-right-radius: 12px;
+          border-bottom-right-radius: 12px;
+        }
+      }
+    }
+    
+    tbody {
+      tr {
+        transition: $tm-transition;
+        
+        td {
+          padding: 0.5rem 0.25rem; // Further reduced from 0.75rem 0.5rem
+          vertical-align: middle;
+          border-bottom: 1px solid $tm-border;
+          color: $tm-text-primary;
+          font-size: 0.8rem; // Further reduced from 0.85rem
+          text-align: center;
+          
+          .sub-text {
+            color: $tm-text-muted;
+            font-size: 0.7rem; // Further reduced from 0.75rem
+          }
+        }
+        
+        &:last-child {
+          td:first-child { border-bottom-left-radius: 12px; }
+          td:last-child { border-bottom-right-radius: 12px; }
+          td { border-bottom: none; }
+        }
+        
+        &:hover {
+          background-color: rgba($tm-primary, 0.02);
+          td {
+            color: darken($tm-text-primary, 5%);
+          }
+        }
+      }
+    }
+  }
+
+  // ============================================
+  // TABS
+  // ============================================
+  .tm-tabs {
+    border-bottom: 1px solid $tm-border;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    
+    .nav-link {
+      border: none;
+      background: transparent;
+      color: $tm-text-secondary;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.2s;
+      
+      &:hover {
+        color: $tm-primary;
+        background: rgba($tm-primary, 0.05);
+      }
+      
+      &.active {
+        color: $tm-primary;
+        border-bottom-color: $tm-primary;
+        background: rgba($tm-primary, 0.05);
+      }
+    }
+  }
+
+  // ============================================
+  // PAGINATION
+  // ============================================
+  .tm-pagination {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    .btn-page {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid $tm-border;
+      background: white;
+      color: $tm-text-secondary;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      
+      &:hover:not(:disabled) {
+        border-color: $tm-primary;
+        color: $tm-primary;
+      }
+      
+      &.active {
+        background: $tm-primary;
+        color: white;
+        border-color: $tm-primary;
+        box-shadow: 0 2px 8px rgba($tm-primary, 0.3);
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // ============================================
+  // FILTERS
+  // ============================================
+  .tm-filter {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border-color: $tm-border;
+        &:focus {
+            box-shadow: 0 0 0 3px rgba($tm-primary, 0.1);
+            border-color: $tm-primary;
+        }
+    }
+
+    .btn-filter {
+        border-radius: 20px;
+        padding: 0.4rem 1.2rem;
+        font-weight: 600;
+        border: 1px solid $tm-border;
+        background: white;
+        color: $tm-text-secondary;
+        transition: $tm-transition;
+        
+        &:hover {
+            color: $tm-primary;
+            border-color: $tm-primary;
+            background: rgba($tm-primary, 0.05);
+        }
+        
+        &.active {
+            color: white;
+            background: $tm-primary;
+            border-color: $tm-primary;
+        }
+
+        &.buy {
+             &.active, &:hover {
+                 background-color: $tm-success;
+                 border-color: $tm-success;
+                 color: white;
+             }
+             color: $tm-success;
+             border-color: $tm-success;
+        }
+
+        &.sell {
+             &.active, &:hover {
+                 background-color: $tm-danger;
+                 border-color: $tm-danger;
+                 color: white;
+             }
+             color: $tm-danger;
+             border-color: $tm-danger;
+        }
+    }
+    
+    .btn-create {
+        background: $tm-primary;
+        color: white;
+        border-radius: 20px;
+        padding: 0.4rem 1.2rem;
+        font-weight: 600;
+        border: none;
+        box-shadow: 0 4px 10px rgba($tm-primary, 0.3);
+        transition: $tm-transition;
+        &:hover {
+            background: $tm-primary-dark;
+            transform: translateY(-1px);
+        }
+    }
+  }
+  
+  // ============================================
+  // BADGES
+  // ============================================
+  .badge-premium {
+    padding: 0.2em 0.5em; // Further reduced
+    border-radius: 4px; // Slightly sharper
+    font-size: 0.7rem; // Smaller font
+    font-weight: 600;
+    white-space: nowrap; // Prevent wrapping
+    
+    &.badge-success { background: rgba($tm-success, 0.1); color: darken($tm-success, 10%); border: 1px solid rgba($tm-success, 0.2); }
+    &.badge-danger { background: rgba($tm-danger, 0.1); color: darken($tm-danger, 10%); border: 1px solid rgba($tm-danger, 0.2); }
+    &.badge-warning { background: rgba($tm-warning, 0.1); color: darken($tm-warning, 15%); border: 1px solid rgba($tm-warning, 0.2); }
+    &.badge-info { background: rgba($tm-info, 0.1); color: darken($tm-info, 10%); border: 1px solid rgba($tm-info, 0.2); }
+    &.badge-secondary { background: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+  }
+
+  // Execution detail row styles
+  .execution-detail-row {
+    background: #f8fafc !important;
+    td {
+      font-size: 0.75rem !important;
+      color: #64748b;
+      border-top: 1px dashed #e2e8f0;
+    }
+  }
+
+  // Extra small button
+  .btn-xs {
+    padding: 0.15rem 0.35rem;
+    font-size: 0.7rem;
+    line-height: 1.2;
+  }
+
+  // ============================================
+  // MOBILE RESPONSIVE
+  // ============================================
+  @media (max-width: 768px) {
+      .tm-card { padding: 1rem; }
+      .tm-table {
+          thead th { font-size: 0.75rem; padding: 0.75rem 0.5rem; white-space: normal; }
+          tbody tr td { font-size: 0.85rem; padding: 0.75rem 0.5rem; }
+      }
+      .tm-pagination .btn-page { width: 28px; height: 28px; font-size: 0.75rem; }
+      
+      .tm-filter {
+          flex-direction: column;
+          align-items: stretch;
+          .btn-filter { width: 100%; text-align: center; }
+      }
+  }
+}

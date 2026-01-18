@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ssi_api_config_admin,ssi.api.config admin,model_ssi_api_config,base.group_system,1,1,1,1
+access_ssi_securities_user,ssi.securities user,model_ssi_securities,base.group_user,1,0,0,0
+access_ssi_securities_manager,ssi.securities manager,model_ssi_securities,base.group_system,1,1,1,1
+access_daily_ohlc_user,ssi.daily.ohlc user,model_ssi_daily_ohlc,base.group_user,1,0,0,0
+access_daily_ohlc_manager,ssi.daily.ohlc manager,model_ssi_daily_ohlc,base.group_system,1,1,1,1
+access_intraday_ohlc_user,ssi.intraday.ohlc user,model_ssi_intraday_ohlc,base.group_user,1,0,0,0
+access_intraday_ohlc_manager,ssi.intraday.ohlc manager,model_ssi_intraday_ohlc,base.group_system,1,1,1,1
+access_ssi_fetch_wizard_user,ssi.data.fetch.wizard user,model_ssi_data_fetch_wizard,base.group_user,1,1,1,0
+access_ssi_fetch_wizard_manager,ssi.data.fetch.wizard manager,model_ssi_data_fetch_wizard,base.group_system,1,1,1,1
+access_ssi_index_list_user,ssi.index.list user,model_ssi_index_list,base.group_user,1,0,0,0
+access_ssi_index_list_manager,ssi.index.list manager,model_ssi_index_list,base.group_system,1,1,1,1
+access_ssi_index_components_user,ssi.index.components user,model_ssi_index_components,base.group_user,1,0,0,0
+access_ssi_index_components_manager,ssi.index.components manager,model_ssi_index_components,base.group_system,1,1,1,1
+
+

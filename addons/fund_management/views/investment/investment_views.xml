@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Investment List View -->
+        <record id="view_portfolio_investment_list" model="ir.ui.view">
+            <field name="name">portfolio.investment.list</field>
+            <field name="model">portfolio.investment</field>
+            <field name="arch" type="xml">
+                <list>
+                    <field name="user_id"/>
+                    <field name="fund_id"/>
+                    <field name="units" string="Tổng CCQ"/>
+                    <field name="available_units"/>
+                    <field name="pending_t2_units"/>
+                    <field name="total_value" widget="monetary"/>
+                    <field name="status" widget="badge" decoration-success="status == 'active'" decoration-warning="status == 'inactive'" decoration-danger="status == 'closed'"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Investment Form View -->
+        <record id="view_portfolio_investment_form" model="ir.ui.view">
+            <field name="name">portfolio.investment.form</field>
+            <field name="model">portfolio.investment</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Investment">
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        
+                        <!-- Summary Stats Cards -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-2">
+                                        <h4 class="mb-0"><field name="total_ccq" readonly="1"/></h4>
+                                        <small class="text-muted">Tổng CCQ</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center py-2">
+                                        <h4 class="mb-0"><field name="available_units" readonly="1"/></h4>
+                                        <small>CCQ khả dụng</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning">
+                                    <div class="card-body text-center py-2">
+                                        <h4 class="mb-0"><field name="pending_t2_units" readonly="1"/></h4>
+                                        <small>Chờ về (T+2)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center py-2">
+                                        <h4 class="mb-0"><field name="total_value" widget="monetary" readonly="1"/></h4>
+                                        <small>Tổng giá trị</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <group>
+                            <group string="Thông tin chung">
+                                <field name="user_id"/>
+                                <field name="fund_id"/>
+                                <field name="status" widget="badge" decoration-success="status == 'active'" decoration-warning="status == 'inactive'" decoration-danger="status == 'closed'"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                            <group string="Phân loại CCQ">
+                                <field name="normal_order_units" readonly="1"/>
+                                <field name="normal_available_units" readonly="1" decoration-success="normal_available_units &gt; 0"/>
+                                <field name="negotiated_order_units" readonly="1"/>
+                                <field name="negotiated_available_units" readonly="1" decoration-success="negotiated_available_units &gt; 0"/>
+                                <field name="total_ccq" invisible="1"/>
+                            </group>
+                        </group>
+                        
+                        <!-- Holdings Notebooks -->
+                        <notebook>
+                            <page string="Lệnh thường" name="normal_orders">
+                                <field name="normal_transaction_ids" readonly="1">
+                                    <list decoration-warning="t2_date &gt; current_date">
+                                        <field name="created_at" string="Ngày đặt"/>
+                                        <field name="order_mode" string="Loại đầu tư"/>
+                                        <field name="units" sum="Tổng"/>
+                                        <field name="price" widget="monetary"/>
+                                        <field name="order_type_detail"/>
+                                        <field name="t2_date" string="Ngày hàng về"/>
+                                        <field name="exchange_status" widget="badge"/>
+                                    </list>
+                                </field>
+                            </page>
+                            <page string="Lệnh thỏa thuận" name="negotiated_orders">
+                                <field name="negotiated_transaction_ids" readonly="1">
+                                    <list>
+                                        <field name="created_at" string="Ngày đặt"/>
+                                        <field name="order_mode" string="Loại đầu tư"/>
+                                        <field name="units" sum="Tổng"/>
+                                        <field name="price" widget="monetary"/>
+                                        <field name="term_months" string="Kỳ hạn"/>
+                                        <field name="interest_rate" string="Lãi suất"/>
+                                        <field name="status" widget="badge"/>
+                                    </list>
+                                </field>
+                            </page>
+                        </notebook>
+                        
+                        <!-- Deprecated fields (hidden by default) -->
+                        <group string="Thông tin cũ (deprecated)" invisible="1">
+                            <field name="investment_type"/>
+                            <field name="amount"/>
+                            <field name="current_value"/>
+                            <field name="profit_loss"/>
+                            <field name="profit_loss_percentage"/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Investment Search View -->
+        <record id="view_portfolio_investment_search" model="ir.ui.view">
+            <field name="name">portfolio.investment.search</field>
+            <field name="model">portfolio.investment</field>
+            <field name="type">search</field>
+            <field name="arch" type="xml">
+                <search string="Investments">
+                    <field name="name"/>
+                    <field name="fund_id"/>
+                    <field name="user_id"/>
+                    <filter string="Active" name="active" domain="[('status','=','active')]"/>
+                    <filter string="Inactive" name="inactive" domain="[('status','=','inactive')]"/>
+                    <filter string="Closed" name="closed" domain="[('status','=','closed')]"/>
+                    <separator/>
+                    <filter string="Có CCQ chờ về" name="pending_t2" domain="[('pending_t2_units', '>', 0)]"/>
+                    <filter string="Có CCQ khả dụng" name="available" domain="[('available_units', '>', 0)]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Fund" name="groupby_fund" context="{'group_by':'fund_id'}"/>
+                        <filter string="User" name="groupby_user" context="{'group_by':'user_id'}"/>
+                        <filter string="Status" name="groupby_status" context="{'group_by':'status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+        
+        <!-- Investment Kanban View (for dashboard) -->
+        <record id="view_portfolio_investment_kanban" model="ir.ui.view">
+            <field name="name">portfolio.investment.kanban</field>
+            <field name="model">portfolio.investment</field>
+            <field name="arch" type="xml">
+                <kanban class="o_kanban_mobile">
+                    <field name="name"/>
+                    <field name="user_id"/>
+                    <field name="fund_id"/>
+                    <field name="units"/>
+                    <field name="available_units"/>
+                    <field name="pending_t2_units"/>
+                    <field name="total_value"/>
+                    <field name="status"/>
+                    <field name="currency_id"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div class="oe_kanban_global_click">
+                                <div class="o_kanban_record_top mb-2">
+                                    <div class="o_kanban_record_headings">
+                                        <strong class="o_kanban_record_title">
+                                            <field name="fund_id"/>
+                                        </strong>
+                                    </div>
+                                    <span t-attf-class="badge #{record.status.raw_value === 'active' ? 'text-bg-success' : record.status.raw_value === 'inactive' ? 'text-bg-warning' : 'text-bg-danger'}">
+                                        <field name="status"/>
+                                    </span>
+                                </div>
+                                <div class="o_kanban_record_body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Tổng CCQ</small>
+                                            <div><strong><field name="units"/></strong></div>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Khả dụng</small>
+                                            <div class="text-success"><strong><field name="available_units"/></strong></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2" t-if="record.pending_t2_units.raw_value > 0">
+                                        <div class="col-12">
+                                            <span class="badge text-bg-warning">
+                                                <i class="fa fa-clock-o"/> Chờ T+2: <field name="pending_t2_units"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="total_value" widget="monetary"/>
+                                    </div>
+                                    <div class="oe_kanban_bottom_right">
+                                        <field name="user_id" widget="many2one_avatar_user"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+    </data>
+</odoo>

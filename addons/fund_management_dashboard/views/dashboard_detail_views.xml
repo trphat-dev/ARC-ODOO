@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Account Stats List View -->
+    <record id="view_dashboard_account_stat_list" model="ir.ui.view">
+        <field name="name">dashboard.account.stat.list</field>
+        <field name="model">dashboard.account.stat</field>
+        <field name="arch" type="xml">
+            <list string="Thống kê tài khoản">
+                <field name="status"/>
+                <field name="count" sum="Tổng"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Fund Movement List View -->
+    <record id="view_dashboard_fund_movement_list" model="ir.ui.view">
+        <field name="name">dashboard.fund.movement.list</field>
+        <field name="model">dashboard.fund.movement</field>
+        <field name="arch" type="xml">
+            <list string="Biến động quỹ">
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+                <field name="buy_count" sum="Tổng"/>
+                <field name="buy_units" sum="Tổng"/>
+                <field name="buy_amount" sum="Tổng"/>
+                <field name="sell_count" sum="Tổng"/>
+                <field name="sell_units" sum="Tổng"/>
+                <field name="sell_amount" sum="Tổng"/>
+                <field name="net_units" sum="Tổng"/>
+                <field name="net_amount" sum="Tổng"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Transaction List View -->
+    <record id="view_dashboard_transaction_list" model="ir.ui.view">
+        <field name="name">dashboard.transaction.list</field>
+        <field name="model">dashboard.transaction</field>
+        <field name="arch" type="xml">
+            <list string="Giao dịch">
+                <field name="name"/>
+                <field name="investor_name"/>
+                <field name="account_number"/>
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+                <field name="transaction_type"/>
+                <field name="units" sum="Tổng"/>
+                <field name="price"/>
+                <field name="amount" sum="Tổng"/>
+                <field name="status"/>
+                <field name="source"/>
+                <field name="matched_units"/>
+                <field name="remaining_units"/>
+                <field name="create_date" widget="datetime"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Transaction Search View -->
+    <record id="view_dashboard_transaction_search" model="ir.ui.view">
+        <field name="name">dashboard.transaction.search</field>
+        <field name="model">dashboard.transaction</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Giao dịch">
+                <field name="name"/>
+                <field name="investor_name"/>
+                <field name="account_number"/>
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+                <field name="transaction_type"/>
+                <field name="status"/>
+                <separator/>
+                <filter string="Mua" name="buy" domain="[('transaction_type', '=', 'buy')]"/>
+                <filter string="Bán" name="sell" domain="[('transaction_type', '=', 'sell')]"/>
+                <filter string="Chờ duyệt" name="pending" domain="[('status', '=', 'pending')]"/>
+                <filter string="Đã hoàn thành" name="completed" domain="[('status', '=', 'completed')]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Fund Movement Search View -->
+    <record id="view_dashboard_fund_movement_search" model="ir.ui.view">
+        <field name="name">dashboard.fund.movement.search</field>
+        <field name="model">dashboard.fund.movement</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Biến động quỹ">
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- NAV Opening List View -->
+    <record id="view_dashboard_nav_opening_list" model="ir.ui.view">
+        <field name="name">dashboard.nav.opening.list</field>
+        <field name="model">dashboard.nav.opening</field>
+        <field name="arch" type="xml">
+            <list string="CCQ Đầu Ngày">
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+                <field name="opening_ccq" sum="Tổng"/>
+                <field name="opening_price" sum="Tổng"/>
+                <field name="opening_value" sum="Tổng"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- NAV Opening Search View -->
+    <record id="view_dashboard_nav_opening_search" model="ir.ui.view">
+        <field name="name">dashboard.nav.opening.search</field>
+        <field name="model">dashboard.nav.opening</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm CCQ Đầu Ngày">
+                <field name="fund_ticker"/>
+                <field name="fund_name"/>
+            </search>
+        </field>
+    </record>
+</odoo>
+

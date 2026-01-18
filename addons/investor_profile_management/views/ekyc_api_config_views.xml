@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- eKYC API Configuration Form View -->
+    <record id="view_ekyc_api_config_form" model="ir.ui.view">
+        <field name="name">ekyc.api.config.form</field>
+        <field name="model">ekyc.api.config</field>
+        <field name="arch" type="xml">
+            <form string="VNPT eKYC API Configuration">
+                <header>
+                    <button name="action_generate_token" string="Lấy Access Token" type="object" class="btn-primary" icon="fa-refresh"/>
+                    <button name="action_update_from_default" string="Cập nhật từ mặc định" type="object" class="btn-secondary" icon="fa-download"/>
+                    <button name="action_view_api_records" string="Xem Bản ghi API" type="object" class="btn-secondary" icon="fa-list"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_api_records" type="object" class="oe_stat_button" icon="fa-list" context="{'default_api_type': 'ekyc'}">
+                            <field name="total_api_calls" widget="statinfo" string="Tổng API Calls"/>
+                        </button>
+                        <button name="action_view_api_records" type="object" class="oe_stat_button" icon="fa-check-circle" context="{'default_api_type': 'ekyc', 'search_default_success': 1}">
+                            <field name="success_calls" widget="statinfo" string="Thành công"/>
+                        </button>
+                        <button name="action_view_api_records" type="object" class="oe_stat_button" icon="fa-times-circle" context="{'default_api_type': 'ekyc', 'search_default_error': 1}">
+                            <field name="failed_calls" widget="statinfo" string="Lỗi"/>
+                        </button>
+                    </div>
+                    <group>
+                        <field name="name"/>
+                        <field name="is_active"/>
+                    </group>
+                    <notebook>
+                        <page string="API Credentials" name="credentials">
+                            <group>
+                                <group string="Thông tin xác thực">
+                                    <field name="token_id" placeholder="4454b0b5-cb14-62fa-e063-62199f0ab40b"/>
+                                    <field name="token_key" password="True" placeholder="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB..."/>
+                                    <field name="access_token" readonly="1" password="True" widget="text"/>
+                                    <field name="token_expiration" readonly="1"/>
+                                </group>
+                                <group string="Public Key">
+                                    <field name="public_key_ca" widget="text" placeholder="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB..."/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="API URLs" name="urls">
+                            <group>
+                                <group string="Endpoints">
+                                    <field name="base_url" placeholder="https://api.idg.vnpt.vn"/>
+                                    <field name="token_endpoint" placeholder="https://api.idg.vnpt.vn/oauth/token"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Sync Status" name="status">
+                            <group>
+                                <group string="Trạng thái đồng bộ">
+                                    <field name="last_sync_date" readonly="1"/>
+                                    <field name="last_sync_status" readonly="1" widget="badge"/>
+                                </group>
+                                <group string="Thống kê">
+                                    <field name="total_api_calls" readonly="1"/>
+                                    <field name="success_calls" readonly="1"/>
+                                    <field name="failed_calls" readonly="1"/>
+                                    <field name="last_api_call_date" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- eKYC API Configuration List View -->
+    <record id="view_ekyc_api_config_list" model="ir.ui.view">
+        <field name="name">ekyc.api.config.list</field>
+        <field name="model">ekyc.api.config</field>
+        <field name="arch" type="xml">
+            <list string="VNPT eKYC API Configurations">
+                <field name="name"/>
+                <field name="is_active" widget="boolean_toggle"/>
+                <field name="token_expiration" widget="datetime"/>
+                <field name="last_sync_date" widget="datetime"/>
+                <field name="last_sync_status" widget="badge"/>
+                <field name="total_api_calls"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- eKYC API Configuration Search View -->
+    <record id="view_ekyc_api_config_search" model="ir.ui.view">
+        <field name="name">ekyc.api.config.search</field>
+        <field name="model">ekyc.api.config</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Cấu hình eKYC">
+                <field name="name"/>
+                <filter string="Đang hoạt động" name="active" domain="[('is_active', '=', True)]"/>
+                <filter string="Không hoạt động" name="inactive" domain="[('is_active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- eKYC API Configuration Action -->
+    <record id="action_ekyc_api_config" model="ir.actions.act_window">
+        <field name="name">VNPT eKYC API Configuration</field>
+        <field name="res_model">ekyc.api.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ekyc_api_config_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có cấu hình eKYC nào
+            </p>
+            <p>
+                Tạo cấu hình mới để quản lý thông tin kết nối VNPT eKYC API.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for eKYC API Configuration -->
+    <menuitem id="menu_ekyc_api_config" 
+              name="VNPT eKYC Configuration" 
+              parent="menu_investor_root" 
+              action="action_ekyc_api_config" 
+              sequence="1"/>
+</odoo>
+

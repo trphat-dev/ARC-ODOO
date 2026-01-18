@@ -1,0 +1,711 @@
+/* Trading Portal Styles - Bootstrap Compatible */
+
+/* Global Variables - Orange Gradient Theme (scoped) */
+#trading_portal_page {
+    --primary-color: #f97316;
+    --primary-dark: #ea580c;
+    --primary-light: #fb923c;
+    --success-color: #198754;
+    --gradient-primary: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+    --gradient-primary-light: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+    --gradient-primary-dark: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+    --gradient-success: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --shadow-md: 0 0.5rem 1rem rgba(249, 115, 22, 0.15);
+    --shadow-lg: 0 1rem 3rem rgba(249, 115, 22, 0.25);
+    --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom styles for trading portal (scoped) */
+#trading_portal_page .trading-balance-widget {
+    padding: 0;
+}
+
+#trading_portal_page .trading-link-account-form {
+    padding: 0;
+}
+
+/* Page Header Animation */
+#trading_portal_page .page-header {
+    animation: slideDownFadeIn 0.6s ease-out;
+}
+
+@keyframes slideDownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Card hover effects with enhanced animations - Orange Theme */
+#trading_portal_page .card.shadow-sm {
+    transition: var(--transition-base);
+    border: none;
+    overflow: hidden;
+    position: relative;
+}
+
+#trading_portal_page .card.shadow-sm::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+#trading_portal_page .card.shadow-sm:hover::before {
+    left: 100%;
+}
+
+#trading_portal_page .card.shadow-sm:hover {
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: var(--shadow-lg) !important;
+    border-top: 3px solid var(--primary-color);
+}
+
+/* Card Header Gradient - Orange Theme */
+#trading_portal_page .card-header.bg-primary {
+    background: var(--gradient-primary) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+#trading_portal_page .card-header.bg-success {
+    background: var(--gradient-primary) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Update primary color for icons and text */
+#trading_portal_page .text-primary {
+    color: var(--primary-color) !important;
+}
+
+#trading_portal_page .border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+#trading_portal_page .bg-primary {
+    background: var(--gradient-primary) !important;
+}
+
+#trading_portal_page .card-header.bg-primary::after,
+#trading_portal_page .card-header.bg-success::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Form validation styles */
+#trading_portal_page .form-control:invalid {
+    border-color: #dc3545;
+}
+
+#trading_portal_page .form-control:valid {
+    border-color: #28a745;
+}
+
+/* Enhanced Loading spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes spinPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: rotate(180deg) scale(1.1);
+    }
+}
+
+#trading_portal_page .spinner-border {
+    animation: spinPulse 1.2s ease-in-out infinite;
+}
+
+#trading_portal_page .fa-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Loading State Styles */
+#trading_portal_page .balance-loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Alert Animations */
+#trading_portal_page .alert {
+    animation: slideDownFadeIn 0.4s ease-out;
+    border-radius: 0.75rem;
+    border: none;
+    box-shadow: var(--shadow-sm);
+}
+
+#trading_portal_page .alert-success {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+    border-left: 4px solid #198754;
+}
+
+#trading_portal_page .alert-danger {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+    border-left: 4px solid #dc3545;
+}
+
+/* Balance Card Enhancements */
+#trading_portal_page .card.border-success,
+#trading_portal_page .card.border-info,
+#trading_portal_page .card.border-primary {
+    transition: var(--transition-base);
+    border-width: 2px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+#trading_portal_page .card.border-success::before,
+#trading_portal_page .card.border-info::before,
+#trading_portal_page .card.border-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+}
+
+#trading_portal_page .card.border-success:hover::before,
+#trading_portal_page .card.border-info:hover::before,
+#trading_portal_page .card.border-primary:hover::before {
+    transform: translateX(100%);
+}
+
+#trading_portal_page .card.border-success:hover,
+#trading_portal_page .card.border-info:hover,
+#trading_portal_page .card.border-primary:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Icon Animations */
+#trading_portal_page .fa-wallet,
+#trading_portal_page .fa-money-bill-wave,
+#trading_portal_page .fa-chart-line {
+    transition: var(--transition-base);
+}
+
+#trading_portal_page .card:hover .fa-wallet,
+#trading_portal_page .card:hover .fa-money-bill-wave,
+#trading_portal_page .card:hover .fa-chart-line {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Refresh Button Enhancement */
+#trading_portal_page .btn-outline-light {
+    transition: var(--transition-base);
+    border-radius: 0.5rem;
+}
+
+#trading_portal_page .btn-outline-light:hover {
+    transform: rotate(180deg);
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #trading_portal_page .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+    }
+    
+    .h3 {
+        font-size: 1.5rem;
+    }
+    
+    #trading_portal_page .ssi-link-box {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    #trading_portal_page .ssi-logo {
+        max-width: 100px;
+        max-height: 50px;
+    }
+    
+    #trading_portal_page .modal-dialog {
+        margin: 1rem;
+    }
+    
+    /* Reduce animations on mobile for performance */
+    .ssi-link-box:hover .ssi-logo-wrapper {
+        animation: none;
+    }
+}
+
+/* Enhanced Custom animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-10px);
+    }
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+#trading_portal_page .card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Stagger animation for balance cards */
+#trading_portal_page .balance-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+#trading_portal_page .balance-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+#trading_portal_page .balance-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+#trading_portal_page .balance-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+/* SSI-style balance tiles */
+#trading_portal_page .balance-card-tile {
+    position: relative;
+    border-radius: 20px;
+    padding: 24px;
+    color: #fff;
+    overflow: hidden;
+    min-height: 160px;
+    box-shadow: var(--shadow-md);
+    background: #4f46e5; /* fallback */
+}
+
+#trading_portal_page .balance-card-tile .tile-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    opacity: 0.95;
+}
+
+#trading_portal_page .balance-card-tile .tile-account {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+#trading_portal_page .balance-card-tile .tile-type {
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+#trading_portal_page .balance-card-tile .tile-middle {
+    margin-top: 28px;
+}
+
+#trading_portal_page .balance-card-tile .tile-label {
+    opacity: 0.85;
+}
+
+#trading_portal_page .balance-card-tile .tile-value {
+    font-size: 28px;
+    font-weight: 800;
+    margin-top: 6px;
+}
+
+#trading_portal_page .balance-card-tile .tile-logo {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    width: 58px;
+    height: auto;
+    opacity: 0.95;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+/* Gradient variants */
+#trading_portal_page .tile-cash {
+    background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+}
+
+#trading_portal_page .tile-margin {
+    background: linear-gradient(135deg, #312e81 0%, #4338ca 100%);
+}
+
+#trading_portal_page .tile-derivative {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+/* SSI Link Box Styles with Enhanced Animations - Orange Theme */
+#trading_portal_page .ssi-link-box {
+    cursor: pointer;
+    padding: 1.5rem 1rem;
+    border: 2px dashed #f97316;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.05) 0%, rgba(249, 115, 22, 0.1) 100%);
+    background-size: 200% 200%;
+    transition: var(--transition-base);
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    animation: scaleIn 0.5s ease-out;
+}
+
+#trading_portal_page .ssi-link-box::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(249, 115, 22, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#trading_portal_page .ssi-link-box:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#trading_portal_page .ssi-link-box:hover {
+    border-color: #f97316;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.25) 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 0.5rem 1.5rem rgba(249, 115, 22, 0.3);
+    border-style: solid;
+}
+
+#trading_portal_page .ssi-link-box:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+#trading_portal_page .ssi-logo-wrapper {
+    margin-bottom: 0.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    transition: var(--transition-base);
+}
+
+#trading_portal_page .ssi-link-box:hover .ssi-logo-wrapper {
+    animation: float 2s ease-in-out infinite;
+}
+
+#trading_portal_page .ssi-logo {
+    max-width: 120px;
+    max-height: 60px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+    transition: var(--transition-base);
+}
+
+#trading_portal_page .ssi-link-box:hover .ssi-logo {
+    transform: scale(1.1);
+    filter: drop-shadow(0 4px 8px rgba(249, 115, 22, 0.3));
+}
+
+#trading_portal_page .ssi-link-box h5 {
+    color: #f97316;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+    transition: var(--transition-base);
+}
+
+#trading_portal_page .ssi-link-box:hover h5 {
+    color: #ea580c;
+    transform: translateY(-2px);
+}
+
+#trading_portal_page .ssi-link-box p {
+    font-size: 0.85rem;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    transition: var(--transition-base);
+}
+
+#trading_portal_page .ssi-link-box:hover p {
+    transform: translateY(-1px);
+}
+
+/* Enhanced Modal Styles with Animations */
+#trading_portal_page .modal {
+    animation: fadeIn 0.2s ease-out;
+}
+
+#trading_portal_page .modal.show {
+    display: block !important;
+    z-index: 1050;
+}
+
+#trading_portal_page .modal-dialog {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#trading_portal_page .modal.show .modal-dialog {
+    transform: none;
+    animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(-50px);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+#trading_portal_page .modal-content {
+    border: none;
+    box-shadow: var(--shadow-lg);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+#trading_portal_page .modal-header {
+    border-bottom: none;
+    position: relative;
+    overflow: hidden;
+}
+
+#trading_portal_page .modal-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+#trading_portal_page .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1040;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+
+#trading_portal_page .modal-backdrop.show {
+    opacity: 1;
+}
+
+/* Form Input Animations - Orange Theme */
+#trading_portal_page .form-control {
+    transition: var(--transition-base);
+    border-radius: 0.5rem;
+}
+
+#trading_portal_page .form-control:focus {
+    transform: scale(1.02);
+    border-color: #f97316;
+    box-shadow: 0 0 0 0.25rem rgba(249, 115, 22, 0.25);
+}
+
+.form-control:invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+
+.form-control:valid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
+/* Button Animations - Orange Theme */
+#trading_portal_page .btn {
+    transition: var(--transition-base);
+    border-radius: 0.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+#trading_portal_page .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+#trading_portal_page .btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#trading_portal_page .btn:active {
+    transform: scale(0.95);
+}
+
+#trading_portal_page .btn-primary {
+    background: var(--gradient-primary);
+    border: none;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+    color: white;
+}
+
+#trading_portal_page .btn-primary:hover {
+    background: var(--gradient-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+}
+
+#trading_portal_page .btn-outline-light {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#trading_portal_page .btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: white;
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 768px) {
+    #trading_portal_page .ssi-link-box {
+        padding: 1.25rem 0.75rem;
+    }
+    
+    #trading_portal_page .ssi-logo {
+        max-width: 100px;
+        max-height: 50px;
+    }
+    
+    #trading_portal_page .modal-dialog {
+        margin: 1rem;
+    }
+}
+

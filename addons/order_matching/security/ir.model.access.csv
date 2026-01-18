@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_transaction_matched_orders_user,transaction.matched.orders.user,model_transaction_matched_orders,base.group_user,1,1,1,1
+access_transaction_matched_orders_manager,transaction.matched.orders.manager,model_transaction_matched_orders,base.group_system,1,1,1,1
+access_transaction_partial_matching_engine_user,transaction.partial.matching.engine.user,model_transaction_partial_matching_engine,base.group_user,1,1,1,1
+access_transaction_partial_matching_engine_manager,transaction.partial.matching.engine.manager,model_transaction_partial_matching_engine,base.group_system,1,1,1,1
+access_transaction_order_queue_user,transaction.order.queue.user,model_transaction_order_queue,base.group_user,1,1,1,1
+access_transaction_order_queue_manager,transaction.order.queue.manager,model_transaction_order_queue,base.group_system,1,1,1,1
+access_transaction_maturity_notification_user,transaction.maturity.notification.user,model_transaction_maturity_notification,base.group_user,1,0,0,0
+access_transaction_maturity_notification_portal,transaction.maturity.notification.portal,model_transaction_maturity_notification,base.group_portal,1,0,0,0
+access_transaction_maturity_notification_manager,transaction.maturity.notification.manager,model_transaction_maturity_notification,base.group_system,1,1,1,1
+access_maturity_notification_log_user,maturity.notification.log.user,model_maturity_notification_log,base.group_user,1,0,0,0
+access_maturity_notification_log_portal,maturity.notification.log.portal,model_maturity_notification_log,base.group_portal,1,0,0,0
+access_maturity_notification_log_manager,maturity.notification.log.manager,model_maturity_notification_log,base.group_system,1,1,1,1
+

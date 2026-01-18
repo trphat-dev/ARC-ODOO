@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Trading Order List View -->
+    <record id="view_trading_order_tree" model="ir.ui.view">
+        <field name="name">trading.order.tree</field>
+        <field name="model">trading.order</field>
+        <field name="arch" type="xml">
+            <list string="Trading Orders" decoration-success="state == 'filled'" decoration-info="state == 'submitted'" decoration-warning="state == 'pending'" decoration-danger="state in ('error', 'rejected')">
+                <field name="name"/>
+                <field name="state" widget="badge" decoration-success="state == 'filled'" decoration-info="state == 'submitted'" decoration-warning="state == 'pending'" decoration-danger="state in ('error', 'rejected')"/>
+                <field name="request_id" optional="show"/>
+                <field name="api_order_id" optional="hide"/>
+                <field name="user_id"/>
+                <field name="order_type" optional="hide"/>
+                <field name="market" optional="hide"/>
+                <field name="instrument_code"/>
+                <field name="buy_sell"/>
+                <field name="order_type_detail"/>
+                <field name="quantity"/>
+                <field name="price"/>
+                <field name="filled_quantity" optional="show"/>
+                <field name="filled_price" optional="show"/>
+                <field name="account"/>
+                <field name="submitted_at" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Trading Order Form View -->
+    <record id="view_trading_order_form" model="ir.ui.view">
+        <field name="name">trading.order.form</field>
+        <field name="model">trading.order</field>
+        <field name="arch" type="xml">
+            <form string="Trading Order">
+                <header>
+                    <button name="action_submit_order" string="Submit Order" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    
+                    <button name="action_sync_status" string="Sync Status" type="object" class="btn-secondary" 
+                            invisible="state == 'draft'" 
+                            title="Force sync status from Exchange"/>
+                    
+                    <button name="action_cancel_order" string="Cancel Order" type="object" 
+                            invisible="state not in ('pending', 'submitted', 'partially_filled')"
+                            confirm="Are you sure you want to cancel this order?"/>
+                            
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,submitted,filled"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="General Info">
+                            <field name="account" placeholder="Account Number"/>
+                            <field name="config_id" invisible="1"/>
+                            <field name="user_id" readonly="state != 'draft'"/>
+                            <field name="instrument_id" options="{'no_create': True}" readonly="state != 'draft'"/>
+                            <field name="instrument_code" readonly="1"/>
+                            <field name="market" readonly="state != 'draft'"/>
+                            <field name="order_type" widget="radio" options="{'horizontal': true}" readonly="state != 'draft'"/>
+                        </group>
+                        <group string="Order Details">
+                            <field name="buy_sell" widget="radio" options="{'horizontal': true}" readonly="state != 'draft'"/>
+                            <field name="order_type_detail" readonly="state != 'draft'"/>
+                            <field name="quantity" readonly="state != 'draft'"/>
+                            <field name="price" widget="monetary" readonly="state != 'draft'"
+                                   invisible="order_type_detail in ('MP', 'ATO', 'ATC', 'MTL', 'MAK', 'MOK')"
+                                   required="order_type_detail in ('LO', 'PLO')"/>
+                            <field name="purchasing_power" widget="monetary"/>
+                            
+                            <label for="code" string="OTP Code" invisible="has_valid_write_token"/>
+                            <div invisible="has_valid_write_token">
+                                <field name="code" password="True" class="oe_inline"/>
+                                <span class="text-muted ms-2" invisible="not code"> Enter OTP if prompted</span>
+                            </div>
+                            <field name="has_valid_write_token" invisible="1"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Execution Status" invisible="state == 'draft'">
+                        <group>
+                            <field name="filled_quantity"/>
+                            <field name="filled_price"/>
+                            <field name="cancel_quantity"/>
+                        </group>
+                        <group>
+                            <field name="submitted_at"/>
+                            <field name="filled_at"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Technical Info">
+                            <group>
+                                <group>
+                                    <field name="request_id"/>
+                                    <field name="api_order_id"/>
+                                    <field name="raw_status"/>
+                                </group>
+                                <group>
+                                    <field name="device_id"/>
+                                    <field name="user_agent"/>
+                                </group>
+                            </group>
+                            <separator string="Last API Response"/>
+                            <field name="api_response" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                            <separator string="Error Message" invisible="not error_message"/>
+                            <field name="error_message" readonly="1" class="text-danger"/>
+                        </page>
+                        
+                        <page string="Derivative Params" invisible="order_type != 'derivative'">
+                            <group>
+                                <group>
+                                    <field name="stop_order"/>
+                                    <field name="stop_price" invisible="not stop_order" required="stop_order"/>
+                                </group>
+                                <group>
+                                    <field name="stop_type"/>
+                                    <field name="stop_step"/>
+                                    <field name="loss_step"/>
+                                    <field name="profit_step"/>
+                                </group>
+                            </group>
+                        </page>
+                        
+                        
+                        <page string="Notes">
+                            <field name="notes" placeholder="Internal notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_trading_order_search" model="ir.ui.view">
+        <field name="name">trading.order.search</field>
+        <field name="model">trading.order</field>
+        <field name="arch" type="xml">
+            <search string="Trading Orders">
+                <field name="name"/>
+                <field name="request_id"/>
+                <field name="api_order_id"/>
+                <field name="account"/>
+                <field name="instrument_code"/>
+                
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Active (Pending/Submitted)" name="active_orders" domain="[('state', 'in', ('pending', 'submitted', 'partially_filled'))]"/>
+                <filter string="Completed (Filled)" name="filled" domain="[('state', '=', 'filled')]"/>
+                <filter string="Failed/Error" name="errors" domain="[('state', 'in', ('error', 'rejected'))]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Market" name="group_market" context="{'group_by': 'market'}"/>
+                    <filter string="Instrument" name="group_instrument" context="{'group_by': 'instrument_code'}"/>
+                    <filter string="Buy/Sell" name="group_buy_sell" context="{'group_by': 'buy_sell'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_trading_order" model="ir.actions.act_window">
+        <field name="name">Trading Orders</field>
+        <field name="res_model">trading.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_trading_order_search"/>
+        <field name="help" type="html">
+          <p class="o_view_nocontent_smiling_face">
+            Create a new trading order
+          </p>
+        </field>
+    </record>
+    
+</odoo>

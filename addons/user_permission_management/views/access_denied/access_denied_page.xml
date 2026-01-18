@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="access_denied_page" name="Access Denied Page">
+        <t t-call="web.layout">
+            <t t-set="title">Không có quyền truy cập</t>
+            <t t-set="head">
+                <!-- Bootstrap CSS -->
+                <link
+                    rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+                    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+                    crossorigin="anonymous"
+                />
+                <!-- Font Awesome -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+            </t>
+
+            <!-- Main Container -->
+            <div id="accessDeniedWidget"></div>
+
+            <!-- Pass data to JavaScript -->
+            <script type="text/javascript">
+                <t t-if="access_denied_data">
+                window.accessDeniedData = <t t-raw="access_denied_data"/>;
+                </t>
+                <t t-if="not access_denied_data">
+                window.accessDeniedData = {
+                    "error_title": "Không có quyền truy cập",
+                    "error_message": "Bạn không có quyền truy cập trang này.",
+                    "allowed_types": []
+                };
+                </t>
+            </script>
+
+            <t t-call-assets="web.assets_frontend" t-js="true"/>
+        </t>
+    </template>
+</odoo>
+

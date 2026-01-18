@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="user_permission_page" name="User Permission Management Page">
+        <t t-call="web.layout">
+            <t t-set="title">Quản lý Phân quyền Hệ thống</t>
+            <t t-set="head">
+                <!-- Bootstrap CSS -->
+                <link
+                    rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+                    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+                    crossorigin="anonymous"
+                />
+                <!-- Bootstrap Icons -->
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+                <!-- Font Awesome -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+            </t>
+
+            <!-- Header Container for Management -->
+            <div id="headermana-container"></div>
+
+            <!-- Main Container -->
+            <div class="fund-dashboard-container">
+                <div class="dashboard-shell">
+                    <!-- Sidebar Widget Container -->
+                    <div id="sidebarContainer"></div>
+
+                    <!-- Main Content -->
+                    <main class="dashboard-main">
+                        <div class="container-fluid p-4">
+                            <!-- Error Container (hidden by default) -->
+                            <div id="error-container" class="error-container" style="display: none;">
+                                <div class="error-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <h4 class="error-title">Có lỗi xảy ra</h4>
+                                <p class="error-message" id="error-message">Không thể tải dữ liệu</p>
+                                <button class="btn btn-primary mt-3" onclick="location.reload()">
+                                    <i class="fas fa-sync-alt me-2"></i>
+                                    Thử lại
+                                </button>
+                            </div>
+                            
+                            <!-- Widget Container -->
+                            <div id="userPermissionWidget"></div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+
+            <!-- Pass data and helper methods -->
+            <script type="text/javascript">
+                <t t-if="user_permission_data">
+                window.userPermissionData = <t t-raw="user_permission_data"/>;
+                </t>
+                <t t-if="not user_permission_data">
+                window.userPermissionData = {};
+                </t>
+                
+                window.showError = function(message) {
+                    const errorContainer = document.getElementById('error-container');
+                    const errorMessage = document.getElementById('error-message');
+                    const widgetContainer = document.getElementById('userPermissionWidget');
+                    
+                    if (errorContainer &amp;&amp; errorMessage) {
+                        errorMessage.textContent = message || 'Có lỗi xảy ra khi tải dữ liệu';
+                        errorContainer.style.display = 'block';
+                    }
+                    
+                    if (widgetContainer) {
+                        widgetContainer.style.display = 'none';
+                    }
+                };
+            </script>
+
+            <t t-call-assets="web.assets_frontend" t-js="true"/>
+        </t>
+    </template>
+</odoo>
+

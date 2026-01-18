@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_fund_signed_contract_form" model="ir.ui.view">
+    <field name="name">fund.signed.contract.form</field>
+    <field name="model">fund.signed.contract</field>
+    <field name="arch" type="xml">
+      <form create="1" edit="1">
+        <sheet>
+          <div class="oe_title">
+            <label for="name"/>
+            <h1><field name="name"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="partner_id"/>
+              <field name="investment_id"/>
+              <field name="transaction_id"/>
+              <field name="signed_type"/>
+              <field name="signed_on"/>
+              <field name="signer_email"/>
+              <field name="signer_phone"/>
+              <field name="signer_id_number"/>
+              <field name="signer_birth_date"/>
+            </group>
+            <group>
+              <field name="file_data" filename="filename"/>
+              <field name="filename" invisible="1"/>
+              <field name="contract_hash" readonly="1"/>
+            </group>
+          </group>
+        </sheet>
+        <div class="oe_chatter">
+          <field name="message_follower_ids"/>
+          <field name="activity_ids"/>
+          <field name="message_ids"/>
+        </div>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_fund_signed_contract_tree" model="ir.ui.view">
+    <field name="name">fund.signed.contract.tree</field>
+    <field name="model">fund.signed.contract</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="partner_id"/>
+        <field name="investment_id"/>
+        <field name="transaction_id"/>
+        <field name="signed_type"/>
+        <field name="signed_on"/>
+        <field name="create_date"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_fund_signed_contract_search" model="ir.ui.view">
+    <field name="name">fund.signed.contract.search</field>
+    <field name="model">fund.signed.contract</field>
+    <field name="type">search</field>
+    <field name="arch" type="xml">
+      <search string="Signed Contracts">
+        <field name="name"/>
+        <field name="partner_id"/>
+        <field name="investment_id"/>
+        <field name="transaction_id"/>
+        <filter string="Handwritten" name="hand" domain="[('signed_type','=','hand')]"/>
+        <filter string="Digital" name="digital" domain="[('signed_type','=','digital')]"/>
+        <group expand="0" string="Group By">
+          <filter string="Sign Type" name="groupby_signed_type" context="{'group_by':'signed_type'}"/>
+          <filter string="Partner" name="groupby_partner" context="{'group_by':'partner_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_fund_signed_contract" model="ir.actions.act_window">
+    <field name="name">Signed Contracts</field>
+    <field name="res_model">fund.signed.contract</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_fund_signed_contract_search"/>
+  </record>
+
+  <menuitem id="menu_fund_signed_contract_root"
+            name="Signed Contracts"
+            parent="fund_management.menu_fund"
+            action="action_fund_signed_contract"
+            sequence="90"/>
+</odoo>
+

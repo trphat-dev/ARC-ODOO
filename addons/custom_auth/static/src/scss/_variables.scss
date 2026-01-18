@@ -1,0 +1,51 @@
+// Custom Auth - SCSS Variables
+// ============================
+
+// Typography
+$font-family-primary: 'Inter', sans-serif;
+$font-family-base: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif;
+
+// Colors - Soft Orange/Peach Theme (Professional & Warm)
+$primary-gradient-start: #FF8C42; // Warm Orange
+$primary-gradient-end: #F9A825;   // Golden Yellow
+$primary-gradient: linear-gradient(135deg, $primary-gradient-start 0%, $primary-gradient-end 100%);
+$hover-gradient: linear-gradient(135deg, darken($primary-gradient-start, 5%) 0%, darken($primary-gradient-end, 5%) 100%);
+
+$text-dark: #1F2937;
+$text-muted: #6B7280;
+$text-light: #9CA3AF;
+
+$bg-white: #ffffff;
+$bg-light: #f3f4f6;
+
+// Glassmorphism Variables
+$glass-bg: rgba(255, 255, 255, 0.85);
+$glass-border: rgba(255, 255, 255, 0.5);
+$glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+$glass-blur: 12px;
+
+$border-color: #e5e7eb;
+$border-focus: #8E2DE2;
+
+$danger: #EF4444;
+$success: #10B981;
+$warning: #F59E0B;
+
+// Spacing
+$card-border-radius: 1.5rem;
+$input-padding-y: 0.875rem;
+$input-padding-x: 1.25rem;
+
+// Shadows
+$card-shadow: $glass-shadow;
+$btn-hover-shadow: 0 10px 20px -10px rgba($primary-gradient-start, 0.5);
+$input-focus-shadow: 0 0 0 4px rgba($primary-gradient-end, 0.1);
+
+// Transitions
+$transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+// Typography Weights
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;

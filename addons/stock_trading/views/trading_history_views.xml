@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- HISTORY VIEWS -->
+    <record id="view_trading_order_history_tree" model="ir.ui.view">
+        <field name="name">trading.order.history.tree</field>
+        <field name="model">trading.order.history</field>
+        <field name="arch" type="xml">
+            <list string="Order History Logs">
+                <field name="name"/>
+                <field name="account"/>
+                <field name="start_date"/>
+                <field name="end_date"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_order_history_form" model="ir.ui.view">
+        <field name="name">trading.order.history.form</field>
+        <field name="model">trading.order.history</field>
+        <field name="arch" type="xml">
+            <form string="Order History Report">
+                <header>
+                    <button name="action_sync_history" string="Fetch History" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                        </group>
+                        <group>
+                            <field name="start_date"/>
+                            <field name="end_date"/>
+                            <field name="last_sync"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Results">
+                            <field name="line_ids">
+                                <list create="0" delete="0" edit="0" decoration-danger="order_status in ('R', 'REJECTED', 'CANCELLED', 'C')" decoration-success="order_status in ('FILLED', 'FF')">
+                                    <field name="unique_id" optional="show"/>
+                                    <field name="order_id" optional="show"/>
+                                    <field name="trading_order_id" optional="show"/>
+                                    <field name="instrument_id"/>
+                                    <field name="buy_sell"/>
+                                    <field name="price"/>
+                                    <field name="quantity"/>
+                                    <field name="filled_qty"/>
+                                    <field name="avg_price"/>
+                                    <field name="order_status" widget="badge"/>
+                                    <field name="input_time"/>
+                                    <field name="reject_reason" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Raw Data">
+                            <field name="raw_response" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- BOOK VIEWS -->
+    <record id="view_trading_order_book_tree" model="ir.ui.view">
+        <field name="name">trading.order.book.tree</field>
+        <field name="model">trading.order.book</field>
+        <field name="arch" type="xml">
+            <list string="Order Books">
+                <field name="name"/>
+                <field name="account"/>
+                <field name="book_type"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_order_book_form" model="ir.ui.view">
+        <field name="name">trading.order.book.form</field>
+        <field name="model">trading.order.book</field>
+        <field name="arch" type="xml">
+            <form string="Order Book Report">
+                <header>
+                    <button name="action_sync_order_book" string="Fetch Order Book" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                        </group>
+                        <group>
+                            <field name="book_type"/>
+                            <field name="last_sync"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Results">
+                            <field name="line_ids">
+                                <list create="0" delete="0" edit="0" decoration-danger="order_status in ('R','REJECTED','CANCELLED')">
+                                    <field name="request_id"/>
+                                    <field name="order_id"/>
+                                    <field name="symbol"/>
+                                    <field name="buy_sell"/>
+                                    <field name="price"/>
+                                    <field name="quantity"/>
+                                    <field name="filled_qty"/>
+                                    <field name="order_status" widget="badge"/>
+                                    <field name="reject_reason" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Raw Data">
+                            <field name="raw_response" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTIONS -->
+    <record id="action_trading_order_history" model="ir.actions.act_window">
+        <field name="name">Order History Logs</field>
+        <field name="res_model">trading.order.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_trading_order_book" model="ir.actions.act_window">
+        <field name="name">Order Book Logs</field>
+        <field name="res_model">trading.order.book</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- RATE LIMIT (Keep simple) -->
+    <record id="view_trading_rate_limit_form" model="ir.ui.view">
+        <field name="name">trading.rate.limit.form</field>
+        <field name="model">trading.rate.limit</field>
+        <field name="arch" type="xml">
+            <form>
+                <header><button name="action_get_rate_limit" string="Get Rate Limit" type="object"/></header>
+                <sheet>
+                    <group><field name="config_id"/><field name="last_sync"/></group>
+                    <field name="raw_response" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="view_trading_rate_limit_tree" model="ir.ui.view">
+        <field name="name">trading.rate.limit.tree</field>
+        <field name="model">trading.rate.limit</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_trading_rate_limit" model="ir.actions.act_window">
+        <field name="name">Rate Limits</field>
+        <field name="res_model">trading.rate.limit</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,230 @@
+# =============================================================================
+# FMS - Fund Management System .gitignore
+# =============================================================================
+
+# =============================================================================
+# SECURITY - Sensitive Files (CRITICAL)
+# =============================================================================
+# Environment variables and secrets
+.env
+.env.*
+*.env
+.envrc
+
+# API Keys and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+secrets/
+credentials/
+**/secrets.py
+**/credentials.py
+**/config_local.py
+
+# SSH keys
+id_rsa*
+id_ed25519*
+*.pub
+
+# =============================================================================
+# ODOO SPECIFIC
+# =============================================================================
+# Odoo data directories
+postgresql/
+etc/odoo-server.log
+etc/addons/
+etc/sessions/
+etc/filestore/
+
+# Odoo generated files
+*.rng
+filestore/
+sessions/
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+# Bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+.python-version
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# =============================================================================
+# IDE / EDITORS
+# =============================================================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Eclipse
+.project
+.pydevproject
+.settings/
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# =============================================================================
+# OS GENERATED
+# =============================================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# LOGS & TEMPORARY FILES
+# =============================================================================
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+logs/
+log/
+tmp/
+temp/
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+*.sqlite
+*.sqlite3
+*.db
+
+# Database dumps
+*.sql
+*.dump
+!data/*.sql
+
+# =============================================================================
+# NODE.JS (if using any JS build tools)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# =============================================================================
+# BUILD & COMPILED
+# =============================================================================
+*.so
+*.dylib
+*.dll
+
+# =============================================================================
+# DOCKER (if applicable)
+# =============================================================================
+.docker/
+docker-compose.override.yml
+
+# =============================================================================
+# MISC
+# =============================================================================
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Except specific archives we want to keep
+!addons/stock_data.zip
+
+# Local configuration overrides
+local_settings.py
+config.local.py

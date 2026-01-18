@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Menu chính -->
+<!--        <menuitem id="stock_menu" name="Management Stock" action="action_stock"/>-->
+        <menuitem id="menu_fund" name="Funds Management" action="action_fund"/>
+        <!-- Menu từng model -->
+        <menuitem id="menu_investment" name="Investments" parent="menu_fund" action="action_investment"/>
+
+        <menuitem id="menu_transactions" name="Transactions" parent="menu_fund" action="action_transactions"/>
+        <menuitem id="menu_account_balance" name="Account Balance" parent="menu_fund" action="action_account_balance"/>
+        <menuitem id="menu_balance_history" name="Balance History" parent="menu_fund" action="action_balance_history"/>
+        <menuitem id="menu_comparisons" name="Comparisons" parent="menu_fund" action="action_comparisons"/>
+        <!-- Sync funds menu -->
+
+    </data>
+</odoo>

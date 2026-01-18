@@ -1,0 +1,30 @@
+// Google Fonts Import
+// Google Fonts Import Removed (Handled via XML or system fallback)
+
+// Color Palette
+$primary-color: #0F172A; // Deep Slate
+$secondary-color: #3B82F6; // Action Blue
+$success-color: #10B981;
+$danger-color: #EF4444;
+$warning-color: #F59E0B;
+$info-color: #3B82F6;
+
+$bg-body: #F1F5F9; // Light Grey-Blue
+$bg-card: #FFFFFF;
+$text-primary: #1E293B;
+$text-secondary: #64748B;
+$border-color: #E2E8F0;
+
+// Typography
+$font-family-base: 'Inter', system-ui, -apple-system, sans-serif;
+$font-size-base: 0.875rem; // 14px
+
+// Spacing
+$spacing-base: 1rem;
+$border-radius: 0.75rem; // 12px
+$border-radius-sm: 0.5rem; // 8px
+
+// Shadows
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);

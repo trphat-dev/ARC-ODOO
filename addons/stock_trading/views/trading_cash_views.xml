@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cash In Advance Views -->
+    <record id="view_trading_cash_cia_tree" model="ir.ui.view">
+        <field name="name">trading.cash.cia.tree</field>
+        <field name="model">trading.cash.cia</field>
+        <field name="arch" type="xml">
+            <list string="Cash In Advance">
+                <field name="name"/>
+                <field name="account"/>
+                <field name="cia_amount" widget="monetary"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_cash_cia_form" model="ir.ui.view">
+        <field name="name">trading.cash.cia.form</field>
+        <field name="model">trading.cash.cia</field>
+        <field name="arch" type="xml">
+            <form string="Cash In Advance">
+                <header>
+                    <button name="action_get_cia_amount" string="Get CIA Amount" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                            <field name="cia_amount" widget="monetary" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="last_sync" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="API Response">
+                            <field name="raw_response" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trading_cash_cia" model="ir.actions.act_window">
+        <field name="name">Cash In Advance</field>
+        <field name="res_model">trading.cash.cia</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Cash Transfer Views -->
+    <record id="view_trading_cash_transfer_tree" model="ir.ui.view">
+        <field name="name">trading.cash.transfer.tree</field>
+        <field name="model">trading.cash.transfer</field>
+        <field name="arch" type="xml">
+            <list string="Cash Transfers" decoration-success="state == 'success'" decoration-danger="state == 'error'">
+                <field name="name"/>
+                <field name="state" widget="badge"/>
+                <field name="account"/>
+                <field name="transfer_type"/>
+                <field name="beneficiary_account" column_invisible="transfer_type == 'vsd'"/>
+                <field name="amount" widget="monetary"/>
+                <field name="submitted_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_cash_transfer_form" model="ir.ui.view">
+        <field name="name">trading.cash.transfer.form</field>
+        <field name="model">trading.cash.transfer</field>
+        <field name="arch" type="xml">
+            <form string="Cash Transfer">
+                <header>
+                    <button name="action_submit_transfer" string="Submit Transfer" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,success"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                            <field name="transfer_type"/>
+                            <field name="beneficiary_account" required="transfer_type == 'internal'" invisible="transfer_type == 'vsd'"/>
+                            <field name="vsd_type" required="transfer_type == 'vsd'" invisible="transfer_type != 'vsd'"/>
+                            <field name="amount"/>
+                            <field name="code" password="True"/>
+                        </group>
+                        <group>
+                            <field name="submitted_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="remark" widget="text"/>
+                    </group>
+                    <notebook>
+                        <page string="API Response">
+                            <field name="raw_response" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Error" invisible="not error_message">
+                            <field name="error_message" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trading_cash_transfer" model="ir.actions.act_window">
+        <field name="name">Cash Transfer</field>
+        <field name="res_model">trading.cash.transfer</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Cash Transfer History Views -->
+    <record id="view_trading_cash_transfer_history_tree" model="ir.ui.view">
+        <field name="name">trading.cash.transfer.history.tree</field>
+        <field name="model">trading.cash.transfer.history</field>
+        <field name="arch" type="xml">
+            <list string="Cash Transfer History">
+                <field name="name"/>
+                <field name="account"/>
+                <field name="from_date"/>
+                <field name="to_date"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_cash_transfer_history_form" model="ir.ui.view">
+        <field name="name">trading.cash.transfer.history.form</field>
+        <field name="model">trading.cash.transfer.history</field>
+        <field name="arch" type="xml">
+            <form string="Cash Transfer History">
+                <header>
+                    <button name="action_sync_history" string="Sync History" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                            <field name="from_date"/>
+                            <field name="to_date"/>
+                        </group>
+                        <group>
+                            <field name="last_sync" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="API Response">
+                            <field name="raw_response" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trading_cash_transfer_history" model="ir.actions.act_window">
+        <field name="name">Cash Transfer History</field>
+        <field name="res_model">trading.cash.transfer.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
+

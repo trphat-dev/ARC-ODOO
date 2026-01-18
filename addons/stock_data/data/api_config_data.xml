@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Default SSI API Configuration. Update consumer_id/consumer_secret in UI after install. -->
+    <record id="ssi_api_config_default" model="ssi.api.config">
+        <field name="name">Default Configuration</field>
+        <field name="consumer_id">557bbed885344578a5870677ae6701e3</field>
+        <field name="consumer_secret">4fe137225f6b45d59fcc80040b817cfc</field>
+        <field name="api_url">https://fc-data.ssi.com.vn/</field>
+        <field name="stream_url">https://fc-datahub.ssi.com.vn/</field>
+        <field name="is_active" eval="True"/>
+        <field name="streaming_batch_size">5000</field>
+        <field name="streaming_batch_timeout">5.0</field>
+    </record>
+</odoo>

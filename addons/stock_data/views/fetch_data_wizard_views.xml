@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_ssi_data_fetch_wizard_form" model="ir.ui.view">
+        <field name="name">ssi.data.fetch.wizard.form</field>
+        <field name="model">ssi.data.fetch.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Fetch Market Data">
+                <sheet>
+                    <div class="alert alert-info" role="alert" invisible="fetch_type not in ('intraday_ohlc', 'daily_ohlc')">
+                        <i class="fa fa-info-circle"/> 
+                        Select date range to fetch historical data. Note that large ranges for Intraday may take time.
+                    </div>
+                    <group>
+                        <group>
+                            <field name="fetch_type" widget="radio"/>
+                        </group>
+                        <group invisible="fetch_type not in ('intraday_ohlc', 'daily_ohlc')">
+                            <field name="from_date" required="fetch_type in ('intraday_ohlc', 'daily_ohlc')"/>
+                            <field name="to_date" required="fetch_type in ('intraday_ohlc', 'daily_ohlc')"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_fetch" string="Fetch Data" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ssi_data_fetch_wizard" model="ir.actions.act_window">
+        <field name="name">Fetch Market Data</field>
+        <field name="res_model">ssi.data.fetch.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

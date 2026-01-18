@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="nav_daily_inventory_list_view" model="ir.ui.view">
+        <field name="name">nav.daily.inventory.list</field>
+        <field name="model">nav.daily.inventory</field>
+        <field name="arch" type="xml">
+            <list string="Tồn kho CCQ hàng ngày" create="true" edit="false" multi_edit="true">
+                <field name="fund_id" string="Quỹ"/>
+                <field name="inventory_date" widget="date" string="Ngày tồn kho"/>
+                <field name="opening_ccq" widget="float" digits="[16,2]" string="CCQ đầu ngày"/>
+                <field name="closing_ccq" widget="float" digits="[16,2]" string="CCQ cuối ngày"/>
+                <field name="opening_avg_price" widget="monetary" digits="[16,2]" string="Giá TB đầu ngày"/>
+                <field name="closing_avg_price" widget="monetary" digits="[16,2]" string="Giá TB cuối ngày"/>
+                <field name="opening_value" widget="monetary" digits="[16,2]" string="Giá trị đầu ngày"/>
+                <field name="closing_value" widget="monetary" digits="[16,2]" string="Giá trị cuối ngày"/>
+                <field name="ccq_change" widget="float" digits="[16,2]" string="Thay đổi CCQ" decoration-success="ccq_change &gt; 0" decoration-danger="ccq_change &lt; 0"/>
+                <field name="price_change" widget="monetary" digits="[16,2]" string="Thay đổi giá" decoration-success="price_change &gt; 0" decoration-danger="price_change &lt; 0"/>
+                <field name="value_change" widget="monetary" digits="[16,2]" string="Thay đổi giá trị" decoration-success="value_change &gt; 0" decoration-danger="value_change &lt; 0"/>
+                <field name="status" widget="badge" string="Trạng thái" decoration-success="status == 'confirmed'" decoration-muted="status == 'cancelled'" decoration-info="status == 'draft'"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- List View với button tự động tạo -->
+    <record id="nav_daily_inventory_auto_list_view" model="ir.ui.view">
+        <field name="name">nav.daily.inventory.auto.list</field>
+        <field name="model">nav.daily.inventory</field>
+        <field name="arch" type="xml">
+            <list string="Tồn kho CCQ hàng ngày" create="true" edit="false" multi_edit="true">
+                <button name="action_create_today_inventory" string="Tự động tạo tồn kho thiếu" type="object" class="btn-primary" icon="fa-magic"/>
+                <field name="fund_id" widget="many2one" string="Quỹ"/>
+                <field name="inventory_date" widget="date" string="Ngày tồn kho"/>
+                <field name="opening_ccq" widget="float" digits="[16,2]" string="CCQ đầu ngày"/>
+                <field name="closing_ccq" widget="float" digits="[16,2]" string="CCQ cuối ngày"/>
+                <field name="opening_avg_price" widget="monetary" digits="[16,2]" string="Giá TB đầu ngày"/>
+                <field name="closing_avg_price" widget="monetary" digits="[16,2]" string="Giá TB cuối ngày"/>
+                <field name="opening_value" widget="monetary" digits="[16,2]" string="Giá trị đầu ngày"/>
+                <field name="closing_value" widget="monetary" digits="[16,2]" string="Giá trị cuối ngày"/>
+                <field name="ccq_change" widget="float" digits="[16,2]" string="Thay đổi CCQ" decoration-success="ccq_change &gt; 0" decoration-danger="ccq_change &lt; 0"/>
+                <field name="price_change" widget="monetary" digits="[16,2]" string="Thay đổi giá" decoration-success="price_change &gt; 0" decoration-danger="price_change &lt; 0"/>
+                <field name="value_change" widget="monetary" digits="[16,2]" string="Thay đổi giá trị" decoration-success="value_change &gt; 0" decoration-danger="value_change &lt; 0"/>
+                <field name="status" widget="badge" string="Trạng thái" decoration-success="status == 'confirmed'" decoration-muted="status == 'cancelled'" decoration-info="status == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="nav_daily_inventory_form_view" model="ir.ui.view">
+        <field name="name">nav.daily.inventory.form</field>
+        <field name="model">nav.daily.inventory</field>
+        <field name="arch" type="xml">
+            <form string="Tồn kho CCQ hàng ngày">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,confirmed,cancelled"/>
+                    <button name="action_create_today_inventory" string="Tạo tồn kho hôm nay" type="object" class="btn-primary" invisible="context.get('create')"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="fund_id" placeholder="Chọn quỹ..." options="{'no_create': True}"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin cơ bản">
+                            <field name="inventory_date" widget="date" string="Ngày tồn kho"/>
+                        </group>
+                        <group string="Tồn kho đầu ngày">
+                            <field name="opening_ccq" widget="float" digits="[16,2]" string="CCQ tồn kho đầu ngày"/>
+                            <field name="opening_avg_price" widget="monetary" digits="[16,2]" string="Giá TB đầu ngày"/>
+                            <field name="opening_value" widget="monetary" digits="[16,2]" readonly="1" string="Giá trị tồn kho đầu ngày"/>
+                        </group>
+                    </group>
+                    
+                    <!-- Thông tin cấu hình quỹ -->
+                    <group string="Cấu hình quỹ" invisible="not fund_id">
+                        <group>
+                            <field name="fund_config_info" widget="text" readonly="1" nolabel="1"/>
+                        </group>
+                    </group>
+                    <!-- Thông tin tự động -->
+                    <group string="Tự động hóa hoàn toàn" invisible="status != 'draft'">
+                        <group>
+                            <div class="alert alert-success" role="alert">
+                                <strong>Tự động:</strong> Hệ thống sẽ tự động lấy dữ liệu từ ngày trước hoặc cấu hình quỹ và tự động tính toán tất cả.
+                            </div>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Tồn kho cuối ngày (Tự động tính)">
+                            <field name="closing_ccq" widget="float" digits="[16,2]" readonly="1" string="CCQ tồn kho cuối ngày"/>
+                            <field name="closing_avg_price" widget="monetary" digits="[16,2]" readonly="1" string="Giá TB cuối ngày"/>
+                            <field name="closing_value" widget="monetary" digits="[16,2]" readonly="1" string="Giá trị tồn kho cuối ngày"/>
+                        </group>
+                        <group string="Thay đổi">
+                            <field name="ccq_change" widget="float" digits="[16,2]" readonly="1" string="Thay đổi CCQ" decoration-success="ccq_change &gt; 0" decoration-danger="ccq_change &lt; 0"/>
+                            <field name="price_change" widget="monetary" digits="[16,2]" readonly="1" string="Thay đổi giá" decoration-success="price_change &gt; 0" decoration-danger="price_change &lt; 0"/>
+                            <field name="value_change" widget="monetary" digits="[16,2]" readonly="1" string="Thay đổi giá trị" decoration-success="value_change &gt; 0" decoration-danger="value_change &lt; 0"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Chi tiết giao dịch" name="transactions">
+                            <group>
+                                <group string="Giao dịch mua/bán trong ngày">
+                                    <field name="transaction_details" widget="html" readonly="1" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Tóm tắt" name="summary">
+                            <group>
+                                <group string="Tóm tắt tồn kho">
+                                    <field name="opening_ccq" widget="float" digits="[16,2]" readonly="1" string="CCQ đầu ngày"/>
+                                    <field name="closing_ccq" widget="float" digits="[16,2]" readonly="1" string="CCQ cuối ngày"/>
+                                    <field name="ccq_change" widget="float" digits="[16,2]" readonly="1" string="Thay đổi CCQ" decoration-success="ccq_change &gt; 0" decoration-danger="ccq_change &lt; 0"/>
+                                </group>
+                                <group string="Tóm tắt giá trị">
+                                    <field name="opening_value" widget="monetary" digits="[16,2]" readonly="1" string="Giá trị đầu ngày"/>
+                                    <field name="closing_value" widget="monetary" digits="[16,2]" readonly="1" string="Giá trị cuối ngày"/>
+                                    <field name="value_change" widget="monetary" digits="[16,2]" readonly="1" string="Thay đổi giá trị" decoration-success="value_change &gt; 0" decoration-danger="value_change &lt; 0"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Chi tiết tính toán" name="calculation">
+                            <group>
+                                <group string="Công thức tính toán">
+                                    <field name="calculation_details" widget="text" readonly="1" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="nav_daily_inventory_search_view" model="ir.ui.view">
+        <field name="name">nav.daily.inventory.search</field>
+        <field name="model">nav.daily.inventory</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm tồn kho CCQ">
+                <field name="fund_id"/>
+                <field name="inventory_date"/>
+                <field name="status"/>
+                <separator/>
+                <filter string="Xác nhận" name="confirmed" domain="[('status', '=', 'confirmed')]"/>
+                <filter string="Nháp" name="draft" domain="[('status', '=', 'draft')]"/>
+                <filter string="Hủy" name="cancelled" domain="[('status', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="Hôm nay" name="today" domain="[('inventory_date', '=', context_today())]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Quỹ" name="group_fund" context="{'group_by': 'fund_id'}"/>
+                    <filter string="Ngày" name="group_date" context="{'group_by': 'inventory_date'}"/>
+                    <filter string="Trạng thái" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="nav_daily_inventory_action" model="ir.actions.act_window">
+        <field name="name">Tồn kho CCQ hàng ngày</field>
+        <field name="res_model">nav.daily.inventory</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="nav_daily_inventory_search_view"/>
+        <field name="context">{'search_default_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo bản ghi tồn kho mới
+            </p>
+            <p>
+                Quản lý số CCQ tồn kho và giá trung bình cuối ngày cho từng quỹ.
+                Hệ thống sẽ tự động tính toán dựa trên các giao dịch đã khớp trong ngày.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Action với tự động tạo tồn kho -->
+    <record id="nav_daily_inventory_auto_action" model="ir.actions.act_window">
+        <field name="name">Tồn kho CCQ hàng ngày (Tự động)</field>
+        <field name="res_model">nav.daily.inventory</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="nav_daily_inventory_auto_list_view"/>
+        <field name="search_view_id" ref="nav_daily_inventory_search_view"/>
+        <field name="context">{'search_default_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Tạo bản ghi tồn kho mới
+            </p>
+            <p>
+                Quản lý số CCQ tồn kho và giá trung bình cuối ngày cho từng quỹ.
+                Hệ thống sẽ tự động tính toán dựa trên các giao dịch đã khớp trong ngày.
+            </p>
+        </field>
+    </record>
+    
+
+    <!-- Menu Item -->
+    <menuitem id="nav_daily_inventory_menu"
+              name="Tồn kho CCQ hàng ngày"
+              parent="menu_nav_management_root"
+              action="nav_daily_inventory_auto_action"
+              sequence="30"/>
+
+</odoo>

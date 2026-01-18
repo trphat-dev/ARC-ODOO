@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <data>
+        <!-- Transaction List View -->
+        <record id="view_portfolio_transaction_list" model="ir.ui.view">
+            <field name="name">portfolio.transaction.list</field>
+            <field name="model">portfolio.transaction</field>
+            <field name="arch" type="xml">
+                <list decoration-success="status == 'completed'" decoration-muted="status == 'cancelled'">
+                    <field name="name"/>
+                    <field name="user_id"/>
+                    <field name="fund_id"/>
+                    <field name="transaction_type" widget="badge"/>
+                    <field name="order_mode" widget="badge" optional="show" string="Loại lệnh"/>
+                    <field name="order_type_detail" optional="hide" string="Chi tiết lệnh"/>
+                    <field name="status" widget="badge" decoration-success="status == 'completed'" decoration-warning="status == 'pending'" decoration-danger="status == 'cancelled'"/>
+                    <field name="exchange_status" widget="badge" optional="hide" string="Trạng thái sàn"/>
+                    <field name="units"/>
+                    <field name="amount" widget="monetary"/>
+                    <field name="fee" widget="monetary"/>
+                    <field name="created_at" widget="datetime"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Transaction Form View -->
+        <record id="view_portfolio_transaction_form" model="ir.ui.view">
+            <field name="name">portfolio.transaction.form</field>
+            <field name="model">portfolio.transaction</field>
+            <field name="type">form</field>
+            <field name="arch" type="xml">
+                <form string="Transaction">
+                    <header>
+                        <button name="action_complete" string="Complete" type="object" class="btn-primary" invisible="status != 'pending'"/>
+                        <button name="action_cancel" string="Cancel" type="object" class="btn-secondary" invisible="status != 'pending'"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group>
+                                <field name="user_id"/>
+                                <field name="fund_id"/>
+                                <field name="transaction_type" widget="badge"/>
+                                <field name="order_mode" widget="badge" decoration-info="order_mode == 'negotiated'" decoration-primary="order_mode == 'normal'"/>
+                                <field name="status" widget="badge" decoration-success="status == 'completed'" decoration-warning="status == 'pending'" decoration-danger="status == 'cancelled'"/>
+                                <field name="source"/>
+                            </group>
+                            <group>
+                                <field name="units"/>
+                                <field name="amount" widget="monetary"/>
+                                <field name="fee" widget="monetary"/>
+                                <field name="price" widget="monetary"/>
+                                <field name="currency_id"/>
+                            </group>
+                        </group>
+                        <group invisible="order_mode == 'normal'">
+                            <group>
+                                <field name="term_months"/>
+                                <field name="interest_rate"/>
+                                <field name="investment_type"/>
+                            </group>
+                            <group>
+                                <field name="created_at_formatted" readonly="1" string="Ngày tạo"/>
+                                <field name="date_end_formatted" readonly="1" string="Ngày kết thúc"/>
+                                <field name="contract_file" filename="contract_filename" widget="binary"/>
+                            </group>
+                        </group>
+                        
+                        <!-- NAV Calculation Box (Only for Negotiated/Term Invesments) -->
+                        <group string="Tính toán NAV" col="4" invisible="order_mode == 'normal'">
+                            <group string="Thông tin cơ bản" col="2">
+                                <field name="user_id" readonly="1"/>
+                                <field name="transaction_type" widget="badge" readonly="1"/>
+                                <field name="transaction_date_formatted" readonly="1" string="Ngày mua/bán (C)"/>
+                                <field name="nav_sell_date_formatted" readonly="1" string="Ngày bán (D)"/>
+                                <field name="nav_maturity_date_formatted" readonly="1" string="Ngày đáo hạn (E)"/>
+                                <field name="term_months" readonly="1" string="Kỳ hạn (F)"/>
+                                <field name="nav_days" readonly="1" string="Số ngày (G)"/>
+                                <field name="nav_days_converted" readonly="1" string="Số ngày quy đổi (H)"/>
+                            </group>
+                            <group string="Giá trị mua" col="2">
+                                <field name="units" readonly="1" string="Số lượng CCQ (I)"/>
+                                <field name="price" widget="monetary" readonly="1" string="Giá CCQ tại thời điểm mua (J)"/>
+                                <field name="fee" widget="monetary" readonly="1" string="Phí mua (K)"/>
+                                <field name="nav_purchase_value" widget="monetary" readonly="1" string="Giá trị mua (L)"/>
+                                <field name="nav_price_with_fee" widget="monetary" readonly="1" string="Giá 1 CCQ đã bao gồm thuế/phí (M)"/>
+                            </group>
+                            <group string="Lãi suất" col="2">
+                                <field name="interest_rate" readonly="1" string="Lãi suất (N)"/>
+                                <field name="nav_converted_rate" readonly="1" string="Lãi suất quy đổi (O)"/>
+                                <field name="nav_interest_delta" readonly="1" string="Chênh lệch lãi suất (Q)"/>
+                                <field name="nav_tax_tncn" readonly="1" string="Thuế TNCN (R)"/>
+                            </group>
+                            <group string="Giá trị bán" col="2">
+                                <field name="nav_sell_fee" widget="monetary" readonly="1" string="Phí bán (X)"/>
+                                <field name="nav_sell_price1" widget="monetary" readonly="1" string="Giá bán 1 (S)"/>
+                                <field name="nav_sell_price2" widget="monetary" readonly="1" string="Giá bán 2 (T)"/>
+                                <field name="nav_sell_value1" widget="monetary" readonly="1" string="Giá trị bán 1 (U)"/>
+                                <field name="nav_sell_value2" widget="monetary" readonly="1" string="Giá trị bán 2 (V)"/>
+                                <field name="nav_difference" widget="monetary" readonly="1" string="Chênh lệch (W)"/>
+                                <field name="nav_tax" widget="monetary" readonly="1" string="Thuế (Y)"/>
+                                <field name="nav_customer_receive" widget="monetary" readonly="1" string="Khách hàng thực nhận (Z)"/>
+                            </group>
+                        </group>
+                        
+                        <notebook>
+                            <page string="Thông tin lệnh đặt thường" invisible="order_mode != 'normal'">
+                                <group>
+                                    <group string="Loại lệnh">
+                                        <!-- order_mode moved to header -->
+                                        <field name="order_type_detail" string="Loại lệnh chi tiết"/>
+                                        <field name="market" string="Sàn giao dịch"/>
+                                    </group>
+                                    <group string="Thông tin giao dịch sàn">
+                                        <field name="exchange_order_id" string="Mã lệnh sàn"/>
+                                        <field name="exchange_status" widget="badge" string="Trạng thái sàn"/>
+                                        <field name="exchange_filled_quantity" string="SL đã khớp"/>
+                                        <field name="exchange_filled_price" widget="monetary" string="Giá khớp sàn"/>
+                                        <field name="exchange_sent_at" string="Thời gian gửi"/>
+                                        <field name="exchange_filled_at" string="Thời gian khớp"/>
+                                        <field name="t2_date" string="Ngày hàng về (T+2)" readonly="1"/>
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Description">
+                                <field name="description" placeholder="Transaction description..."/>
+                            </page>
+                        </notebook>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids"/>
+                        <field name="activity_ids"/>
+                        <field name="message_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <!-- Transaction Search View -->
+        <record id="view_portfolio_transaction_search" model="ir.ui.view">
+            <field name="name">portfolio.transaction.search</field>
+            <field name="model">portfolio.transaction</field>
+            <field name="type">search</field>
+            <field name="arch" type="xml">
+                <search string="Transactions">
+                    <field name="name"/>
+                    <field name="fund_id"/>
+                    <field name="user_id"/>
+                    <field name="order_mode"/>
+                    <filter string="Pending" name="pending" domain="[('status','=','pending')]"/>
+                    <filter string="Completed" name="completed" domain="[('status','=','completed')]"/>
+                    <filter string="Cancelled" name="cancelled" domain="[('status','=','cancelled')]"/>
+                    <separator/>
+                    <filter string="Buy" name="buy" domain="[('transaction_type','=','buy')]"/>
+                    <filter string="Sell" name="sell" domain="[('transaction_type','=','sell')]"/>
+                    <separator/>
+                    <filter string="Lệnh thỏa thuận" name="negotiated" domain="[('order_mode','=','negotiated')]"/>
+                    <filter string="Lệnh đặt thường" name="normal" domain="[('order_mode','=','normal')]"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Fund" name="groupby_fund" context="{'group_by':'fund_id'}"/>
+                        <filter string="Status" name="groupby_status" context="{'group_by':'status'}"/>
+                        <filter string="Type" name="groupby_type" context="{'group_by':'transaction_type'}"/>
+                        <filter string="Order Mode" name="groupby_order_mode" context="{'group_by':'order_mode'}"/>
+                        <filter string="Exchange Status" name="groupby_exchange_status" context="{'group_by':'exchange_status'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+    </data>
+</odoo>
+

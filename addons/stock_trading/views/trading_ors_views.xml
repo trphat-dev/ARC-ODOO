@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ORS Views -->
+    <record id="view_trading_ors_tree" model="ir.ui.view">
+        <field name="name">trading.ors.tree</field>
+        <field name="model">trading.ors</field>
+        <field name="arch" type="xml">
+            <list string="ORS Registrations" decoration-success="state == 'success'" decoration-danger="state == 'error'">
+                <field name="name"/>
+                <field name="state" widget="badge"/>
+                <field name="account"/>
+                <field name="instrument_code"/>
+                <field name="entitlement_id"/>
+                <field name="quantity"/>
+                <field name="amount" widget="monetary"/>
+                <field name="submitted_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_ors_form" model="ir.ui.view">
+        <field name="name">trading.ors.form</field>
+        <field name="model">trading.ors</field>
+        <field name="arch" type="xml">
+            <form string="Online Right Subscription">
+                <header>
+                    <button name="action_submit_ors" string="Submit ORS" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,submitted,success"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                            <field name="instrument_id"/>
+                            <field name="instrument_code" readonly="1"/>
+                            <field name="entitlement_id"/>
+                            <field name="quantity"/>
+                            <field name="amount" widget="monetary"/>
+                            <field name="code" password="True"/>
+                        </group>
+                        <group>
+                            <field name="submitted_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="API Response">
+                            <field name="raw_response" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Error" invisible="not error_message">
+                            <field name="error_message" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trading_ors" model="ir.actions.act_window">
+        <field name="name">ORS Registration</field>
+        <field name="res_model">trading.ors</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ORS Dividend Views -->
+    <record id="view_trading_ors_dividend_tree" model="ir.ui.view">
+        <field name="name">trading.ors.dividend.tree</field>
+        <field name="model">trading.ors.dividend</field>
+        <field name="arch" type="xml">
+            <list string="ORS Dividends">
+                <field name="name"/>
+                <field name="account"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_trading_ors_dividend_form" model="ir.ui.view">
+        <field name="name">trading.ors.dividend.form</field>
+        <field name="model">trading.ors.dividend</field>
+        <field name="arch" type="xml">
+            <form string="ORS Dividend">
+                <header>
+                    <button name="action_get_dividend" string="Get Dividend" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="config_id"/>
+                            <field name="account"/>
+                        </group>
+                        <group>
+                            <field name="last_sync" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="API Response">
+                            <field name="raw_response" widget="text" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_trading_ors_dividend" model="ir.actions.act_window">
+        <field name="name">ORS Dividend</field>
+        <field name="res_model">trading.ors.dividend</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>
+

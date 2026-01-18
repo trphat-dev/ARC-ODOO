@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_wizard_sync_fund_certificate_form" model="ir.ui.view">
+        <field name="name">wizard.sync.fund.certificate.form</field>
+        <field name="model">wizard.sync.fund.certificate</field>
+        <field name="arch" type="xml">
+            <form string="Đồng bộ Fund Certificate">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="market_selection" widget="radio"/>
+                            <field name="sync_option" widget="radio"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_sync" string="Bắt đầu Đồng bộ" type="object" class="btn-primary"/>
+                        <button string="Hủy" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wizard_sync_fund_certificate" model="ir.actions.act_window">
+        <field name="name">Đồng bộ từ Stock Data</field>
+        <field name="res_model">wizard.sync.fund.certificate</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu Item for Wizard (Optional - can be accessed via button) -->
+    <!-- Put it under Configuration or similar if needed -->
+</odoo>

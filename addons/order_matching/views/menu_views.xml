@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!-- Root Menu -->
+    <menuitem id="menu_order_matching_root"
+              name="Order Matching"
+              sequence="20"/>
+    
+    <!-- Matched Orders Action -->
+    <record id="action_transaction_matched_orders" model="ir.actions.act_window">
+        <field name="name">Danh sách lệnh thỏa thuận</field>
+        <field name="res_model">transaction.matched.orders</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_transaction_matched_orders_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_transaction_matched_orders_form')})]"/>
+        <field name="search_view_id" ref="view_transaction_matched_orders_search"/>
+        <field name="context">{'search_default_partial': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có lệnh nào được khớp
+            </p>
+            <p>
+                Các lệnh đã khớp (bao gồm cả lệnh nhỏ) sẽ hiển thị ở đây sau khi thực hiện khớp lệnh.
+            </p>
+        </field>
+    </record>
+    
+    <!-- Menu Items -->
+    <menuitem id="menu_transaction_matched_orders"
+              name="Danh sách lệnh thỏa thuận"
+              parent="menu_order_matching_root"
+              action="action_transaction_matched_orders"
+              sequence="20"/>
+    
+    <menuitem id="menu_transaction_maturity_notification"
+              name="Thông báo đáo hạn"
+              parent="menu_order_matching_root"
+              action="action_transaction_maturity_notification"
+              sequence="30"/>
+
+    </data>
+</odoo>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Index List Views -->
+    <record id="view_index_list_tree" model="ir.ui.view">
+        <field name="name">ssi.index.list.tree</field>
+        <field name="model">ssi.index.list</field>
+        <field name="arch" type="xml">
+            <list string="Index List" class="o_list_table_ungrouped">
+                <field name="index_code" decoration-bf="True"/>
+                <field name="exchange" decoration-info="True"/>
+                <field name="index_name_vn" decoration-muted="True"/>
+                <field name="index_name_en" decoration-muted="True"/>
+                <field name="index_type" decoration-muted="True"/>
+                <field name="base_value" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                <field name="last_update" widget="datetime"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_index_list_search" model="ir.ui.view">
+        <field name="name">ssi.index.list.search</field>
+        <field name="model">ssi.index.list</field>
+        <field name="arch" type="xml">
+            <search string="Index List">
+                <field name="index_code"/>
+                <filter string="HOSE" name="ex_hose" domain="[('exchange','=','hose')]"/>
+                <filter string="HNX" name="ex_hnx" domain="[('exchange','=','hnx')]"/>
+                <filter string="UPCOM" name="ex_upcom" domain="[('exchange','=','upcom')]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Exchange" name="group_exchange" context="{'group_by':'exchange'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_index_list" model="ir.actions.act_window">
+        <field name="name">Index List</field>
+        <field name="res_model">ssi.index.list</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Index Components Views -->
+    <record id="view_index_components_tree" model="ir.ui.view">
+        <field name="name">ssi.index.components.tree</field>
+        <field name="model">ssi.index.components</field>
+        <field name="arch" type="xml">
+            <list string="Index Components" decoration-success="is_active == True" decoration-muted="is_active == False"
+                  class="o_list_table_ungrouped">
+                <field name="index_code" decoration-bf="True"/>
+                <field name="symbol" decoration-info="True"/>
+                <field name="weight" widget="percentage"/>
+                <field name="is_active" widget="boolean_toggle"/>
+                <field name="last_update" widget="datetime"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_index_components_search" model="ir.ui.view">
+        <field name="name">ssi.index.components.search</field>
+        <field name="model">ssi.index.components</field>
+        <field name="arch" type="xml">
+            <search string="Index Components">
+                <field name="index_code"/>
+                <field name="symbol"/>
+                <group expand="1" string="Group By">
+                    <filter string="Index" name="group_index" context="{'group_by':'index_code'}"/>
+                    <filter string="Symbol" name="group_symbol" context="{'group_by':'symbol'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+</odoo>
+
+

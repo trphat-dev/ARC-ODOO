@@ -1,0 +1,154 @@
+// Imports handled by manifest
+
+// Cards
+.card-fmc {
+    background: $bg-card;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    box-shadow: $shadow-sm;
+    transition: box-shadow 0.2s ease-in-out;
+    margin-bottom: $spacing-base * 1.5;
+
+    &:hover {
+        box-shadow: $shadow-md;
+    }
+
+    .card-header {
+        background: transparent;
+        border-bottom: 1px solid $border-color;
+        padding: $spacing-base;
+        font-weight: 600;
+        color: $primary-color;
+    }
+
+    .card-body {
+        padding: $spacing-base * 1.5;
+    }
+    
+    .card-footer {
+        background: transparent;
+        border-top: 1px solid $border-color;
+        padding: $spacing-base;
+    }
+}
+
+// Buttons
+.btn-fmc-primary {
+    background-color: $secondary-color;
+    border-color: $secondary-color;
+    color: white;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    border-radius: $border-radius-sm;
+    transition: all 0.2s;
+
+    &:hover {
+        background-color: darken($secondary-color, 5%);
+        border-color: darken($secondary-color, 5%);
+        transform: translateY(-1px);
+        box-shadow: $shadow-sm;
+    }
+}
+
+.btn-fmc-light {
+    background-color: white;
+    border: 1px solid $border-color;
+    color: $text-primary;
+    border-radius: $border-radius-sm;
+    
+    &:hover {
+        background-color: $bg-body;
+        border-color: darken($border-color, 10%);
+        color: $primary-color;
+    }
+}
+
+// Search & Inputs
+.fmc-search-input {
+    border-radius: $border-radius-sm;
+    border: 1px solid $border-color;
+    padding-left: 1rem;
+    
+    &:focus {
+        border-color: lighten($secondary-color, 20%);
+        box-shadow: 0 0 0 3px rgba($secondary-color, 0.1);
+    }
+}
+
+// Tables
+.table-fmc {
+    margin-bottom: 0;
+    
+    thead th {
+        background-color: #F8FAFC;
+        color: $text-secondary;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid $border-color;
+        padding: 1rem;
+        border-top: none;
+    }
+    
+    tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom-color: $border-color;
+        color: $text-primary;
+        font-size: 0.875rem;
+    }
+    
+    tbody tr {
+        transition: background-color 0.15s;
+        
+        &:hover {
+            background-color: #F8FAFC;
+        }
+        
+        &.active {
+            background-color: rgba($secondary-color, 0.05);
+        }
+    }
+}
+
+// Badges
+.badge-fmc {
+    padding: 0.35em 0.8em;
+    border-radius: 9999px;
+    font-weight: 500;
+    font-size: 0.75rem;
+    
+    &.badge-success {
+        background-color: rgba($success-color, 0.1);
+        color: darken($success-color, 10%);
+    }
+    
+    &.badge-danger {
+        background-color: rgba($danger-color, 0.1);
+        color: darken($danger-color, 10%);
+    }
+    
+    &.badge-info {
+        background-color: rgba($info-color, 0.1);
+        color: darken($info-color, 10%);
+    }
+}
+
+// Fund Icon
+.fund-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background-color: #F1F5F9;
+    
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+    }
+}

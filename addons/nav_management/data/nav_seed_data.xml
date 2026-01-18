@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Seed: Kỳ hạn / Lãi suất theo tháng -->
+    <record id="nav_term_rate_month_1" model="nav.term.rate">
+        <field name="term_months">1</field>
+        <field name="interest_rate">4.80</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 1 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_2" model="nav.term.rate">
+        <field name="term_months">2</field>
+        <field name="interest_rate">5.80</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 2 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_3" model="nav.term.rate">
+        <field name="term_months">3</field>
+        <field name="interest_rate">6.20</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 3 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_4" model="nav.term.rate">
+        <field name="term_months">4</field>
+        <field name="interest_rate">6.50</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 4 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_5" model="nav.term.rate">
+        <field name="term_months">5</field>
+        <field name="interest_rate">7.00</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 5 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_6" model="nav.term.rate">
+        <field name="term_months">6</field>
+        <field name="interest_rate">7.70</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 6 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_7" model="nav.term.rate">
+        <field name="term_months">7</field>
+        <field name="interest_rate">8.00</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 7 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_8" model="nav.term.rate">
+        <field name="term_months">8</field>
+        <field name="interest_rate">8.50</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 8 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_9" model="nav.term.rate">
+        <field name="term_months">9</field>
+        <field name="interest_rate">8.60</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 9 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_10" model="nav.term.rate">
+        <field name="term_months">10</field>
+        <field name="interest_rate">8.70</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 10 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_11" model="nav.term.rate">
+        <field name="term_months">11</field>
+        <field name="interest_rate">8.90</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 11 tháng</field>
+    </record>
+    <record id="nav_term_rate_month_12" model="nav.term.rate">
+        <field name="term_months">12</field>
+        <field name="interest_rate">9.1</field>
+        <field name="effective_date">2025-01-01</field>
+        <field name="end_date">2025-12-31</field>
+        <field name="active">True</field>
+        <field name="description">Kỳ hạn 12 tháng</field>
+    </record>
+
+    <!-- Seed: Cấu hình Chặn trên / Chặn dưới -->
+    <record id="nav_cap_config_default" model="nav.cap.config">
+        <field name="cap_upper">2.00</field>
+        <field name="cap_lower">0.10</field>
+        <field name="active">True</field>
+        <field name="description">Cấu hình mặc định: Chặn trên 2%, Chặn dưới 0.1%</field>
+    </record>
+</odoo>
+
+

@@ -1,0 +1,440 @@
+// =============================================================================
+// Fund Management Dashboard - Sidebar Styles
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// Variables
+// -----------------------------------------------------------------------------
+
+// Colors
+$sidebar-primary: #6366f1;
+$sidebar-primary-dark: #4f46e5;
+$sidebar-primary-light: #818cf8;
+$sidebar-secondary: #8b5cf6;
+$sidebar-success: #10b981;
+$sidebar-warning: #f59e0b;
+$sidebar-danger: #ef4444;
+
+// Text colors
+$sidebar-text-primary: #1e293b;
+$sidebar-text-secondary: #64748b;
+$sidebar-text-muted: #94a3b8;
+$sidebar-text-light: #cbd5e1;
+
+// Background colors
+$sidebar-bg: #ffffff;
+$sidebar-bg-hover: #f8fafc;
+$sidebar-bg-active: rgba($sidebar-primary, 0.08);
+$sidebar-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+
+// Border & Shadow
+$sidebar-border: #e2e8f0;
+$sidebar-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+// Sizes
+$sidebar-width: 240px;
+$sidebar-width-collapsed: 72px;
+$sidebar-radius: 16px;
+
+// Transitions
+$sidebar-transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+// -----------------------------------------------------------------------------
+// Main Sidebar
+// -----------------------------------------------------------------------------
+
+.dashboard-sidebar {
+  width: $sidebar-width;
+  background: $sidebar-bg;
+  border-radius: $sidebar-radius;
+  box-shadow: $sidebar-shadow;
+  padding: 1.25rem 1rem;
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width $sidebar-transition;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $sidebar-border;
+    border-radius: 4px;
+
+    &:hover {
+      background: $sidebar-text-muted;
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  // Toggle Button
+  // -----------------------------------------------------------------------------
+
+  .sidebar-toggle-btn {
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid $sidebar-border;
+    background: $sidebar-bg;
+    color: $sidebar-text-secondary;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(231, 226, 226, 0.1);
+    transition: all $sidebar-transition;
+    z-index: 10;
+
+    &:hover {
+      background: $sidebar-primary;
+      border-color: $sidebar-primary;
+      color: #fff;
+      transform: translateY(-50%) scale(1.1);
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  // Logo Section
+  // -----------------------------------------------------------------------------
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #ffffff;
+    border-radius: 10px;
+  }
+
+  .sidebar-logo-img {
+    max-width: 100%;
+    height: auto;
+    max-height: 50px;
+    object-fit: contain;
+  }
+
+  // -----------------------------------------------------------------------------
+  // Menu Section
+  // -----------------------------------------------------------------------------
+
+  .sidebar-menu {
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      border-radius: 10px;
+      color: $sidebar-text-secondary;
+      font-weight: 500;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all $sidebar-transition;
+      overflow: hidden;
+
+      &:hover {
+        background: $sidebar-bg-hover;
+        color: $sidebar-text-primary;
+
+        i {
+          color: $sidebar-primary;
+        }
+      }
+
+      &.active {
+        background: $sidebar-bg-active;
+        color: $sidebar-primary;
+
+        i {
+          color: $sidebar-primary;
+        }
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 60%;
+          background: $sidebar-primary;
+          border-radius: 0 4px 4px 0;
+        }
+      }
+    }
+  }
+
+  .sidebar-group {
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 1.5px;
+    color: $sidebar-text-muted;
+    margin: 1.25rem 0 0.5rem 0.75rem;
+    font-weight: 600;
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+    position: relative;
+
+    i {
+      font-size: 0.9rem;
+      width: 20px;
+      text-align: center;
+      color: $sidebar-text-muted;
+      transition: color $sidebar-transition;
+    }
+
+    span {
+      font-size: 0.85rem;
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  // Dropdown Menu
+  // -----------------------------------------------------------------------------
+
+  .sidebar-dropdown {
+    margin: 2px 0;
+  }
+
+  .nav-main-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: $sidebar-text-secondary;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all $sidebar-transition;
+
+    i {
+      font-size: 0.9rem;
+      color: $sidebar-text-muted;
+      transition: color $sidebar-transition;
+    }
+
+    .fa-chevron-down {
+      font-size: 0.65rem;
+      transition: transform $sidebar-transition;
+    }
+
+    &:hover {
+      background: $sidebar-bg-hover;
+      color: $sidebar-text-primary;
+
+      i {
+        color: $sidebar-primary;
+      }
+    }
+
+    &.active,
+    &.expanded {
+      color: $sidebar-primary;
+
+      i {
+        color: $sidebar-primary;
+      }
+    }
+
+    &.expanded .fa-chevron-down {
+      transform: rotate(180deg);
+    }
+  }
+
+  // -----------------------------------------------------------------------------
+  // Submenu
+  // -----------------------------------------------------------------------------
+
+  .sidebar-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    margin-left: 1rem;
+    margin-top: 2px;
+    padding-left: 1rem;
+    border-left: 2px solid $sidebar-border;
+
+    &.show {
+      max-height: 500px;
+    }
+  }
+
+  .sidebar-submenu-item {
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: $sidebar-text-secondary;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all $sidebar-transition;
+    display: block;
+    margin: 1px 0;
+    position: relative;
+
+    &:hover {
+      background: $sidebar-bg-hover;
+      color: $sidebar-primary;
+      padding-left: 1rem;
+    }
+
+    &.active {
+      background: $sidebar-bg-active;
+      color: $sidebar-primary;
+      font-weight: 600;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2px;
+        height: 50%;
+        background: $sidebar-primary;
+        margin-left: -1px;
+      }
+    }
+  }
+}
+
+// =============================================================================
+// Collapsed State (via dashboard-shell)
+// =============================================================================
+
+.dashboard-shell.sidebar-collapsed {
+  .dashboard-sidebar {
+    width: $sidebar-width-collapsed;
+    padding: 1rem 0.5rem;
+
+    .sidebar-toggle-btn {
+      right: -10px;
+    }
+
+    .logo-text,
+    .sidebar-group {
+      display: none;
+    }
+
+    .sidebar-logo {
+      justify-content: center;
+      padding: 0.5rem;
+    }
+
+    .sidebar-menu {
+      ul li {
+        justify-content: center;
+      }
+    }
+
+    .sidebar-link {
+      justify-content: center;
+      padding: 0.6rem;
+
+      span {
+        display: none;
+      }
+
+      i {
+        width: auto;
+        font-size: 1rem;
+      }
+    }
+
+    .nav-main-item {
+      justify-content: center;
+      padding: 0.6rem;
+
+      span {
+        display: none;
+      }
+
+      .fa-chevron-down {
+        display: none;
+      }
+
+      i:first-child {
+        font-size: 1rem;
+      }
+    }
+
+    .sidebar-submenu {
+      display: none;
+    }
+
+    .sidebar-dropdown:hover {
+      .sidebar-submenu {
+        display: block;
+        position: absolute;
+        left: $sidebar-width-collapsed;
+        top: 0;
+        min-width: 180px;
+        background: $sidebar-bg;
+        border-radius: 10px;
+        box-shadow: $sidebar-shadow;
+        padding: 0.5rem;
+        margin-left: 0;
+        border-left: none;
+        max-height: none;
+        z-index: 100;
+      }
+    }
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+  }
+}
+
+// =============================================================================
+// Responsive
+// =============================================================================
+
+@media (max-width: 768px) {
+  .dashboard-sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .dashboard-shell.sidebar-collapsed .dashboard-sidebar {
+    width: 100%;
+  }
+}

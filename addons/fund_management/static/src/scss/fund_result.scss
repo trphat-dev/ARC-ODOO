@@ -1,0 +1,405 @@
+// Fund Result Page - Clean Modern Design (2-Col Layout)
+// =======================================
+
+// Variables
+$primary-color: #F26522;
+$success-color: #10b981;
+$danger-color: #ef4444;
+$text-dark: #1e293b;
+$text-muted: #64748b;
+$bg-light: #f8fafc;
+$card-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+$border-radius: 12px;
+
+// Page Container
+.fm-result-page {
+  min-height: 100vh;
+  background: $bg-light;
+  font-family: 'Inter', -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  
+  // Main content area should grow to push footer down
+  > .container {
+    flex: 1 0 auto;
+    padding-bottom: 3rem;
+  }
+  
+  // Footer should stay at bottom
+  > #footer-container {
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+}
+
+// Toggle Classes - controlled by body class
+.normal-only {
+  display: none;
+}
+.negotiated-only {
+  display: none;
+}
+
+// When body has normal-order class
+body.normal-order-mode {
+  .normal-only {
+    display: flex !important;
+  }
+  .negotiated-only {
+    display: none !important;
+  }
+}
+
+// When body has negotiated-order class
+body.negotiated-order-mode {
+  .normal-only {
+    display: none !important;
+  }
+  .negotiated-only {
+    display: flex !important;
+  }
+}
+
+// Success Card
+.fm-success-card {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: $border-radius;
+  padding: 1.5rem 2rem;
+  color: #fff;
+  box-shadow: $card-shadow;
+}
+
+.fm-success-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+  animation: successPop 0.5s ease-out;
+}
+
+.fm-success-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+}
+
+.fm-success-subtitle {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin: 0;
+}
+
+// Status Badge
+.fm-status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  
+  &.pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  
+  &.success {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  
+  &.cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+}
+
+// Details Card
+.fm-details-card {
+  background: #fff;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.fm-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  
+  i {
+    color: $primary-color;
+  }
+}
+
+.fm-details-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.fm-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &.highlight {
+    background: #f0fdf4;
+    margin: 0.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 0;
+    border: none;
+  }
+}
+
+.fm-detail-label {
+  font-size: 0.9rem;
+  color: $text-muted;
+  font-weight: 500;
+}
+
+.fm-detail-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $text-dark;
+  text-align: right;
+}
+
+// Type Badge
+.fm-type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+// Maturity Box
+.fm-maturity-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid rgba($success-color, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+}
+
+.fm-maturity-icon {
+  width: 44px;
+  height: 44px;
+  background: $success-color;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fm-maturity-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fm-maturity-label {
+  font-size: 0.9rem;
+  color: #059669;
+  font-weight: 600;
+}
+
+.fm-maturity-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+// Contract Card
+.fm-contract-card {
+  background: #fff;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 1.5rem;
+  
+  // Title and buttons in a row
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  .fm-card-title {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .d-grid {
+    display: flex !important;
+    flex-direction: row;
+    gap: 12px;
+    
+    .fm-contract-btn {
+      flex: 1;
+    }
+  }
+}
+
+.fm-contract-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  background: $primary-color;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  &.outline {
+    background: #fff;
+    color: $primary-color;
+    border: 1px solid $primary-color;
+    
+    &:hover {
+      background: #fff7ed;
+    }
+  }
+}
+
+// Actions Card
+.fm-actions-card {
+  background: #fff;
+  border-radius: $border-radius;
+  box-shadow: $card-shadow;
+  padding: 1.5rem;
+}
+
+.fm-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  
+  &.primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+    }
+  }
+  
+  &.secondary {
+    background: #fff;
+    color: $primary-color;
+    border: 1px solid #fed7aa;
+    
+    &:hover {
+      background: #fff7ed;
+      border-color: $primary-color;
+    }
+  }
+  
+  &.danger {
+    background: #fff;
+    color: $danger-color;
+    border: 1px solid #fecaca;
+    
+    &:hover {
+      background: #fef2f2;
+      border-color: $danger-color;
+    }
+  }
+}
+
+// Support Text
+.fm-support-text {
+  font-size: 0.85rem;
+  color: $text-muted;
+  
+  a {
+    transition: color 0.2s;
+    &:hover { color: darken(#3b82f6, 10%); }
+  }
+}
+
+// Animation
+@keyframes successPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+// Text Helpers
+.text-success { color: $success-color !important; }
+.text-primary { color: #3b82f6 !important; }
+.text-muted { color: $text-muted !important; }
+
+// Responsive
+@media (max-width: 991.98px) {
+  .fm-success-card {
+    padding: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    
+    .d-flex {
+      flex-direction: column;
+    }
+    
+    .fm-success-icon {
+      margin-right: 0 !important;
+      margin-bottom: 1rem !important;
+    }
+  }
+  
+  .fm-details-card, 
+  .fm-contract-card,
+  .fm-actions-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .fm-success-title { font-size: 1.25rem; }
+  .fm-detail-label, .fm-detail-value { font-size: 0.85rem; }
+}

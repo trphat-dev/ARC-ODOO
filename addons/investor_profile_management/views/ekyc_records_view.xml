@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- eKYC Records List View -->
+    <record id="view_ekyc_records_tree" model="ir.ui.view">
+        <field name="name">ekyc.records.list</field>
+        <field name="model">investor.profile</field>
+        <field name="arch" type="xml">
+            <list string="Danh sách Hồ sơ eKYC" decoration-info="id_type == 'id_card'" decoration-success="id_front and id_back" decoration-warning="not id_front or not id_back">
+                <field name="name" string="Họ và tên"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="id_type" string="Loại giấy tờ" widget="badge" decoration-info="id_type == 'id_card'" decoration-primary="id_type == 'passport'"/>
+                <field name="id_number" string="Số giấy tờ"/>
+                <field name="birth_date" string="Ngày sinh" widget="date"/>
+                <field name="gender" string="Giới tính" widget="badge"/>
+                <field name="nationality" string="Quốc tịch"/>
+                <field name="phone" string="Số điện thoại" widget="phone"/>
+                <field name="email" string="Email" widget="email"/>
+                <field name="id_issue_date" string="Ngày cấp" widget="date"/>
+                <field name="id_issue_place" string="Nơi cấp"/>
+                <field name="id_front" string="Ảnh mặt trước" widget="image" options="{'preview_image': 'id_front'}" width="80"/>
+                <field name="id_back" string="Ảnh mặt sau" widget="image" options="{'preview_image': 'id_back'}" width="80"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- eKYC Records Form View -->
+    <record id="view_ekyc_records_form" model="ir.ui.view">
+        <field name="name">ekyc.records.form</field>
+        <field name="model">investor.profile</field>
+        <field name="arch" type="xml">
+            <form string="Chi tiết Hồ sơ eKYC">
+                <header>
+                    <button name="download_id_front" string="Tải ảnh mặt trước" type="object" class="btn-secondary" icon="fa-download"/>
+                    <button name="download_id_back" string="Tải ảnh mặt sau" type="object" class="btn-secondary" icon="fa-download"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="download_id_front" type="object" class="oe_stat_button" icon="fa-image" context="{'default_field': 'id_front'}">
+                            <field name="id_front" widget="statinfo" string="Ảnh mặt trước"/>
+                        </button>
+                        <button name="download_id_back" type="object" class="oe_stat_button" icon="fa-image" context="{'default_field': 'id_back'}">
+                            <field name="id_back" widget="statinfo" string="Ảnh mặt sau"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Nhập họ và tên" required="1" class="oe_required"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Thông tin cá nhân">
+                            <field name="partner_id" string="Đối tác" required="1" class="oe_required"/>
+                            <field name="user_id" string="Người dùng" readonly="1"/>
+                            <field name="birth_date" widget="date" required="1" class="oe_required"/>
+                            <field name="gender" widget="radio" required="1" class="oe_required"/>
+                            <field name="nationality" required="1" class="oe_required"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="email" widget="email"/>
+                        </group>
+                        <group string="Thông tin giấy tờ">
+                            <field name="id_type" widget="radio" required="1" class="oe_required"/>
+                            <field name="id_number" required="1" class="oe_required"/>
+                            <field name="id_issue_date" widget="date" required="1" class="oe_required"/>
+                            <field name="id_issue_place" required="1" class="oe_required"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Ảnh giấy tờ" name="id_documents">
+                            <group>
+                                <group string="CCCD/CMND Mặt Trước" col="2">
+                                    <field name="id_front" widget="image" filename="id_front_filename" 
+                                           options="{'preview_image': 'id_front'}" 
+                                           style="width: 100%; max-width: 500px;"/>
+                                    <field name="id_front_filename" invisible="1"/>
+                                </group>
+                                <group string="CCCD/CMND Mặt Sau" col="2">
+                                    <field name="id_back" widget="image" filename="id_back_filename" 
+                                           options="{'preview_image': 'id_back'}" 
+                                           style="width: 100%; max-width: 500px;"/>
+                                    <field name="id_back_filename" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Tài khoản ngân hàng" name="bank_accounts">
+                            <field name="bank_account_ids" nolabel="1">
+                                <list>
+                                    <field name="bank_name"/>
+                                    <field name="account_number"/>
+                                    <field name="account_holder"/>
+                                    <field name="branch"/>
+                                    <field name="is_default" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Địa chỉ" name="addresses">
+                            <field name="address_ids" nolabel="1">
+                                <list>
+                                    <field name="address_type"/>
+                                    <field name="street"/>
+                                    <field name="ward"/>
+                                    <field name="district"/>
+                                    <field name="state_id"/>
+                                    <field name="country_id"/>
+                                    <field name="zip"/>
+                                    <field name="is_default" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Status" name="status">
+                            <field name="status_info_ids" nolabel="1">
+                                <list>
+                                    <field name="account_number" string="Account Number"/>
+                                    <field name="referral_code" string="Referral Code"/>
+                                    <field name="account_status" string="Account Status" widget="badge"/>
+                                    <field name="profile_status" string="Profile Status" widget="badge"/>
+                                    <field name="rm_id" string="RM"/>
+                                    <field name="bda_id" string="BDA"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- eKYC Records Search View -->
+    <record id="view_ekyc_records_search" model="ir.ui.view">
+        <field name="name">ekyc.records.search</field>
+        <field name="model">investor.profile</field>
+        <field name="arch" type="xml">
+            <search string="Tìm kiếm Hồ sơ eKYC">
+                <field name="name" string="Họ và tên" filter_domain="['|', ('name', 'ilike', self), ('id_number', 'ilike', self)]"/>
+                <field name="id_number" string="Số giấy tờ"/>
+                <field name="phone" string="Số điện thoại"/>
+                <field name="email" string="Email"/>
+                <field name="partner_id" string="Đối tác"/>
+                <field name="nationality" string="Quốc tịch"/>
+                <separator/>
+                <filter string="Có đầy đủ ảnh" name="has_images" domain="[('id_front', '!=', False), ('id_back', '!=', False)]"/>
+                <filter string="Thiếu ảnh mặt trước" name="missing_front" domain="[('id_front', '=', False)]"/>
+                <filter string="Thiếu ảnh mặt sau" name="missing_back" domain="[('id_back', '=', False)]"/>
+                <filter string="CMND/CCCD" name="id_card" domain="[('id_type', '=', 'id_card')]"/>
+                <filter string="Hộ chiếu" name="passport" domain="[('id_type', '=', 'passport')]"/>
+                <separator/>
+                <filter string="Nam" name="male" domain="[('gender', '=', 'male')]"/>
+                <filter string="Nữ" name="female" domain="[('gender', '=', 'female')]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Loại giấy tờ" name="group_by_id_type" context="{'group_by': 'id_type'}"/>
+                    <filter string="Giới tính" name="group_by_gender" context="{'group_by': 'gender'}"/>
+                    <filter string="Quốc tịch" name="group_by_nationality" context="{'group_by': 'nationality'}"/>
+                    <filter string="Ngày sinh" name="group_by_birth_date" context="{'group_by': 'birth_date'}"/>
+                    <filter string="Đối tác" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Kanban View for eKYC Records -->
+    <record id="view_ekyc_records_kanban" model="ir.ui.view">
+        <field name="name">ekyc.records.kanban</field>
+        <field name="model">investor.profile</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="id_type" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="id_type"/>
+                <field name="id_number"/>
+                <field name="id_front"/>
+                <field name="id_back"/>
+                <field name="gender"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_content">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <strong><field name="name"/></strong>
+                                        <div><field name="id_number"/></div>
+                                        <div><field name="id_type" widget="badge"/></div>
+                                    </div>
+                                    <div class="col-6 text-right">
+                                        <field name="id_front" widget="image" options="{'preview_image': 'id_front'}" style="width: 80px; height: 50px;"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- eKYC Records Action -->
+    <record id="action_ekyc_records" model="ir.actions.act_window">
+        <field name="name">Hồ sơ eKYC</field>
+        <field name="res_model">investor.profile</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+                                       (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_ekyc_records_kanban')}),
+                                       (0, 0, {'view_mode': 'list', 'view_id': ref('view_ekyc_records_tree')}),
+                                       (0, 0, {'view_mode': 'form', 'view_id': ref('view_ekyc_records_form')})]"/>
+        <field name="search_view_id" ref="view_ekyc_records_search"/>
+        <field name="context">{'search_default_has_images': 0}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Chưa có hồ sơ eKYC nào
+            </p>
+            <p>
+                Tạo hồ sơ eKYC mới để quản lý thông tin nhà đầu tư và giấy tờ tùy thân.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for eKYC Records -->
+    <menuitem id="menu_ekyc_records" 
+              name="Hồ sơ eKYC" 
+              parent="menu_investor_root" 
+              action="action_ekyc_records" 
+              sequence="5"/>
+</odoo>
+

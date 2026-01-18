@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="dashboard_page" name="Fund Management Dashboard Page">
+        <t t-call="web.layout">
+            <t t-set="title">Dashboard</t>
+            <t t-set="head">
+                <!-- Bootstrap CSS -->
+                <link
+                    rel="stylesheet"
+                    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+                    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+                    crossorigin="anonymous"
+                />
+                <!-- Bootstrap Icons -->
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet"/>
+                <!-- Font Awesome -->
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+            </t>
+
+            <!-- Header Container for Management -->
+            <div id="headermana-container"></div>
+
+            <!-- Main Container -->
+            <div class="dashboard-container">
+                <div class="container-fluid py-4">
+                    <!-- Loading Spinner -->
+                    <div id="loading-spinner" class="loading-container">
+                        <div class="loading-spinner">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <div class="loading-text">Đang tải dữ liệu...</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Error Container (hidden by default) -->
+                    <div id="error-container" class="error-container" style="display: none;">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h4 class="error-title">Có lỗi xảy ra</h4>
+                        <p class="error-message" id="error-message">Không thể tải dữ liệu</p>
+                        <button class="btn btn-primary mt-3" onclick="location.reload()">
+                            <i class="fas fa-sync-alt me-2"></i>
+                            Thử lại
+                        </button>
+                    </div>
+                    
+                    <!-- Dashboard Widget Container -->
+                    <div id="dashboard-widget" class="w-100" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Pass data and helper methods (align with nav_transaction_page pattern) -->
+            <script type="text/javascript">
+                window.dashboardData = <t t-raw="dashboard_data"/>;
+                
+                window.showError = function(message) {
+                    const errorContainer = document.getElementById('error-container');
+                    const errorMessage = document.getElementById('error-message');
+                    const loadingSpinner = document.getElementById('loading-spinner');
+                    const widgetContainer = document.getElementById('dashboard-widget');
+                    
+                    if (errorContainer &amp;&amp; errorMessage) {
+                        errorMessage.textContent = message || 'Có lỗi xảy ra khi tải dữ liệu';
+                        errorContainer.style.display = 'block';
+                    }
+                    
+                    if (loadingSpinner) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                    
+                    if (widgetContainer) {
+                        widgetContainer.style.display = 'none';
+                    }
+                };
+                
+                window.hideSpinner = function() {
+                    const loadingSpinner = document.getElementById('loading-spinner');
+                    const errorContainer = document.getElementById('error-container');
+                    const widgetContainer = document.getElementById('dashboard-widget');
+                    
+                    if (loadingSpinner) {
+                        loadingSpinner.style.display = 'none';
+                    }
+                    
+                    if (errorContainer) {
+                        errorContainer.style.display = 'none';
+                    }
+                    
+                    if (widgetContainer) {
+                        widgetContainer.style.display = 'block';
+                    }
+                };
+            </script>
+
+            <t t-call-assets="web.assets_frontend" t-js="true"/>
+        </t>
+    </template>
+
+    <!-- Action - Đã chuyển sang act_window để hiển thị form view -->
+    <!-- Action này đã được di chuyển sang fund_dashboard_daily_views.xml -->
+</odoo>
+

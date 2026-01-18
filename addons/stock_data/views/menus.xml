@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Root Menu -->
+        <menuitem id="menu_stock_data_root" 
+                  name="Stock Data" 
+                  web_icon="stock_data,static/description/icon.png" 
+                  sequence="10"/>
+
+        <!-- Main Menus -->
+        <menuitem id="menu_securities_master" 
+                  name="Securities" 
+                  parent="menu_stock_data_root" 
+                  sequence="10"/>
+
+        <menuitem id="menu_market_data" 
+                  name="Market Data" 
+                  parent="menu_stock_data_root" 
+                  sequence="20"/>
+                  
+        <menuitem id="menu_configuration" 
+                  name="Configuration" 
+                  parent="menu_stock_data_root" 
+                  sequence="100"/>
+
+        <!-- Sub Menus -->
+        <menuitem id="menu_securities_list" 
+                  name="Securities List" 
+                  parent="menu_securities_master" 
+                  action="action_securities" 
+                  sequence="10"/>
+
+        <menuitem id="menu_daily_ohlc" 
+                  name="Daily OHLC" 
+                  parent="menu_market_data" 
+                  action="action_daily_ohlc" 
+                  sequence="10"/>
+                  
+        <menuitem id="menu_intraday_ohlc" 
+                  name="Intraday OHLC" 
+                  parent="menu_market_data" 
+                  action="action_intraday_ohlc" 
+                  sequence="20"/>
+
+        <!-- Config Sub Menus -->
+        <menuitem id="menu_ssi_api_config" 
+                  name="SSI API Config" 
+                  parent="menu_configuration" 
+                  action="action_ssi_api_config" 
+                  sequence="10"/>
+
+        <menuitem id="menu_ssi_fetch_wizard" 
+                  name="Fetch Data (Legacy/Wizard)" 
+                  parent="menu_configuration" 
+                  action="action_ssi_data_fetch_wizard" 
+                  sequence="20"/>
+
+    </data>
+</odoo>

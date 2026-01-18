@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Stock Board Main Template -->
+    <t t-name="stock_data.StockBoard">
+        <div class="stock-board">
+            <!-- Header -->
+            <div class="stock-board-header">
+                <div class="header-left">
+                    <span t-att-class="'live-indicator ' + (state.connected ? 'connected' : 'disconnected')">
+                        <i class="fa fa-circle"/>
+                    </span>
+                    <h2>BẢNG GIÁ CHỨNG KHOÁN</h2>
+                    <span class="stock-count">(                        <t t-esc="totalCount"/>
+ mã)</span>
+                    <span class="msg-count" t-if="state.messagesReceived > 0">
+                        <i class="fa fa-bolt text-warning"/>
+                        <t t-esc="state.messagesReceived"/>
+                    </span>
+                </div>
+                <div class="header-center">
+                    <div class="search-box">
+                        <i class="fa fa-search"/>
+                        <input type="text" t-ref="searchInput" placeholder="Tìm mã CK..." t-on-input="onSearchInput"/>
+                        <button t-if="state.searchQuery" class="btn-clear" t-on-click="onClearSearch">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="update-time live-clock">
+                        <i class="fa fa-clock-o"/>
+                        <t t-esc="state.currentTime"/>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="stock-board-filters">
+                <!-- Market Filter -->
+                <div class="filter-group">
+                    <span class="filter-label">Sàn:</span>
+                    <button t-att-class="'filter-btn ' + (state.filter === 'all' and !state.indexFilter ? 'active' : '')" t-on-click="() => this.onFilterChange('all')">Tất cả</button>
+                    <button t-att-class="'filter-btn ' + (state.filter === 'hose' ? 'active' : '')" t-on-click="() => this.onFilterChange('hose')">HOSE</button>
+                    <button t-att-class="'filter-btn ' + (state.filter === 'hnx' ? 'active' : '')" t-on-click="() => this.onFilterChange('hnx')">HNX</button>
+                    <button t-att-class="'filter-btn ' + (state.filter === 'upcom' ? 'active' : '')" t-on-click="() => this.onFilterChange('upcom')">UPCOM</button>
+                </div>
+
+                <!-- Index Filter - Dynamic from database -->
+                <div class="filter-group" t-if="state.indexes.length > 0">
+                    <span class="filter-label">Chỉ số:</span>
+                    <t t-foreach="state.indexes" t-as="idx" t-key="idx.index_code">
+                        <button t-att-class="'filter-btn index-btn ' + (state.indexFilter === idx.index_code ? 'active' : '')" t-on-click="() => this.onIndexFilterChange(idx.index_code)" t-esc="idx.index_code"/>
+                    </t>
+                </div>
+
+                <!-- Active Filter Badge -->
+                <div class="active-filter" t-if="state.indexFilter">
+                    <span class="badge bg-success">
+                        <t t-esc="state.indexFilter"/>
+                        <i class="fa fa-times ms-1" t-on-click="() => this.onIndexFilterChange('')"/>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Loading -->
+            <div t-if="state.loading" class="stock-board-loading">
+                <i class="fa fa-spinner fa-spin fa-2x"/>
+                <p>Đang tải dữ liệu...</p>
+            </div>
+
+            <!-- Stock Table -->
+            <div t-else="" class="stock-board-table-container" t-ref="stockTable">
+                <table class="stock-board-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" t-on-click="() => this.onSort('symbol')">
+                                Mã
+                                <i t-if="state.sortBy === 'symbol'" t-att-class="'fa fa-sort-' + (state.sortAsc ? 'asc' : 'desc')"/>
+                            </th>
+                            <th class="text-center">Sàn</th>
+                            <th class="text-end sortable" t-on-click="() => this.onSort('reference_price')">TC</th>
+                            <th class="text-end">Trần</th>
+                            <th class="text-end">Sàn</th>
+                            <th class="text-end sortable" t-on-click="() => this.onSort('current_price')">
+                                Giá
+                                <i t-if="state.sortBy === 'current_price'" t-att-class="'fa fa-sort-' + (state.sortAsc ? 'asc' : 'desc')"/>
+                            </th>
+                            <th class="text-end sortable" t-on-click="() => this.onSort('volume')">
+                                KL
+                                <i t-if="state.sortBy === 'volume'" t-att-class="'fa fa-sort-' + (state.sortAsc ? 'asc' : 'desc')"/>
+                            </th>
+                            <th class="text-end sortable" t-on-click="() => this.onSort('change_percent')">
+                                +/-%
+                                <i t-if="state.sortBy === 'change_percent'" t-att-class="'fa fa-sort-' + (state.sortAsc ? 'asc' : 'desc')"/>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="filteredSecurities" t-as="security" t-key="security.id">
+                            <tr t-att-class="security.flashClass" t-on-click="() => this.onRowClick(security)">
+                                <!-- Symbol -->
+                                <td class="symbol-cell">
+                                    <span class="symbol-code" t-esc="security.symbol"/>
+                                </td>
+                                <!-- Market -->
+                                <td class="text-center market-cell">
+                                    <span t-att-class="'market-badge market-' + (security.market || '').toLowerCase()" t-esc="security.market"/>
+                                </td>
+                                <!-- Reference -->
+                                <td class="text-end price-ref">
+                                    <t t-esc="formatPrice(security.reference_price)"/>
+                                </td>
+                                <!-- Ceiling -->
+                                <td class="text-end price-ceiling">
+                                    <t t-esc="formatPrice(security.ceiling_price)"/>
+                                </td>
+                                <!-- Floor -->
+                                <td class="text-end price-floor">
+                                    <t t-esc="formatPrice(security.floor_price)"/>
+                                </td>
+                                <!-- Current Price -->
+                                <td t-att-class="'text-end price-cell ' + security.priceClass">
+                                    <span class="price-value">
+                                        <t t-esc="formatPrice(security.current_price)"/>
+                                    </span>
+                                    <span class="price-indicator" t-if="security.direction !== 'unchanged'">
+                                        <t t-if="security.direction === 'up'">▲</t>
+                                        <t t-else="">▼</t>
+                                    </span>
+                                </td>
+                                <!-- Volume -->
+                                <td class="text-end volume-cell">
+                                    <t t-esc="formatVolume(security.volume)"/>
+                                </td>
+                                <!-- Change % -->
+                                <td t-att-class="'text-end change-cell ' + security.priceClass">
+                                    <t t-esc="formatPercent(security.change_percent)"/>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="stock-board-footer">
+                <div class="legend">
+                    <span class="legend-item price-ceiling">
+                        <i class="fa fa-square"/>
+ Trần</span>
+                    <span class="legend-item price-up">
+                        <i class="fa fa-square"/>
+ Tăng</span>
+                    <span class="legend-item price-ref">
+                        <i class="fa fa-square"/>
+ TC</span>
+                    <span class="legend-item price-down">
+                        <i class="fa fa-square"/>
+ Giảm</span>
+                    <span class="legend-item price-floor">
+                        <i class="fa fa-square"/>
+ Sàn</span>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

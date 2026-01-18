@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Server Action to Trigger Sync from Master -->
+        <record id="action_sync_all_certs_to_portfolio" model="ir.actions.server">
+            <field name="name">Sync to Funds Management</field>
+            <field name="model_id" ref="model_fund_certificate"/>
+            <field name="state">code</field>
+            <field name="code">
+action = model.sync_all_certificates_to_portfolio()
+            </field>
+        </record>
+
+        <!-- Menu Item in Funds Management App -->
+        <!-- We link to the 'fund_management.menu_fund' which is the top level menu of Fund Management app -->
+        <!-- Note: We depend on 'fund_management' (via dashboard) so we can reference its ID if loaded -->
+        <!-- But wait, fund_management_control depends on fund_management_dashboard. 
+             fund_management_dashboard depends on fund_management. 
+             So fund_management_control CAN reference fund_management.menu_fund -->
+
+
+    </data>
+</odoo>

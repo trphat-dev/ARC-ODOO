@@ -1,0 +1,39 @@
+<!-- file: your_module/views/fee_modal_template.xml -->
+<odoo>
+  <template id="fee_template" name="Fee Modal Template">
+    <div class="modal fade" id="feeModal" tabindex="-1" aria-labelledby="feeModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-header">
+            <h5 class="modal-title" id="feeModalLabel">Biểu phí mua</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-bordered text-center">
+              <thead>
+                <tr>
+                  <th>Giá trị</th>
+                  <th>Phí mua</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Dưới 10,000,000</td>
+                  <td>0.3%</td>
+                </tr>
+                <tr>
+                  <td>10,000,000 - 20,000,000</td>
+                  <td>0.2%</td>
+                </tr>
+                <tr>
+                  <td>Trên 20,000,000</td>
+                  <td>0.1%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+</odoo>

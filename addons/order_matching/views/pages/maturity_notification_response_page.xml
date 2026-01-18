@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="maturity_notification_response" name="Maturity Notification Response">
+        <t t-call="web.layout">
+            <t t-set="title">Xác nhận đáo hạn</t>
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header" t-attf-class="card-header bg-{{ 'success' if success else 'danger' }}">
+                                <h3 class="card-title mb-0">
+                                    <t t-if="success">
+                                        <i class="fa fa-check-circle"></i> Thành công
+                                    </t>
+                                    <t t-if="not success">
+                                        <i class="fa fa-exclamation-circle"></i> Thông báo
+                                    </t>
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert" t-attf-class="alert alert-{{ 'success' if success else 'warning' }}" role="alert">
+                                    <t t-esc="message"/>
+                                </div>
+                                
+                                <t t-if="notification">
+                                    <hr/>
+                                    <h5>Thông tin lệnh giao dịch:</h5>
+                                    <table class="table table-bordered">
+                                        <tr>
+                                            <td><strong>Mã lệnh:</strong></td>
+                                            <td><t t-esc="notification.transaction_id.name"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Quỹ:</strong></td>
+                                            <td><t t-esc="notification.fund_id.name or 'N/A'"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Số lượng CCQ:</strong></td>
+                                            <td><t t-esc="notification.remaining_units"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Ngày đáo hạn:</strong></td>
+                                            <td>
+                                                <t t-if="notification.maturity_date">
+                                                    <t t-esc="notification.maturity_date.strftime('%d/%m/%Y')"/>
+                                                </t>
+                                                <t t-if="not notification.maturity_date">N/A</t>
+                                            </td>
+                                        </tr>
+                                        <tr t-if="notification.sell_order_id">
+                                            <td><strong>Lệnh bán đã tạo:</strong></td>
+                                            <td><t t-esc="notification.sell_order_id.name"/></td>
+                                        </tr>
+                                    </table>
+                                </t>
+                                
+                                <div class="mt-4">
+                                    <a href="/" class="btn btn-primary">Về trang chủ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
+

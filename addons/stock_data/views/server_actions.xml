@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Server Action: Fetch All Securities List -->
+        <record id="action_fetch_all_securities_list" model="ir.actions.server">
+            <field name="name">Fetch All Securities List</field>
+            <field name="model_id" ref="model_ssi_securities"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_global_fetch_securities_list()
+            </field>
+        </record>
+
+        <!-- Server Action: Fetch All Details -->
+        <record id="action_fetch_all_securities_details" model="ir.actions.server">
+            <field name="name">Fetch All Securities Details</field>
+            <field name="model_id" ref="model_ssi_securities"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_global_fetch_securities_details()
+            </field>
+        </record>
+
+        <!-- Server Action: Fetch All Prices -->
+        <record id="action_fetch_all_latest_price" model="ir.actions.server">
+            <field name="name">Fetch All Latest Prices</field>
+            <field name="model_id" ref="model_ssi_securities"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_global_fetch_latest_price()
+            </field>
+        </record>
+
+        <!-- Server Action: Fetch All Daily OHLC -->
+        <record id="action_fetch_all_daily_ohlc" model="ir.actions.server">
+            <field name="name">Fetch All Daily OHLC</field>
+            <field name="model_id" ref="model_ssi_securities"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_global_fetch_daily_ohlc()
+            </field>
+        </record>
+
+         <!-- Server Action: Fetch All Intraday OHLC -->
+        <record id="action_fetch_all_intraday_ohlc" model="ir.actions.server">
+            <field name="name">Fetch All Intraday OHLC</field>
+            <field name="model_id" ref="model_ssi_securities"/>
+            <field name="state">code</field>
+            <field name="code">
+                action = model.action_global_fetch_intraday_ohlc()
+            </field>
+        </record>
+
+        <!-- Menu Item -->
+        <menuitem id="menu_stock_data_actions" 
+                  name="Data Actions" 
+                  parent="menu_stock_data_root" 
+                  sequence="20"/>
+
+        <menuitem id="menu_action_fetch_list" 
+                  name="Fetch Securities List" 
+                  parent="menu_stock_data_actions" 
+                  action="action_fetch_all_securities_list" 
+                  sequence="10"/>
+
+        <menuitem id="menu_action_fetch_details" 
+                  name="Fetch Securities Details" 
+                  parent="menu_stock_data_actions" 
+                  action="action_fetch_all_securities_details" 
+                  sequence="20"/>
+
+        <menuitem id="menu_action_fetch_prices" 
+                  name="Fetch Latest Prices" 
+                  parent="menu_stock_data_actions" 
+                  action="action_fetch_all_latest_price" 
+                  sequence="30"/>
+
+        <menuitem id="menu_action_fetch_daily" 
+                  name="Fetch Daily OHLC" 
+                  parent="menu_stock_data_actions" 
+                  action="action_fetch_all_daily_ohlc" 
+                  sequence="40"/>
+                  
+        <menuitem id="menu_action_fetch_intraday" 
+                  name="Fetch Intraday OHLC" 
+                  parent="menu_stock_data_actions" 
+                  action="action_fetch_all_intraday_ohlc" 
+                  sequence="50"/>
+
+    </data>
+</odoo>

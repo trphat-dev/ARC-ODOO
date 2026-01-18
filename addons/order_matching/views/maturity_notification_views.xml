@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_maturity_notification_tree" model="ir.ui.view">
+        <field name="name">transaction.maturity.notification.tree</field>
+        <field name="model">transaction.maturity.notification</field>
+        <field name="arch" type="xml">
+            <list string="Thông báo đáo hạn">
+                <field name="name"/>
+                <field name="transaction_id"/>
+                <field name="user_id"/>
+                <field name="fund_id"/>
+                <field name="maturity_date"/>
+                <field name="remaining_units"/>
+                <field name="state" widget="badge"/>
+                <field name="investor_response"/>
+                <field name="notification_sent"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_maturity_notification_form" model="ir.ui.view">
+        <field name="name">transaction.maturity.notification.form</field>
+        <field name="model">transaction.maturity.notification</field>
+        <field name="arch" type="xml">
+            <form string="Thông báo đáo hạn">
+                <header>
+                    <button name="action_send_notification" string="Gửi thông báo" type="object" class="oe_highlight" invisible="notification_sent"/>
+                    <button name="action_confirm_sell" string="Xác nhận bán" type="object" class="oe_highlight" invisible="investor_response != 'pending'"/>
+                    <button name="action_reject_sell" string="Từ chối bán" type="object" invisible="investor_response != 'pending'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,confirmed,done"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="transaction_id"/>
+                            <field name="user_id"/>
+                            <field name="partner_id"/>
+                            <field name="fund_id"/>
+                            <field name="maturity_date"/>
+                        </group>
+                        <group>
+                            <field name="units"/>
+                            <field name="remaining_units"/>
+                            <field name="term_months"/>
+                            <field name="interest_rate"/>
+                            <field name="current_nav"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="notification_sent"/>
+                            <field name="notification_sent_at" invisible="not notification_sent"/>
+                            <field name="notification_log_count" widget="statinfo" string="Số lần gửi"/>
+                            <field name="investor_response"/>
+                            <field name="investor_response_at" invisible="investor_response == 'pending'"/>
+                        </group>
+                        <group>
+                            <field name="sell_order_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lịch sử gửi thông báo" name="notification_logs">
+                            <field name="notification_log_ids" nolabel="1" context="{'default_maturity_notification_id': id}" options="{'no_create': True, 'no_create_edit': True}">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="notification_type"/>
+                                    <field name="sent_at"/>
+                                    <field name="sent_status" widget="badge" decoration-success="sent_status == 'success'" decoration-danger="sent_status == 'failed'"/>
+                                    <field name="title"/>
+                                    <field name="channel_name"/>
+                                    <field name="error_message" invisible="sent_status == 'success'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_maturity_notification_search" model="ir.ui.view">
+        <field name="name">transaction.maturity.notification.search</field>
+        <field name="model">transaction.maturity.notification</field>
+        <field name="arch" type="xml">
+            <search string="Tìm thông báo đáo hạn">
+                <field name="name"/>
+                <field name="transaction_id"/>
+                <field name="user_id"/>
+                <field name="fund_id"/>
+                <field name="maturity_date"/>
+                <filter string="Chờ phản hồi" name="pending" domain="[('investor_response', '=', 'pending')]"/>
+                <filter string="Đã xác nhận" name="confirmed" domain="[('investor_response', '=', 'confirmed')]"/>
+                <filter string="Đã từ chối" name="rejected" domain="[('investor_response', '=', 'rejected')]"/>
+                <filter string="Hết hạn" name="expired" domain="[('investor_response', '=', 'expired')]"/>
+                <group expand="0" string="Nhóm theo">
+                    <filter string="Nhà đầu tư" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Quỹ" name="group_fund" context="{'group_by': 'fund_id'}"/>
+                    <filter string="Trạng thái" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_transaction_maturity_notification" model="ir.actions.act_window">
+        <field name="name">Thông báo đáo hạn</field>
+        <field name="res_model">transaction.maturity.notification</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_pending': 1}</field>
+    </record>
+
+</odoo>
+

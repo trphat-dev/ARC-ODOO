@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_portfolio_fund_user,portfolio.fund.user,model_portfolio_fund,base.group_user,1,1,1,0
+access_portfolio_fund_portal,portfolio.fund.portal,model_portfolio_fund,base.group_portal,1,1,1,0
+access_portfolio_fund_manager,portfolio.fund.manager,model_portfolio_fund,base.group_system,1,1,1,1
+access_portfolio_investment_user,portfolio.investment.user,model_portfolio_investment,base.group_user,1,1,1,0
+access_portfolio_investment_portal,portfolio.investment.portal,model_portfolio_investment,base.group_portal,1,1,1,0
+access_portfolio_investment_manager,portfolio.investment.manager,model_portfolio_investment,base.group_system,1,1,1,1
+access_portfolio_transaction_user,portfolio.transaction.user,model_portfolio_transaction,base.group_user,1,1,1,0
+access_portfolio_transaction_portal,portfolio.transaction.portal,model_portfolio_transaction,base.group_portal,1,1,1,0
+access_portfolio_transaction_manager,portfolio.transaction.manager,model_portfolio_transaction,base.group_system,1,1,1,1
+access_portfolio_comparison_user,portfolio.comparison.user,model_portfolio_comparison,base.group_user,1,1,1,0
+access_portfolio_comparison_portal,portfolio.comparison.portal,model_portfolio_comparison,base.group_portal,1,1,1,0
+access_portfolio_comparison_manager,portfolio.comparison.manager,model_portfolio_comparison,base.group_system,1,1,1,1

@@ -1,0 +1,675 @@
+// Trading Portal SCSS - Modern Bootstrap Theme
+// ==============================================
+
+// Bootstrap overrides
+$primary: #f97316;
+$primary-dark: #ea580c;
+$accent: #7c3aed;
+$accent-light: #a78bfa;
+$success: #10b981;
+$danger: #ef4444;
+$warning: #f59e0b;
+$info: #3b82f6;
+
+// Custom gradients
+$gradient-primary: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+$gradient-accent: linear-gradient(135deg, $accent 0%, #6366f1 100%);
+$gradient-glass: linear-gradient(
+  135deg,
+  rgba(255, 255, 255, 0.1) 0%,
+  rgba(255, 255, 255, 0.05) 100%
+);
+
+// Shadows
+$shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+$shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.16);
+$shadow-glow: 0 0 40px rgba($primary, 0.3);
+
+// Transitions
+$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.15s ease-out;
+
+// ==============================================
+// Main Container
+// ==============================================
+.trading-portal {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 2rem 0;
+
+  // Page Header
+  &__header {
+    margin-bottom: 2rem;
+    animation: slideDown 0.5s ease-out;
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 0.25rem;
+
+      i {
+        color: $primary;
+        margin-right: 0.75rem;
+      }
+    }
+
+    p {
+      color: #64748b;
+      margin: 0;
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// ==============================================
+// Balance Card - Modern Gradient Style
+// ==============================================
+.balance-card {
+  background: linear-gradient(135deg, #e49d5c 0%, #b3cdda 50%, #509fca 100%);
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  color: #1e3a5f; // Dark blue text for better readability
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(14, 165, 233, 0.3);
+  animation: fadeInUp 0.6s ease-out;
+
+  // Glassmorphism overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: $gradient-glass;
+    pointer-events: none;
+  }
+
+  // Decorative circles
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+
+    h5 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  &__refresh {
+    background: rgba(30, 58, 95, 0.15);
+    border: 1px solid rgba(30, 58, 95, 0.25);
+    color: #1e3a5f;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: $transition-base;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+      background: rgba(30, 58, 95, 0.25);
+      transform: translateY(-2px);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .fa-spin {
+      animation: spin 1s linear infinite;
+    }
+  }
+
+  &__body {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  &__item {
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(10px);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    transition: $transition-base;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5);
+      transform: translateY(-2px);
+    }
+
+    &-label {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    &-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+  }
+
+  &__footer {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    position: relative;
+    z-index: 1;
+
+    i {
+      margin-right: 0.25rem;
+    }
+  }
+
+  // Empty state
+  &__empty {
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+
+    i {
+      font-size: 3rem;
+      opacity: 0.5;
+      margin-bottom: 1rem;
+    }
+
+    h5 {
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      opacity: 0.8;
+      margin: 0;
+    }
+  }
+
+  // Loading state
+  &__loading {
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+
+    .spinner-border {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-width: 3px;
+    }
+
+    p {
+      margin-top: 1rem;
+      opacity: 0.8;
+    }
+  }
+
+  // Error state
+  &__error {
+    background: rgba($danger, 0.15);
+    border: 1px solid rgba($danger, 0.3);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    position: relative;
+    z-index: 1;
+
+    i {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+// ==============================================
+// Link Account Section
+// ==============================================
+.link-section {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+
+  &__header {
+    background: $gradient-primary;
+    color: white;
+    padding: 1rem 1.5rem;
+
+    h5 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &__body {
+    padding: 1.5rem;
+  }
+}
+
+// ==============================================
+// SSI Link Box
+// ==============================================
+.ssi-box {
+  cursor: pointer;
+  padding: 2rem 1.5rem;
+  border: 2px dashed rgba($primary, 0.4);
+  border-radius: 1rem;
+  background: linear-gradient(
+    135deg,
+    rgba($primary, 0.03) 0%,
+    rgba($primary, 0.08) 100%
+  );
+  text-align: center;
+  transition: $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba($primary, 0.1);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.5s ease-out;
+  }
+
+  &:hover {
+    border-color: $primary;
+    border-style: solid;
+    background: linear-gradient(
+      135deg,
+      rgba($primary, 0.08) 0%,
+      rgba($primary, 0.15) 100%
+    );
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba($primary, 0.25);
+
+    &::before {
+      width: 250px;
+      height: 250px;
+    }
+
+    .ssi-box__logo {
+      transform: scale(1.1);
+    }
+
+    .ssi-box__text {
+      color: $primary-dark;
+    }
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(0.98);
+  }
+
+  &__logo {
+    width: 100px;
+    height: auto;
+    margin-bottom: 0.75rem;
+    transition: $transition-base;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $primary;
+    margin-bottom: 0.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+    transition: $transition-base;
+  }
+}
+
+// ==============================================
+// Modal Styles
+// ==============================================
+.link-modal {
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1040;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    z-index: 1050;
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &__content {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: $shadow-lg;
+    overflow: hidden;
+  }
+
+  &__header {
+    background: $gradient-primary;
+    color: white;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h5 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: $transition-fast;
+    line-height: 1;
+    padding: 0;
+
+    &:hover {
+      opacity: 1;
+      transform: rotate(90deg);
+    }
+  }
+
+  &__body {
+    padding: 1.5rem;
+    max-height: calc(90vh - 200px);
+    overflow-y: auto;
+  }
+
+  &__footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    text-align: center;
+  }
+}
+
+// ==============================================
+// Form Styles
+// ==============================================
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+
+    i {
+      color: $primary;
+      margin-right: 0.5rem;
+    }
+
+    .required {
+      color: $danger;
+      margin-left: 0.25rem;
+    }
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: $transition-base;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.15);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .form-text {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 0.25rem;
+  }
+}
+
+// ==============================================
+// Buttons
+// ==============================================
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $gradient-primary;
+    color: white;
+    box-shadow: 0 4px 12px rgba($primary, 0.3);
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba($primary, 0.4);
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  &--lg {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+}
+
+// ==============================================
+// Alerts
+// ==============================================
+.alert {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  animation: slideDown 0.3s ease-out;
+
+  i {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  &--success {
+    background: rgba($success, 0.1);
+    border: 1px solid rgba($success, 0.3);
+    color: darken($success, 15%);
+  }
+
+  &--error {
+    background: rgba($danger, 0.1);
+    border: 1px solid rgba($danger, 0.3);
+    color: darken($danger, 10%);
+  }
+}
+
+// ==============================================
+// Spinner
+// ==============================================
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+// ==============================================
+// Animations
+// ==============================================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ==============================================
+// Responsive
+// ==============================================
+@media (max-width: 768px) {
+  .trading-portal {
+    padding: 1rem 0;
+
+    &__header h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .balance-card {
+    padding: 1.25rem;
+
+    &__item-value {
+      font-size: 1.25rem;
+    }
+  }
+
+  .link-modal__dialog {
+    width: 95%;
+  }
+}

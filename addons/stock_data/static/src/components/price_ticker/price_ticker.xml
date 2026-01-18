@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Price Ticker Widget - Realtime -->
+    <t t-name="stock_data.PriceTickerWidget">
+        <div t-att-class="'price-ticker ' + state.priceClass + ' ' + state.flashClass">
+            <!-- Price Display -->
+            <div class="ticker-main">
+                <span class="ticker-price" t-esc="formattedPrice"/>
+                <span class="ticker-icon" t-if="state.direction !== 'unchanged'" t-esc="directionIcon"/>
+            </div>
+
+            <!-- Change Info -->
+            <div class="ticker-change" t-if="state.change !== 0">
+                <span t-esc="formattedChange"/>
+                <span class="ticker-percent">(                    <t t-esc="formattedChangePercent"/>
+)</span>
+            </div>
+
+            <!-- Connection Indicator -->
+            <div class="ticker-status" t-if="state.connected">
+                <i class="fa fa-wifi text-success" title="Realtime Connected"/>
+            </div>
+        </div>
+    </t>
+
+</templates>

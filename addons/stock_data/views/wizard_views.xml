@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Wizard for fetching market data -->
+    <record id="view_wizard_fetch_market_data_form" model="ir.ui.view">
+        <field name="name">wizard.fetch.market.data.form</field>
+        <field name="model">wizard.fetch.market.data</field>
+        <field name="arch" type="xml">
+            <form string="Fetch Market Data">
+                <sheet>
+                    <group>
+                        <field name="action_type" widget="radio"/>
+                        <field name="market" widget="radio"/>
+                        <field name="symbol" invisible="action_type in ('securities_all', 'index_all', 'daily_index')" required="action_type in ('backtest')"/>
+                    </group>
+                    <group invisible="action_type not in ('fetch_all_ohlc', 'daily_index', 'backtest')">
+                        <field name="from_date" widget="date"/>
+                        <field name="to_date" widget="date"/>
+                    </group>
+                    <group>
+                        <field name="page_index"/>
+                        <field name="page_size"/>
+                    </group>
+                    <group>
+                        <field name="result_message" readonly="1" nolabel="1" widget="html"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Fetch Data" name="action_fetch_data" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_wizard_fetch_market_data" model="ir.actions.act_window">
+        <field name="name">Fetch Market Data</field>
+        <field name="res_model">wizard.fetch.market.data</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>
+
+
