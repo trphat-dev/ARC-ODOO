@@ -9,6 +9,7 @@ from odoo.http import request
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 from odoo.exceptions import UserError
 from odoo.addons.custom_auth.constants import PERMISSION_INVESTOR_USER
+import werkzeug
 
 _logger = logging.getLogger(__name__)
 
@@ -182,4 +183,50 @@ class CustomAuthController(AuthSignupHome):
         """Gửi SMS OTP (cần implement)"""
         # Implement gửi SMS OTP ở đây
         # Có thể sử dụng các dịch vụ SMS như Twilio, Nexmo, etc.
-        pass 
+        pass
+    
+    @http.route('/web/reset_password', type='http', auth='public', website=True, sitemap=False)
+    def web_auth_reset_password(self, *args, **kw):
+        """
+        Override password reset to redirect to login page with success message
+        after password is successfully changed (instead of auto-login).
+        """
+        qcontext = self.get_auth_signup_qcontext()
+
+        if not qcontext.get('token') and not qcontext.get('reset_password_enabled'):
+            raise werkzeug.exceptions.NotFound()
+
+        if 'error' not in qcontext and request.httprequest.method == 'POST':
+            try:
+                if qcontext.get('token'):
+                    # Validate password match
+                    if qcontext.get('password') != qcontext.get('confirm_password'):
+                        qcontext['error'] = _("Mật khẩu không khớp. Vui lòng nhập lại.")
+                    else:
+                        # Change the password using signup mechanism
+                        self.do_signup(qcontext)
+                        # Logout user if they were auto-logged in by do_signup
+                        request.session.logout(keep_db=True)
+                        # Redirect to login with success message
+                        return request.redirect('/web/login?message=password_reset_success')
+                else:
+                    # Request password reset email
+                    login = qcontext.get('login')
+                    if not login:
+                        qcontext['error'] = _("Vui lòng nhập email.")
+                    else:
+                        _logger.info(
+                            "Password reset attempt for <%s> by user <%s> from %s",
+                            login, request.env.user.login, request.httprequest.remote_addr)
+                        request.env['res.users'].sudo().reset_password(login)
+                        qcontext['message'] = _("Hướng dẫn đặt lại mật khẩu đã được gửi đến email của bạn")
+            except UserError as e:
+                qcontext['error'] = e.args[0]
+            except Exception as e:
+                qcontext['error'] = str(e)
+                _logger.exception('error when resetting password')
+
+        response = request.render('auth_signup.reset_password', qcontext)
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['Content-Security-Policy'] = "frame-ancestors 'self'"
+        return response

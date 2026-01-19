@@ -572,7 +572,7 @@ class NavDailyInventory(models.Model):
                 # Lấy thông tin từ fund.certificate trong fund_management_control
                 cert = record.fund_id.certificate_id
                 
-                if cert:
+                if cert and cert.exists():
                     total_value = (cert.initial_certificate_quantity or 0.0) * (cert.initial_certificate_price or 0.0)
                     record.fund_config_info = f"""
                     Thông tin quỹ từ fund.certificate:
@@ -640,7 +640,7 @@ class NavDailyInventory(models.Model):
                 # 3. Thử lấy từ fund.certificate (Logic fallback chính)
                 # Dùng sudo() để đảm bảo quyền truy cập nếu cần
                 fund_sudo = self.fund_id.sudo()
-                if fund_sudo.certificate_id:
+                if fund_sudo.certificate_id and fund_sudo.certificate_id.exists():
                      cert = fund_sudo.certificate_id
                      self.opening_ccq = cert.initial_certificate_quantity or 0.0
                      self.opening_avg_price = cert.initial_certificate_price or 0.0
@@ -687,7 +687,7 @@ class NavDailyInventory(models.Model):
             else:
                 # Lấy từ fund.certificate trong fund_management_control
                 cert = self.fund_id.certificate_id
-                if cert:
+                if cert and cert.exists():
                     if need_ccq:
                         self.opening_ccq = cert.initial_certificate_quantity or 0.0
                     if need_price:
@@ -783,7 +783,7 @@ class NavDailyInventory(models.Model):
 
                 # 3. Thử lấy từ fund.certificate (Logic fallback chính)
                 fund_sudo = record.fund_id.sudo()
-                if fund_sudo.certificate_id:
+                if fund_sudo.certificate_id and fund_sudo.certificate_id.exists():
                      cert = fund_sudo.certificate_id
                      record.opening_ccq = cert.initial_certificate_quantity or 0.0
                      record.opening_avg_price = cert.initial_certificate_price or 0.0

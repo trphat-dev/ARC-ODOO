@@ -151,10 +151,16 @@ class FundCertificate(models.Model):
             if not rec.fund_description:
                 rec.fund_description = f"{rec.symbol} - {rec.market}"
 
-            # Lấy giá tồn kho ban đầu từ close_price của Daily OHLC mới nhất
-            close_price = rec._get_latest_close_price_from_ohlc(sec)
-            if close_price > 0:
-                rec.initial_certificate_price = close_price
+            # Lấy giá tồn kho ban đầu từ open_price của Daily OHLC mới nhất hoặc today_open_price
+            if sec.today_open_price > 0:
+                rec.initial_certificate_price = sec.today_open_price
+            else:
+                # Fallback to OHLC Open Price
+                latest_ohlc = self.env['ssi.daily.ohlc'].sudo().search([
+                    ('security_id', '=', sec.id)
+                ], order='date desc', limit=1)
+                if latest_ohlc and latest_ohlc.open_price:
+                    rec.initial_certificate_price = latest_ohlc.open_price
 
     @api.depends('initial_certificate_quantity')
     def _compute_volume(self):
@@ -242,7 +248,7 @@ class FundCertificate(models.Model):
                           'stock_name_vn', 'stock_name_en', 'reference_price', 
                           'ceiling_price', 'floor_price', 'current_price', 
                           'high_price', 'low_price', 'volume', 'total_value', 
-                          'change', 'change_percent']
+                          'change', 'change_percent', 'today_open_price']
                           
         _logger.info("Fields to read: %s", fields_to_read)
         securities_data = Securities.search_read(domain, fields_to_read, limit=page_size if page_size else None)
@@ -276,8 +282,8 @@ class FundCertificate(models.Model):
                 total_skipped += 1
                 continue
             
-            # Use current_price from streaming, fallback to reference_price
-            initial_price = data.get('current_price') or data.get('reference_price') or 0.0
+            # Use today_open_price from streaming, fallback to reference_price
+            initial_price = data.get('today_open_price') or data.get('reference_price') or 0.0
             
             vals = {
                 'symbol': symbol,
@@ -938,11 +944,11 @@ class AutoFundCertificateCreator(models.Model):
                         continue
                     existing = fund_model.search([('symbol', '=', sec.symbol), ('market', '=', sec.market)], limit=1)
                     
-                    # Lấy close_price từ Daily OHLC mới nhất
+                    # Lấy open_price từ Daily OHLC mới nhất
                     latest_ohlc = ohlc_model.search([
                         ('security_id', '=', sec.id)
                     ], order='date desc', limit=1)
-                    initial_price = latest_ohlc.close_price if latest_ohlc and latest_ohlc.close_price else 0.0
+                    initial_price = latest_ohlc.open_price if latest_ohlc and latest_ohlc.open_price else 0.0
                     
                     vals = {
                         'symbol': sec.symbol,

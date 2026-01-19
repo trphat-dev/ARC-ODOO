@@ -38,10 +38,10 @@ Key Features:
         'data/cron_data.xml',
         # Wizard (must load before menu_views.xml for action reference)
         'wizard/wizard_sync_fund_view.xml',
-        # Menu
-        'views/menu_views.xml',
         # Fund Certificate
         'views/fund_certificate/sync_action.xml',
+        # Menu
+        'views/menu_views.xml',
         'views/fund_certificate/fund_certificate_page.xml',
         'views/fund_certificate/fund_certificate_form.xml',
         'views/fund_certificate/fund_certificate_edit_form.xml',
