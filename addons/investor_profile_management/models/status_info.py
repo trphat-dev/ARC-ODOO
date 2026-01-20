@@ -21,8 +21,9 @@ class StatusInfo(models.Model):
         ('complete', 'Complete'),
         ('incomplete', 'Incomplete')
     ], string="Profile Status", default='incomplete', required=True)
-    rm_id = fields.Many2one('res.users', string="RM")
-    bda_id = fields.Many2one('res.users', string="BDA")
+    
+    # New Field for Auto-Approval Logic
+    ekyc_verified = fields.Boolean(string="eKYC Verified", default=False, readonly=True)
 
     @api.model
     def create(self, vals):
@@ -58,11 +59,7 @@ class StatusInfo(models.Model):
                 if duplicate:
                     raise ValidationError(_('Each partner can only have one status record.'))
 
-    @api.constrains('rm_id', 'bda_id')
-    def _check_rm_bda(self):
-        for record in self:
-            if record.rm_id and record.bda_id and record.rm_id.id == record.bda_id.id:
-                raise ValidationError(_('RM and BDA cannot be the same person.'))
+
 
     @api.constrains('account_status', 'profile_status')
     def _check_status_consistency(self):

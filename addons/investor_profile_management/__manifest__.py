@@ -58,6 +58,8 @@ Key Features:
             # Styles
             'investor_profile_management/static/src/scss/_investor_variables.scss',
             'investor_profile_management/static/src/scss/investor_profile.scss',
+            # Shared Components
+            'investor_profile_management/static/src/js/components/investor_sidebar.js',
             # Personal Profile Widget
             'investor_profile_management/static/src/js/personal_profile/entrypoint.js',
             'investor_profile_management/static/src/js/personal_profile/personal_profile_widget.js',

@@ -7,8 +7,7 @@
         <field name="arch" type="xml">
             <form string="VNPT eKYC API Configuration">
                 <header>
-                    <button name="action_generate_token" string="Lấy Access Token" type="object" class="btn-primary" icon="fa-refresh"/>
-                    <button name="action_update_from_default" string="Cập nhật từ mặc định" type="object" class="btn-secondary" icon="fa-download"/>
+                    <button name="action_check_connection" string="Kiểm tra kết nối" type="object" class="btn-primary" icon="fa-wifi"/>
                     <button name="action_view_api_records" string="Xem Bản ghi API" type="object" class="btn-secondary" icon="fa-list"/>
                 </header>
                 <sheet>
@@ -116,10 +115,6 @@
     </record>
 
     <!-- Menu Item for eKYC API Configuration -->
-    <menuitem id="menu_ekyc_api_config" 
-              name="VNPT eKYC Configuration" 
-              parent="menu_investor_root" 
-              action="action_ekyc_api_config" 
-              sequence="1"/>
+    <menuitem id="menu_ekyc_api_config" name="VNPT eKYC Configuration" parent="menu_investor_root" action="action_ekyc_api_config" sequence="1"/>
 </odoo>
 

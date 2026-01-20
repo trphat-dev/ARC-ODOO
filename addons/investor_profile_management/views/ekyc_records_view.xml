@@ -68,15 +68,11 @@
                         <page string="Ảnh giấy tờ" name="id_documents">
                             <group>
                                 <group string="CCCD/CMND Mặt Trước" col="2">
-                                    <field name="id_front" widget="image" filename="id_front_filename" 
-                                           options="{'preview_image': 'id_front'}" 
-                                           style="width: 100%; max-width: 500px;"/>
+                                    <field name="id_front" widget="image" filename="id_front_filename" options="{'preview_image': 'id_front'}" style="width: 100%; max-width: 500px;"/>
                                     <field name="id_front_filename" invisible="1"/>
                                 </group>
                                 <group string="CCCD/CMND Mặt Sau" col="2">
-                                    <field name="id_back" widget="image" filename="id_back_filename" 
-                                           options="{'preview_image': 'id_back'}" 
-                                           style="width: 100%; max-width: 500px;"/>
+                                    <field name="id_back" widget="image" filename="id_back_filename" options="{'preview_image': 'id_back'}" style="width: 100%; max-width: 500px;"/>
                                     <field name="id_back_filename" invisible="1"/>
                                 </group>
                             </group>
@@ -113,8 +109,7 @@
                                     <field name="referral_code" string="Referral Code"/>
                                     <field name="account_status" string="Account Status" widget="badge"/>
                                     <field name="profile_status" string="Profile Status" widget="badge"/>
-                                    <field name="rm_id" string="RM"/>
-                                    <field name="bda_id" string="BDA"/>
+                                    <field name="ekyc_verified" string="eKYC Verified" widget="boolean"/>
                                 </list>
                             </field>
                         </page>
@@ -175,9 +170,15 @@
                             <div class="oe_kanban_content">
                                 <div class="row">
                                     <div class="col-6">
-                                        <strong><field name="name"/></strong>
-                                        <div><field name="id_number"/></div>
-                                        <div><field name="id_type" widget="badge"/></div>
+                                        <strong>
+                                            <field name="name"/>
+                                        </strong>
+                                        <div>
+                                            <field name="id_number"/>
+                                        </div>
+                                        <div>
+                                            <field name="id_type" widget="badge"/>
+                                        </div>
                                     </div>
                                     <div class="col-6 text-right">
                                         <field name="id_front" widget="image" options="{'preview_image': 'id_front'}" style="width: 80px; height: 50px;"/>
@@ -213,10 +214,6 @@
     </record>
 
     <!-- Menu Item for eKYC Records -->
-    <menuitem id="menu_ekyc_records" 
-              name="Hồ sơ eKYC" 
-              parent="menu_investor_root" 
-              action="action_ekyc_records" 
-              sequence="5"/>
+    <menuitem id="menu_ekyc_records" name="Hồ sơ eKYC" parent="menu_investor_root" action="action_ekyc_records" sequence="5"/>
 </odoo>
 

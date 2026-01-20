@@ -34,26 +34,17 @@ class InvestorList(models.Model):
     id_number_manual = fields.Boolean(string='ĐKSH thủ công', default=False)
     province_city_manual = fields.Boolean(string='Tỉnh/TP thủ công', default=False)
     
-    # Thông tin bổ sung
-    source = fields.Selection([
-        ('tpb2', 'TPB2'),
-        ('fpla1', 'FPLA1'),
-        ('scb', 'SCB'),
-        ('other', 'Khác')
-    ], string='Nguồn', default='other')
-    
-    bda_user = fields.Many2one('res.users', string='BDA')
-    
-    # Trạng thái có thể chỉnh sửa
+    # Trạng thái quản lý (Lifecycle Status)
     status = fields.Selection([
-        ('pending', 'Chờ KYC'),
-        ('kyc', 'KYC'),
-        ('vsd', 'VSD'),
-        ('incomplete', 'Chưa cập nhật')
-    ], string='Trạng thái', default='incomplete')
+        ('draft', 'Chưa cập nhật'),       # Hồ sơ chưa hoàn thiện
+        ('pending', 'Chờ KYC'),           # Hồ sơ đã xong, chờ eKYC
+        ('active', 'KYC'),                # eKYC thành công
+        ('vsd', 'VSD'),                   # Đã lên VSD
+        ('rejected', 'Từ chối')           # Từ chối
+    ], string='Trạng thái', default='draft')
     
     # Track xem trạng thái đã được set thủ công hay chưa
-    status_manual = fields.Boolean(string='Trạng thái thủ công', default=False)
+    status_manual = fields.Boolean(string='Manual Status', default=False)
     
     # Thông tin từ status.info - có thể chỉnh sửa
     account_status = fields.Selection([
@@ -163,41 +154,28 @@ class InvestorList(models.Model):
                 self._update_status_from_status_info()
     
     def _update_status_from_status_info(self):
-        """Cập nhật trạng thái dựa trên thông tin từ status.info"""
+        """
+        New International Standard Algorithm for Status Calculation:
+        - Draft: Profile not complete.
+        - Pending: Profile complete but Account not approved (Waiting for review/eKYC).
+        - Active: Account approved (eKYC verified or Manually approved).
+        - Rejected: Account rejected.
+        """
         for record in self:
             # Nếu trạng thái đã được set thủ công, không override
             if record.status_manual:
                 continue
                 
-            # Kiểm tra xem có đủ thông tin cơ bản không
-            has_basic_info = (
-                record.partner_name and record.partner_name.strip() and
-                record.phone and record.phone.strip() and
-                record.email and record.email.strip() and
-                record.id_number and record.id_number.strip() and
-                record.province_city and record.province_city.strip()
-            )
-            
-            if not has_basic_info:
-                # NĐT chưa cập nhật: chưa có đủ thông tin cơ bản
-                record.status = 'incomplete'
+            if record.account_status == 'rejected':
+                record.status = 'rejected'
+            elif record.account_status == 'approved':
+                record.status = 'active'
+            elif record.profile_status == 'complete':
+                # Completed profile but not approved yet -> Pending
+                record.status = 'pending'
             else:
-                # Logic mới dựa trên hồ sơ gốc và trạng thái TK đầu tư
-                if record.profile_status == 'incomplete' and record.account_status == 'pending':
-                    # Profile incomplete and account pending -> incomplete
-                    record.status = 'incomplete'
-                elif record.profile_status == 'complete' and record.account_status == 'pending':
-                    # Profile complete but account pending -> pending KYC
-                    record.status = 'pending'
-                elif record.profile_status == 'complete' and record.account_status == 'approved':
-                    # Profile complete and account approved -> KYC complete
-                    record.status = 'kyc'
-                elif record.account_status == 'rejected':
-                    # Rejected: still shown but can be filtered
-                    record.status = 'pending'
-                else:
-                    # Mặc định
-                    record.status = 'incomplete'
+                # Incomplete profile -> Draft
+                record.status = 'draft'
     
     @api.model
     def create(self, vals):

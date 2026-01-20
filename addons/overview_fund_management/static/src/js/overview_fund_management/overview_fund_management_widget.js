@@ -3,6 +3,8 @@
 import { Component, xml, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { loadJS } from "@web/core/assets";
 
+import { useService } from "@web/core/utils/hooks";
+
 export class OverviewFundManagementWidget extends Component {
   static template = xml`
     <div class="fund-overview-container">
@@ -40,13 +42,13 @@ export class OverviewFundManagementWidget extends Component {
                                         <div class="col-6">
                                             <div t-attf-class="stat-item-compact text-end #{this.getNavClass(fund)}">
                                                 <p class="text-muted xs mb-0">NAV hiện tại</p>
-                                                <p class="fw-semibold small mb-0">
+                                                <p t-attf-class="fw-semibold small mb-0 #{this.getPriceColorClass(fund.current_nav, fund.reference_price, fund.ceiling_price, fund.floor_price)}">
                                                     <t t-esc="this.formatCurrency(fund.current_value / fund.total_units)"/>đ
                                                 </p>
                                             </div>
                                             <div t-attf-class="stat-item-compact text-end mt-1 #{this.getValueClass(fund)}">
                                                 <p class="text-muted xs mb-0">Giá trị hiện tại</p>
-                                                <p class="fw-semibold small mb-0"><t t-esc="this.formatCurrency(fund.current_value)"/>đ</p>
+                                                <p t-attf-class="fw-semibold small mb-0 #{this.getPriceColorClass(fund.current_nav, fund.reference_price, fund.ceiling_price, fund.floor_price)}"><t t-esc="this.formatCurrency(fund.current_value)"/>đ</p>
                                             </div>
                                         </div>
                                     </div>
@@ -216,6 +218,13 @@ export class OverviewFundManagementWidget extends Component {
     this._previousNavs = {};
     this._navDirections = {};
     
+    // Bus service
+    try {
+        this.bus = useService?.('bus_service');
+    } catch (e) {
+        this.bus = null;
+    }
+    
     this.state = useState({
       funds: this.props.funds || [],
       transactions: this.props.transactions || [],
@@ -240,6 +249,24 @@ export class OverviewFundManagementWidget extends Component {
     onMounted(() => {
       this.initChart();
       this._startAutoRefresh();
+      
+      // Subscribe to real-time events
+      if (this.bus && typeof this.bus.addEventListener === 'function') {
+        try {
+            this.bus.addChannel('stock_data_live');
+            this.bus.start();
+            this.bus.addEventListener('notification', ({ detail }) => {
+                const notifs = detail || [];
+                const hasPriceUpdate = notifs.some((n) => (n.type === 'stock_data/price_update'));
+                if (hasPriceUpdate) {
+                    // console.log('⚡ Realtime Update Received, fetching latest data...');
+                    this._fetchLatestData();
+                }
+            });
+        } catch (e) {
+            console.warn('⚠️ Bus init failed:', e);
+        }
+      }
     });
     
     onWillUnmount(() => {
@@ -414,6 +441,20 @@ export class OverviewFundManagementWidget extends Component {
       return value;
     }
     return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
+  }
+
+  getPriceColorClass(price, refPrice, ceiling, floor) {
+        if (!price || !refPrice) return '';
+        price = Number(price);
+        refPrice = Number(refPrice);
+        ceiling = Number(ceiling || 0);
+        floor = Number(floor || 0);
+
+        if (ceiling > 0 && price >= ceiling) return 'text-purple'; // Ceiling (Custom class or fallback logic if CSS missing, usually text-purple)
+        if (floor > 0 && price <= floor) return 'text-cyan';      // Floor
+        if (price === refPrice) return 'text-warning';            // Ref
+        if (price > refPrice) return 'text-success';              // Up
+        return 'text-danger';                                     // Down
   }
 }
 

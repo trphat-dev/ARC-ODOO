@@ -201,25 +201,33 @@ class EKYCIntegrationController(http.Controller):
     def _ensure_access_token(self, config):
         """
         Lấy access token từ config.
-        KHÔNG tự động refresh token vì VNPT OAuth API đang lỗi 500.
-        Admin cần cập nhật token thủ công từ portal VNPT.
+        Nếu token hết hạn hoặc chưa có, thử tự động lấy mới.
         """
         token = config.get('access_token')
         expiration = config.get('token_expiration')
         
         # Kiểm tra token có tồn tại không
         if not token:
-            _logger.error('Access token chưa được cấu hình. Vui lòng cập nhật từ portal VNPT.')
-            raise Exception(_('Access token chưa được cấu hình. Vui lòng vào Settings → VNPT eKYC Configuration để cập nhật.'))
+            _logger.info('Access token chưa được cấu hình. Thử lấy token mới...')
+            try:
+                # Thử lấy mới
+                return self._refresh_access_token(config)
+            except Exception as e:
+                _logger.error('Tự động lấy token thất bại: %s', e)
+                raise Exception(_('Access token chưa được cấu hình và không thể tự động lấy mới. Vui lòng cập nhật thủ công.'))
         
         # Kiểm tra token có hết hạn không
         if expiration:
             try:
                 exp_dt = fields.Datetime.from_string(expiration)
-                if exp_dt <= fields.Datetime.now():
-                    _logger.warning('Access token đã hết hạn vào %s. Vui lòng cập nhật token mới từ portal VNPT.', expiration)
-                    # Vẫn trả về token cũ để thử, có thể VNPT vẫn chấp nhận
-                    # Nếu không được, API sẽ trả về 401 và admin sẽ biết cần cập nhật
+                # Nếu đã hết hạn hoặc sắp hết hạn trong 5 phút nữa
+                if exp_dt <= fields.Datetime.now() + timedelta(minutes=5):
+                    _logger.info('Access token đã hết hạn (hoặc sắp hết hạn) vào %s. Thử làm mới...', expiration)
+                    try:
+                        return self._refresh_access_token(config)
+                    except Exception as e:
+                        _logger.warning('Làm mới token thất bại: %s. Sẽ dùng lại token cũ tạm thời.', e)
+                        # Vẫn trả về token cũ để thử vận may, có thể VNPT du di
             except Exception as e:
                 _logger.warning('Không thể parse token expiration: %s', e)
         
@@ -683,6 +691,23 @@ class EKYCIntegrationController(http.Controller):
             if not file_hash:
                 raise Exception('Không nhận được hash từ API upload')
             
+
+            current_user = request.env.user
+            partner = current_user.partner_id
+            # Assuming _logger is imported globally or within the class
+            import logging
+            _logger = logging.getLogger(__name__)
+            # Assuming ocr_full_result is available, though not produced by upload_file
+            ocr_full_result = {} # Placeholder
+
+            # 5. Save eKYC verified status if successful
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', partner.id)
+            ], limit=1)
+            if status_info:
+                status_info.sudo().write({'ekyc_verified': True})
+                _logger.info(f"✅ Auto-set eKYC Verified for user {current_user.login}")
+
             return self._make_success_response({
                 'hash': file_hash,
                 'file_info': response.get('object', {})
@@ -1248,6 +1273,19 @@ class EKYCIntegrationController(http.Controller):
             
             _logger.info('✅ eKYC process completed: %s', result.get('message'))
             
+            # Auto-set eKYC verified status if successful
+            if result.get('success'):
+                current_user = request.env.user
+                status_info = request.env['status.info'].sudo().search([
+                    ('partner_id', '=', current_user.partner_id.id)
+                ], limit=1)
+                if status_info:
+                    status_info.sudo().write({
+                        'ekyc_verified': True,
+                        'account_status': 'approved'
+                    })
+                    _logger.info(f"✅ Auto-set eKYC Verified and Approved for user {current_user.login}")
+
             return self._make_success_response(result, result.get('message'))
                 
         except ValueError as e:

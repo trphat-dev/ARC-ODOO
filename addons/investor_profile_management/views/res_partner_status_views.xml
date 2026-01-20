@@ -13,8 +13,7 @@
                             <field name="referral_code"/>
                             <field name="account_status" widget="badge" decoration-success="account_status == 'approved'" decoration-warning="account_status == 'pending'" decoration-danger="account_status == 'rejected'" options="{'classes': {'success': 'text-success', 'warning': 'text-warning', 'danger': 'text-danger'}}"/>
                             <field name="profile_status" widget="badge" decoration-success="profile_status == 'complete'" decoration-warning="profile_status == 'incomplete'" options="{'classes': {'success': 'text-success', 'warning': 'text-warning'}}"/>
-                            <field name="rm_id"/>
-                            <field name="bda_id"/>
+                            <field name="ekyc_verified" widget="boolean"/>
                         </list>
                     </field>
                 </page>
@@ -30,8 +29,6 @@
             <search string="Search Status Information">
                 <field name="account_number"/>
                 <field name="referral_code"/>
-                <field name="rm_id"/>
-                <field name="bda_id"/>
                 <separator/>
                 <filter string="Approved" name="approved" domain="[('account_status','=','approved')]"/>
                 <filter string="Pending" name="pending" domain="[('account_status','=','pending')]"/>
@@ -39,10 +36,10 @@
                 <separator/>
                 <filter string="Profile Complete" name="doc_received" domain="[('profile_status','=','complete')]"/>
                 <filter string="Profile Incomplete" name="doc_pending" domain="[('profile_status','=','incomplete')]"/>
+                <filter string="eKYC Verified" name="ekyc_verified" domain="[('ekyc_verified','=',True)]"/>
                 <group expand="0" string="Group By">
                     <filter string="Status" name="group_by_status" context="{'group_by':'account_status'}"/>
                     <filter string="Profile Status" name="group_by_doc" context="{'group_by':'profile_status'}"/>
-                    <filter string="RM" name="group_by_rm" context="{'group_by':'rm_id'}"/>
                 </group>
             </search>
         </field>

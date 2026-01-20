@@ -14,3 +14,9 @@ access_data_bank_branch,access.data.bank.branch,model_data_bank_branch,base.grou
 access_data_country,access.data.country,model_data_country,base.group_user,1,1,1,1
 access_data_city,access.data.city,model_data_city,base.group_user,1,1,1,1
 access_data_ward,access.data.ward,model_data_ward,base.group_user,1,1,1,1
+
+access_data_bank_portal,access.data.bank.portal,model_data_bank,base.group_portal,1,0,0,0
+access_data_bank_branch_portal,access.data.bank.branch.portal,model_data_bank_branch,base.group_portal,1,0,0,0
+access_data_country_portal,access.data.country.portal,model_data_country,base.group_portal,1,0,0,0
+access_data_city_portal,access.data.city.portal,model_data_city,base.group_portal,1,0,0,0
+access_data_ward_portal,access.data.ward.portal,model_data_ward,base.group_portal,1,0,0,0

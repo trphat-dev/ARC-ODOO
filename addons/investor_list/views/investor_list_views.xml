@@ -5,7 +5,7 @@
         <field name="name">investor.list.list</field>
         <field name="model">investor.list</field>
         <field name="arch" type="xml">
-            <list string="Danh sách nhà đầu tư" decoration-info="status == 'pending'" decoration-success="status == 'kyc'" decoration-warning="status == 'vsd'" decoration-danger="status == 'incomplete'">
+            <list string="Danh sách nhà đầu tư" decoration-warning="status == 'draft'" decoration-info="status == 'pending'" decoration-success="status == 'active'" decoration-primary="status == 'vsd'" decoration-danger="status == 'rejected'">
                 <field name="open_date" widget="datetime"/>
                 <field name="account_number"/>
                 <field name="partner_name"/>
@@ -13,11 +13,9 @@
                 <field name="phone"/>
                 <field name="email"/>
                 <field name="province_city"/>
-                <field name="source"/>
-                <field name="bda_user"/>
                 <field name="account_status"/>
                 <field name="profile_status"/>
-                <field name="status" widget="badge" decoration-info="status == 'pending'" decoration-success="status == 'kyc'" decoration-warning="status == 'vsd'" decoration-danger="status == 'incomplete'"/>
+                <field name="status" widget="badge" decoration-warning="status == 'draft'" decoration-info="status == 'pending'" decoration-success="status == 'active'" decoration-primary="status == 'vsd'" decoration-danger="status == 'rejected'"/>
             </list>
         </field>
     </record>
@@ -50,9 +48,7 @@
                         <group string="Thông tin địa chỉ">
                             <field name="province_city"/>
                         </group>
-                        <group string="Thông tin bổ sung">
-                            <field name="source"/>
-                            <field name="bda_user"/>
+                        <group string="Trạng thái">
                             <field name="account_status"/>
                             <field name="profile_status"/>
                             <field name="status"/>
@@ -76,18 +72,13 @@
                 <field name="id_number"/>
                 <field name="province_city"/>
                 <separator/>
+                <filter string="Chưa cập nhật" name="draft" domain="[('status', '=', 'draft')]"/>
                 <filter string="Chờ KYC" name="pending" domain="[('status', '=', 'pending')]"/>
-                <filter string="KYC" name="kyc" domain="[('status', '=', 'kyc')]"/>
+                <filter string="KYC" name="active" domain="[('status', '=', 'active')]"/>
                 <filter string="VSD" name="vsd" domain="[('status', '=', 'vsd')]"/>
-                <filter string="Chưa cập nhật" name="incomplete" domain="[('status', '=', 'incomplete')]"/>
-                <separator/>
-                <filter string="TPB2" name="tpb2" domain="[('source', '=', 'tpb2')]"/>
-                <filter string="FPLA1" name="fpla1" domain="[('source', '=', 'fpla1')]"/>
-                <filter string="SCB" name="scb" domain="[('source', '=', 'scb')]"/>
+                <filter string="Từ chối" name="rejected" domain="[('status', '=', 'rejected')]"/>
                 <group expand="0" string="Group By">
                     <filter string="Trạng thái" name="group_status" context="{'group_by': 'status'}"/>
-                    <filter string="Nguồn" name="group_source" context="{'group_by': 'source'}"/>
-                    <filter string="BDA" name="group_bda" context="{'group_by': 'bda_user'}"/>
                     <filter string="Tỉnh/Thành phố" name="group_province" context="{'group_by': 'province_city'}"/>
                 </group>
             </search>
@@ -111,11 +102,7 @@
     </record>
 
     <!-- Menu -->
-    <menuitem id="menu_investor_list"
-              name="Danh sách nhà đầu tư"
-              parent="menu_investor_list_root"
-              action="action_investor_list"
-              sequence="10"/>
+    <menuitem id="menu_investor_list" name="Danh sách nhà đầu tư" parent="menu_investor_list_root" action="action_investor_list" sequence="10"/>
 
     <!-- Server Action để đồng bộ portal users -->
     <record id="action_sync_portal_users" model="ir.actions.server">
@@ -128,9 +115,5 @@
     </record>
 
     <!-- Menu cho server action -->
-    <menuitem id="menu_sync_portal_users"
-              name="Đồng bộ tài khoản portal"
-              parent="menu_investor_list_root"
-              action="action_sync_portal_users"
-              sequence="20"/>
+    <menuitem id="menu_sync_portal_users" name="Đồng bộ tài khoản portal" parent="menu_investor_list_root" action="action_sync_portal_users" sequence="20"/>
 </odoo> 

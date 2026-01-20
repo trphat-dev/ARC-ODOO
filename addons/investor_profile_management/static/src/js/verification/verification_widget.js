@@ -4,109 +4,82 @@ console.log('Loading VerificationWidget component...');
 const { Component, xml, useState, onMounted } = owl;
 
 class VerificationWidget extends Component {
+    static components = { InvestorSidebar: window.InvestorSidebar };
+    
     static template = xml`
         <div class="investor-page">
             <div class="investor-layout">
                 <!-- Sidebar -->
-                <aside class="investor-sidebar">
-                    <div class="sidebar-header">
-                        <div class="logo-container">
-                            <i class="fa fa-user-circle"></i>
-                        </div>
-                        <h3><t t-esc="state.profile.name || 'Investor'" /></h3>
-                        <div class="mt-2">
-                             <span t-if="state.statusInfo.account_status == 'approved'" class="status-badge status-complete">Đã duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'pending'" class="status-badge status-incomplete">Chờ duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'rejected'" class="status-badge status-incomplete">Từ chối</span>
-                             <span t-else="" class="status-badge status-incomplete">Chưa có</span>
-                        </div>
-                        
-                        <div class="mt-4 px-2">
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Số TK:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.account_number || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Mã GT:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.referral_code || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Hồ sơ:</span>
-                                
-                                <span t-if="state.statusInfo.profile_status == 'complete'" class="text-success fw-bold">Đã hoàn tất</span>
-                                <span t-else="" class="text-warning fw-bold">Chưa hoàn tất</span>
-                            </div>
-                        </div>
-
-                        <t t-if="state.statusInfo.rm_name">
-                            <div class="mt-3 pt-3 border-top small text-center text-muted">
-                                <i class="fa fa-id-card-o me-1"></i> RM: <t t-esc="state.statusInfo.rm_name"/>
-                            </div>
-                        </t>
-                    </div>
-                    
-                    <nav class="sidebar-nav mt-3">
-                        <a href="/personal_profile" class="nav-item">
-                            <i class="fa fa-user"></i> Thông tin cá nhân
-                        </a>
-                        <a href="/bank_info" class="nav-item">
-                            <i class="fa fa-university"></i> TK Ngân hàng
-                        </a>
-                        <a href="/address_info" class="nav-item">
-                            <i class="fa fa-map-marker"></i> Thông tin địa chỉ
-                        </a>
-                        <a href="/verification" class="nav-item active">
-                            <i class="fa fa-shield"></i> Xác thực &amp; eKYC
-                        </a>
-                    </nav>
-                </aside>
+                <InvestorSidebar profile="this.state.profile" statusInfo="this.state.statusInfo" activePage="'verification'" />
                 
                 <!-- Main Content -->
                 <div class="investor-content">
-                    <div class="investor-card">
-                        <div class="card-header-styled">
-                            <h2>Xác thực hoàn tất</h2>
-                            <p>Xác nhận thông tin và hoàn tất hồ sơ đăng ký</p>
+                    <div class="investor-card border-0 shadow-sm" style="background: white; border-radius: 12px; padding: 2rem;">
+                         <!-- Brand Header Style -->
+                        <div class="d-flex align-items-center mb-4 pb-2 border-bottom">
+                            <div style="width: 4px; height: 32px; background-color: #ff9900; margin-right: 12px; border-radius: 2px;"></div>
+                            <div>
+                                <h2 class="mb-0 fw-bold text-dark" style="font-size: 1.75rem;">Xác thực hoàn tất</h2>
+                                <p class="text-muted mb-0 small">Xác nhận thông tin và hoàn tất hồ sơ đăng ký</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                             <h5 class="text-primary fw-bold mb-3">Xác nhận thông tin</h5>
                         </div>
                         
                         <form class="investor-form" t-on-submit.prevent="completeVerification">
-                             <div class="row">
-                                <div class="col-12 mb-4">
-                                     <h5 class="text-primary fw-bold mb-3 border-bottom pb-2">Xác nhận thông tin</h5>
-                                     
-                                     <div class="p-3 bg-light rounded mb-4 border">
-                                         <p class="mb-3">
-                                          Để bắt đầu thực hiện giao dịch, Quý khách cần phải xác nhận thông tin và đồng ý các điều khoản, điều kiện dưới đây:
-                                         </p>
-                                         <p class="mb-3">
-                                          Sau khi hoàn tất bước xác nhận này thông tin <span class="fw-bold text-primary">Hợp đồng mở tài khoản</span> của Quý khách sẽ được gửi tới email <span class="fw-bold text-highlight"><t t-esc="state.contractEmail" /></span>.
-                                         </p>
-                                         <p class="mb-0">
-                                          Quý khách vui lòng in, ký xác nhận và gửi thư về địa chỉ của công ty trong phần liên hệ!
-                                         </p>
-                                     </div>
-                                     
-                                     <div class="terms-box p-3 border rounded mb-3 bg-white" style="max-height: 200px; overflow-y: auto;">
-                                          <p class="mb-2 small"><i class="fa fa-check text-success me-2"></i> Tôi cam kết các thông tin đã cung cấp là chính xác và trung thực.</p>
-                                          <p class="mb-2 small"><i class="fa fa-check text-success me-2"></i> Tôi đồng ý tuân thủ các quy định giao dịch của công ty quản lý quỹ.</p>
-                                          <p class="mb-2 small"><i class="fa fa-check text-success me-2"></i> Tôi đã đọc, hiểu và đồng ý với các điều khoản trong hợp đồng mở tài khoản.</p>
-                                          <p class="mb-2 small"><i class="fa fa-check text-success me-2"></i> Tôi cam kết sẽ thông báo cho công ty khi có thay đổi về thông tin cá nhân.</p>
-                                     </div>
-                                     
-                                     <div class="form-check p-3 border border-warning bg-warning bg-opacity-10 rounded">
-                                          <input type="checkbox" id="agree_terms" t-model="state.agreedToTerms" required="required" class="form-check-input mt-1" />
-                                          <label for="agree_terms" class="form-check-label fw-bold">
-                                              Tôi đồng ý với các điều khoản và điều kiện trên <span class="text-danger">*</span>
-                                          </label>
-                                     </div>
-                                </div>
+                             
+                             <!-- Instruction Box -->
+                             <div class="p-4 bg-light rounded-3 mb-4" style="border: 1px solid #e9ecef;">
+                                 <p class="mb-3 text-secondary">
+                                  Để đảm bảo quyền lợi và tính pháp lý, Quý khách vui lòng kiểm tra kỹ lại toàn bộ thông tin đã cung cấp.
+                                 </p>
+                                 <p class="mb-3 text-secondary">
+                                  Bằng việc nhấn nút <span class="fw-bold text-primary">"Hoàn tất"</span> bên dưới, Quý khách xác nhận rằng mọi thông tin là chính xác và đồng ý ký kết Hợp đồng mở tài khoản giao dịch chứng chỉ quỹ.
+                                 </p>
+                                 <p class="mb-0 text-secondary">
+                                  Hệ thống sẽ tự động ghi nhận hồ sơ và kích hoạt tài khoản ngay sau khi yêu cầu được phê duyệt.
+                                 </p>
                              </div>
                              
-                             <div class="d-flex justify-content-end pt-3 border-top gap-2">
-                                 <button type="button" class="btn btn-outline-secondary px-4 rounded-pill" t-on-click="onBack">
+                             <!-- Commitment List (International Standard Style) -->
+                             <div class="mb-4 ps-2">
+                                  <div class="d-flex align-items-start mb-3">
+                                      <i class="fa fa-check text-success mt-1 me-3 fs-5"></i>
+                                      <span class="text-dark">Tôi cam kết các thông tin đã cung cấp là chính xác và trung thực.</span>
+                                  </div>
+                                  <div class="d-flex align-items-start mb-3">
+                                      <i class="fa fa-check text-success mt-1 me-3 fs-5"></i>
+                                      <span class="text-dark">Tôi đồng ý tuân thủ các quy định giao dịch của công ty quản lý quỹ.</span>
+                                  </div>
+                                  <div class="d-flex align-items-start mb-3">
+                                      <i class="fa fa-check text-success mt-1 me-3 fs-5"></i>
+                                      <span class="text-dark">Tôi đã đọc, hiểu và đồng ý với các điều khoản trong hợp đồng mở tài khoản.</span>
+                                  </div>
+                                  <div class="d-flex align-items-start mb-3">
+                                      <i class="fa fa-check text-success mt-1 me-3 fs-5"></i>
+                                      <span class="text-dark">Tôi cam kết sẽ thông báo cho công ty khi có thay đổi về thông tin cá nhân.</span>
+                                  </div>
+                             </div>
+                             
+                             <!-- Highlighted Agreement Checkbox -->
+                             <div class="form-check p-3 rounded-3 mb-5 d-flex align-items-center" 
+                                  style="background-color: #ffcc00; border: 1px solid #e6b800; min-height: 56px;">
+                                  <input type="checkbox" id="agree_terms" t-model="state.agreedToTerms" required="required" 
+                                         class="form-check-input me-3" 
+                                         style="width: 24px; height: 24px; margin-top: 0; cursor: pointer;" />
+                                  <label for="agree_terms" class="form-check-label fw-bold text-dark fs-5" style="cursor: pointer;">
+                                      Tôi đồng ý với các điều khoản và điều kiện trên <span class="text-danger">*</span>
+                                  </label>
+                             </div>
+                             
+                             <!-- Action Buttons -->
+                             <div class="d-flex justify-content-end gap-3 border-top pt-4">
+                                 <button type="button" class="btn btn-link text-decoration-none text-secondary fw-bold px-4" t-on-click="onBack">
                                      <i class="fa fa-arrow-left me-2"></i> Quay lại
                                  </button>
-                                 <button type="submit" class="btn btn-primary-investor px-5">
+                                 <button type="submit" class="btn btn-warning text-white fw-bold px-5 py-2 rounded-pill shadow-sm" style="background-color: #ff9900; border: none; font-size: 1.1rem;">
                                       <i class="fa fa-check-circle me-2"></i> Hoàn tất
                                  </button>
                              </div>
@@ -123,7 +96,7 @@ class VerificationWidget extends Component {
                     <button type="button" class="btn-close" t-on-click="closeModal"></button>
                   </div>
                   <div class="modal-body text-center p-4">
-                    <t t-if="state.modalTitle === 'Thành công' || state.modalTitle === 'Xác nhận thành công'">
+                    <t t-if="state.modalTitle === 'Thành công' || state.modalTitle === 'Xác nhận hoàn tất'">
                       <div class="mb-3 text-success" style="font-size: 3rem;">
                         <i class="fa fa-check-circle"></i>
                       </div>
@@ -323,9 +296,29 @@ class VerificationWidget extends Component {
             this.state.showModal = true;
             
             // Chuyển hướng về trang chủ sau 3 giây
-            setTimeout(() => { 
-                window.location.href = '/my/home'; 
-            }, 3000);
+           if (this.state.agreedToTerms) {
+            // Call API to complete verification
+            fetch('/api/verification/complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Có lỗi xảy ra: ' + (data.error || data.message));
+                }
+            })
+            .catch(error => {
+                console.error('Error completing verification:', error);
+                alert('Có lỗi xảy ra khi hoàn tất xác thực.');
+            });
+        } else {
+            alert("Vui lòng đồng ý với điều khoản sử dụng.");
+        }
             
         } catch (error) {
             console.error('Lỗi khi xác thực:', error);

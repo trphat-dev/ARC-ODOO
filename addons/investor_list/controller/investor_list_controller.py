@@ -30,8 +30,6 @@ class InvestorListController(http.Controller):
                 'phone': record.phone or '',
                 'email': record.email or '',
                 'province_city': record.province_city or '',
-                'source': record.source or '',
-                'bda_user': record.bda_user.name if record.bda_user else '',
                 'status': record.status or '',
                 'account_status': record.account_status or '',
                 'profile_status': record.profile_status or '',
@@ -43,20 +41,22 @@ class InvestorListController(http.Controller):
                 'province_city_manual': record.province_city_manual
             })
         
-        # Tính toán số lượng theo từng trạng thái
+        # Tính toán số lượng theo từng trạng thái mới
+        draft_count = len([i for i in investor_data if i['status'] == 'draft'])
         pending_count = len([i for i in investor_data if i['status'] == 'pending'])
-        kyc_count = len([i for i in investor_data if i['status'] == 'kyc'])
+        active_count = len([i for i in investor_data if i['status'] == 'active'])
         vsd_count = len([i for i in investor_data if i['status'] == 'vsd'])
-        incomplete_count = len([i for i in investor_data if i['status'] == 'incomplete'])
+        rejected_count = len([i for i in investor_data if i['status'] == 'rejected'])
         
         # Tạo dữ liệu cho template
         all_dashboard_data = {
             'investors': investor_data,
             'total_count': len(investor_data),
+            'draft_count': draft_count,
             'pending_count': pending_count,
-            'kyc_count': kyc_count,
+            'active_count': active_count,
             'vsd_count': vsd_count,
-            'incomplete_count': incomplete_count
+            'rejected_count': rejected_count
         }
 
         return request.render('investor_list.investor_list_page', {
@@ -65,6 +65,7 @@ class InvestorListController(http.Controller):
 
     @http.route('/api/investor_list/<int:investor_id>', type='http', auth='user', methods=['PUT'], csrf=False)
     def update_investor(self, investor_id, **kwargs):
+        """Update investor details with manual override tracking"""
         try:
             # Đọc dữ liệu JSON từ request body
             data = json.loads(request.httprequest.data.decode('utf-8'))
@@ -74,83 +75,66 @@ class InvestorListController(http.Controller):
                 return json.dumps({'error': 'Nhà đầu tư không tồn tại'})
             
             # Cập nhật các trường được phép chỉnh sửa
-            update_data = {}
+            vals = {}
             
-            # Xử lý trường source
-            if 'source' in data:
-                update_data['source'] = data['source']
+            # Fields that can be manually edited
+            editable_fields = ['partner_name', 'phone', 'email', 'id_number', 'province_city']
             
-            # Xử lý trường bda_user - có thể là ID hoặc tên
-            if 'bda_user' in data and data['bda_user']:
-                bda_value = data['bda_user']
-                if isinstance(bda_value, int):
-                    # Nếu là ID
-                    update_data['bda_user'] = bda_value
-                else:
-                    # Nếu là tên, tìm user theo tên
-                    user = request.env['res.users'].search([('name', '=', bda_value)], limit=1)
-                    if user:
-                        update_data['bda_user'] = user.id
-                    else:
-                        # Nếu không tìm thấy, tạo mới hoặc để trống
-                        update_data['bda_user'] = False
-            elif 'bda_user' in data and not data['bda_user']:
-                # Nếu bda_user rỗng, set về False
-                update_data['bda_user'] = False
+            for field in editable_fields:
+                if field in data:
+                    vals[field] = data[field]
+                    vals[f'{field}_manual'] = True
             
-            # Xử lý các trường thông tin cá nhân
-            if 'partner_name' in data:
-                update_data['partner_name'] = data['partner_name']
-            if 'phone' in data:
-                update_data['phone'] = data['phone']
-            if 'email' in data:
-                update_data['email'] = data['email']
-            if 'id_number' in data:
-                update_data['id_number'] = data['id_number']
-            if 'province_city' in data:
-                update_data['province_city'] = data['province_city']
-            
-            # Xử lý các trường khác
+            # Status fields
             if 'account_status' in data:
-                update_data['account_status'] = data['account_status']
+                vals['account_status'] = data['account_status']
             if 'profile_status' in data:
-                update_data['profile_status'] = data['profile_status']
+                vals['profile_status'] = data['profile_status']
             if 'status' in data:
-                update_data['status'] = data['status']
+                vals['status'] = data['status']
+                vals['status_manual'] = True
             
-            # Ghi dữ liệu vào database
-            investor.write(update_data)
+            if vals:
+                investor.write(vals)
             
-            # Refresh record để lấy dữ liệu mới nhất
-            investor.refresh()
+            return json.dumps({'success': True})
             
-            # Trả về dữ liệu đã cập nhật
-            response_data = {
-                'id': investor.id,
-                'open_date': investor.open_date.strftime('%Y-%m-%d %H:%M:%S') if investor.open_date else '',
-                'account_number': investor.account_number or '',
-                'partner_name': investor.partner_name or '',
-                'id_number': investor.id_number or '',
-                'phone': investor.phone or '',
-                'email': investor.email or '',
-                'province_city': investor.province_city or '',
-                'source': investor.source or '',
-                'bda_user': investor.bda_user.name if investor.bda_user else '',
-                'status': investor.status or '',
-                'account_status': investor.account_status or '',
-                'profile_status': investor.profile_status or '',
-                'status_manual': investor.status_manual,
-                'partner_name_manual': investor.partner_name_manual,
-                'phone_manual': investor.phone_manual,
-                'email_manual': investor.email_manual,
-                'id_number_manual': investor.id_number_manual,
-                'province_city_manual': investor.province_city_manual
-            }
-            
-            return json.dumps(response_data)
         except Exception as e:
             return json.dumps({'error': str(e)})
 
+    @http.route('/api/investor_list/<int:investor_id>/approve', type='json', auth='user', methods=['POST'])
+    def approve_investor(self, investor_id):
+        """Manually approve an investor"""
+        try:
+            # Check permission (simple check for now, can be enhanced)
+            if not request.env.user.has_group('base.group_user'):
+                 return {'error': 'Permission denied'}
+
+            investor = request.env['investor.list'].browse(investor_id)
+            if not investor.exists():
+                return {'error': 'Investor not found'}
+            
+            # Update status manual flag
+            investor.write({'status_manual': True, 'account_status': 'approved'})
+            return {'success': True, 'status': 'approved', 'status_display': 'Approved'}
+        except Exception as e:
+            return {'error': str(e)}
+
+    @http.route('/api/investor_list/<int:investor_id>/reject', type='json', auth='user', methods=['POST'])
+    def reject_investor(self, investor_id):
+        """Manually reject an investor"""
+        try:
+            if not request.env.user.has_group('base.group_user'):
+                 return {'error': 'Permission denied'}
+
+            investor = request.env['investor.list'].browse(investor_id)
+            if not investor.exists():
+                return {'error': 'Investor not found'}
+            
+            investor.write({'status_manual': True, 'account_status': 'rejected'})
+            return {'success': True, 'status': 'rejected', 'status_display': 'Rejected'}
+        except Exception as e:
+            return {'error': str(e)}
 
     @http.route('/api/users', type='http', auth='user', methods=['GET'], csrf=False)
     def get_users(self, **kwargs):
@@ -169,12 +153,12 @@ class InvestorListController(http.Controller):
         except Exception as e:
             return json.dumps({'error': str(e)})
 
-    @http.route('/api/investor_list/<int:investor_id>/reset', type='http', auth='user', methods=['POST'], csrf=False)
+    @http.route('/api/investor_list/<int:investor_id>/reset', type='json', auth='user', methods=['POST'])
     def reset_investor_fields(self, investor_id, **kwargs):
         try:
             investor = request.env['investor.list'].browse(investor_id)
             if not investor.exists():
-                return json.dumps({'error': 'Nhà đầu tư không tồn tại'})
+                return {'error': 'Nhà đầu tư không tồn tại'}
             
             # Reset tất cả trường về tự động
             investor.reset_manual_fields()
@@ -189,8 +173,7 @@ class InvestorListController(http.Controller):
                 'phone': investor.phone or '',
                 'email': investor.email or '',
                 'province_city': investor.province_city or '',
-                'source': investor.source or '',
-                'bda_user': investor.bda_user.name if investor.bda_user else '',
+                'province_city': investor.province_city or '',
                 'status': investor.status or '',
                 'account_status': investor.account_status or '',
                 'profile_status': investor.profile_status or '',

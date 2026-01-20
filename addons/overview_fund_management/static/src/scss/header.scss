@@ -438,6 +438,9 @@ $z-index-fixed: 1030;
     }
     
     .notif-list {
+        max-height: 400px; // Limit height for scroll
+        overflow-y: auto;  // Enable vertical scroll
+
         .notif-item {
             border-bottom: 1px solid #f1f5f9;
             

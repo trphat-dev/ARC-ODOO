@@ -4,62 +4,13 @@ console.log('Loading BankInfoWidget component...');
 const { Component, xml, useState, onMounted } = owl;
 
 class BankInfoWidget extends Component {
+    static components = { InvestorSidebar: window.InvestorSidebar };
+    
     static template = xml`
         <div class="investor-page">
             <div class="investor-layout">
                 <!-- Sidebar -->
-                <aside class="investor-sidebar">
-                    <div class="sidebar-header">
-                        <div class="logo-container">
-                            <i class="fa fa-user-circle"></i>
-                        </div>
-                        <h3><t t-esc="state.profile.name || 'Investor'" /></h3>
-                        <div class="mt-2">
-                             <span t-if="state.statusInfo.account_status == 'approved'" class="status-badge status-complete">Đã duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'pending'" class="status-badge status-incomplete">Chờ duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'rejected'" class="status-badge status-incomplete">Từ chối</span>
-                             <span t-else="" class="status-badge status-incomplete">Chưa có</span>
-                        </div>
-                        
-                        <div class="mt-4 px-2">
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Số TK:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.account_number || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Mã GT:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.referral_code || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Hồ sơ:</span>
-                                
-                                <span t-if="state.statusInfo.profile_status == 'complete'" class="text-success fw-bold">Đã hoàn tất</span>
-                                <span t-else="" class="text-warning fw-bold">Chưa hoàn tất</span>
-                            </div>
-                        </div>
-
-                        <t t-if="state.statusInfo.rm_name">
-                            <div class="mt-3 pt-3 border-top small text-center text-muted">
-                                <i class="fa fa-id-card-o me-1"></i> RM: <t t-esc="state.statusInfo.rm_name"/>
-                            </div>
-                        </t>
-                    </div>
-                    
-                    <nav class="sidebar-nav mt-3">
-                        <a href="/personal_profile" class="nav-item">
-                            <i class="fa fa-user"></i> Thông tin cá nhân
-                        </a>
-                        <a href="/bank_info" class="nav-item active">
-                            <i class="fa fa-university"></i> TK Ngân hàng
-                        </a>
-                        <a href="/address_info" class="nav-item">
-                            <i class="fa fa-map-marker"></i> Thông tin địa chỉ
-                        </a>
-                        <a href="/verification" class="nav-item">
-                            <i class="fa fa-shield"></i> Xác thực &amp; eKYC
-                        </a>
-                    </nav>
-                </aside>
+                <InvestorSidebar profile="this.state.profile" statusInfo="this.state.statusInfo" activePage="'bank'" />
                 
                 <!-- Main Content -->
                 <div class="investor-content">
@@ -304,6 +255,7 @@ class BankInfoWidget extends Component {
     async loadStatusInfo() {
         try {
             const response = await fetch('/get_status_info');
+            if (!response.ok) throw new Error(`Status ${response.status}`);
             const data = await response.json();
             if (data && data.length > 0) {
                 this.state.statusInfo = data[0];
@@ -312,11 +264,16 @@ class BankInfoWidget extends Component {
             }
             // Luôn lấy tên user từ profile
             const profileRes = await fetch('/data_personal_profile');
-            const profileData = await profileRes.json();
-            if (profileData && profileData.length > 0 && profileData[0].name) {
-                this.state.profile.name = profileData[0].name;
+            if (profileRes.ok) {
+                 const profileData = await profileRes.json();
+                 if (profileData && profileData.length > 0 && profileData[0].name) {
+                     this.state.profile.name = profileData[0].name;
+                 } else {
+                     this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
+                 }
             } else {
-                this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
+                 console.warn('⚠️ /data_personal_profile failed:', profileRes.status);
+                 this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
             }
         } catch (error) {
             this.state.statusInfo = {};
@@ -338,6 +295,9 @@ class BankInfoWidget extends Component {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bankData)
             });
+            if (!response.ok) {
+                 throw new Error(`Server returned ${response.status}`);
+            }
             const result = await response.json();
             if (response.ok && result.success) {
                 sessionStorage.setItem('bankInfoData', JSON.stringify(bankData));
@@ -366,6 +326,7 @@ class BankInfoWidget extends Component {
         try {
             console.log("🔄 Loading bank profile data from server...");
             const response = await fetch('/data_bank_info');
+            if (!response.ok) throw new Error(`Status ${response.status}`);
             const data = await response.json();
             console.log("📥 Bank profile data received:", data);
 
@@ -418,6 +379,9 @@ class BankInfoWidget extends Component {
     async loadBanks() {
         try {
             const response = await fetch('/get_bank_data?limit=1000');
+            if (!response.ok) {
+                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            }
             const data = await response.json();
             if (data && data.records) {
                 this.state.allBanks = data.records.filter(b => b.active);
@@ -458,6 +422,9 @@ class BankInfoWidget extends Component {
     async loadBranches(bankId) {
         try {
             const response = await fetch(`/get_bank_branch_data?limit=1000`);
+            if (!response.ok) {
+                 throw new Error(`Server returned ${response.status} ${response.statusText}`);
+            }
             const data = await response.json();
             if (data && data.records) {
                 // Filter branches by bank name (since API doesn't support bank_id filter)

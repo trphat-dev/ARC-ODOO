@@ -113,10 +113,7 @@ class PersonalProfileController(http.Controller):
                     'referral_code': status_info.referral_code or '',
                     'account_status': status_info.account_status or '',
                     'profile_status': status_info.profile_status or '',
-                    'rm_id': status_info.rm_id.id if status_info.rm_id else '',
-                    'rm_name': status_info.rm_id.name if status_info.rm_id else '',
-                    'bda_id': status_info.bda_id.id if status_info.bda_id else '',
-                    'bda_name': status_info.bda_id.name if status_info.bda_id else '',
+                    'ekyc_verified': status_info.ekyc_verified or False,
                 })
             
             return Response(json.dumps(data), content_type='application/json')
@@ -674,6 +671,46 @@ class PersonalProfileController(http.Controller):
                 })
 
             return Response(json.dumps(data), content_type='application/json')
+        except Exception as e:
+            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+
+    @http.route('/api/verification/complete', type='http', auth='user', methods=['POST'], csrf=False)
+    def complete_verification_process(self, **kwargs):
+        """
+        API endpoint to complete the verification process.
+        Auto-approves if eKYC is verified, otherwise sets to pending.
+        """
+        try:
+            current_user = request.env.user
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', current_user.partner_id.id)
+            ], limit=1)
+            
+            if not status_info:
+                # Create if not exists (should not happen usually)
+                status_info = request.env['status.info'].sudo().create({
+                    'partner_id': current_user.partner_id.id
+                })
+            
+            update_vals = {'profile_status': 'complete'}
+            
+            # Auto-approve if eKYC is verified OR profile is already complete
+            if status_info.ekyc_verified or status_info.profile_status == 'complete':
+                update_vals['account_status'] = 'approved'
+                update_vals['ekyc_verified'] = True  # Ensure flag is set
+                message = 'Hồ sơ đã được phê duyệt tự động.'
+            else:
+                update_vals['account_status'] = 'pending'
+                message = 'Hồ sơ đang chờ duyệt.'
+                
+            status_info.sudo().write(update_vals)
+            
+            return Response(json.dumps({
+                'success': True,
+                'message': message,
+                'status': update_vals['account_status']
+            }), content_type='application/json')
+            
         except Exception as e:
             return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
 

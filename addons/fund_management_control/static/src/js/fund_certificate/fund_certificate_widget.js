@@ -129,7 +129,7 @@ export class FundCertificateWidget extends Component {
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center gap-3">
-                                            <div class="fund-icon flex-shrink-0" t-attf-style="#{cert.fund_image ? '' : 'background-color:' + cert.fund_color + '20; color:' + cert.fund_color}">
+                                            <div class="fund-icon flex-shrink-0" t-attf-style="#{cert.fund_image ? '' : 'background-color:' + this.getFundColor(cert.symbol) + '20; color:' + this.getFundColor(cert.symbol)}">
                                                 <t t-if="cert.fund_image">
                                                     <img t-att-src="cert.fund_image" alt="Logo"/>
                                                 </t>
@@ -147,7 +147,7 @@ export class FundCertificateWidget extends Component {
                                         <span class="badge bg-light text-dark border fw-bold" t-esc="cert.symbol"></span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="rounded-circle border mx-auto" t-attf-style="width: 24px; height: 24px; background-color: #{cert.fund_color};" title="Màu đại diện"></div>
+                                        <div class="rounded-circle border mx-auto" t-attf-style="width: 24px; height: 24px; background-color: #{this.getFundColor(cert.symbol)};" title="Màu đại diện"></div>
                                     </td>
                                     <td class="text-center">
                                         <div class="fw-bold text-success" t-esc="formatCurrency(cert.current_price or cert.reference_price or 0)"></div>
@@ -611,6 +611,35 @@ export class FundCertificateWidget extends Component {
     formatCurrency(value) {
         if (typeof value !== 'number') return value;
         return new Intl.NumberFormat('vi-VN', { style: 'decimal' }).format(value);
+    }
+
+    getFundColor(symbol) {
+        if (!symbol) return '#4A90E2';
+        
+        // Palette of premium, distinct colors
+        const colors = [
+            '#2563EB', // Blue 600
+            '#DB2777', // Pink 600
+            '#059669', // Emerald 600
+            '#D97706', // Amber 600
+            '#7C3AED', // Violet 600
+            '#DC2626', // Red 600
+            '#0891B2', // Cyan 600
+            '#4F46E5', // Indigo 600
+            '#EA580C', // Orange 600
+            '#65A30D', // Lime 600
+            '#BE185D', // Rose 700
+            '#0D9488', // Teal 600
+        ];
+        
+        // Simple hash function to get consistent index
+        let hash = 0;
+        for (let i = 0; i < symbol.length; i++) {
+            hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        
+        const index = Math.abs(hash) % colors.length;
+        return colors[index];
     }
 }
 

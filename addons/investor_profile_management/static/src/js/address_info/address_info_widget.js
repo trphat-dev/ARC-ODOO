@@ -4,62 +4,13 @@ console.log('Loading AddressInfoWidget component...');
 const { Component, xml, useState, onMounted } = owl;
 
 class AddressInfoWidget extends Component {
+    static components = { InvestorSidebar: window.InvestorSidebar };
+    
     static template = xml`
         <div class="investor-page">
             <div class="investor-layout">
                 <!-- Sidebar -->
-                <aside class="investor-sidebar">
-                    <div class="sidebar-header">
-                        <div class="logo-container">
-                            <i class="fa fa-user-circle"></i>
-                        </div>
-                        <h3><t t-esc="state.profile.name || 'Investor'" /></h3>
-                        <div class="mt-2">
-                             <span t-if="state.statusInfo.account_status == 'approved'" class="status-badge status-complete">Đã duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'pending'" class="status-badge status-incomplete">Chờ duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'rejected'" class="status-badge status-incomplete">Từ chối</span>
-                             <span t-else="" class="status-badge status-incomplete">Chưa có</span>
-                        </div>
-                        
-                        <div class="mt-4 px-2">
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Số TK:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.account_number || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Mã GT:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.referral_code || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Hồ sơ:</span>
-                                
-                                <span t-if="state.statusInfo.profile_status == 'complete'" class="text-success fw-bold">Đã hoàn tất</span>
-                                <span t-else="" class="text-warning fw-bold">Chưa hoàn tất</span>
-                            </div>
-                        </div>
-
-                        <t t-if="state.statusInfo.rm_name">
-                            <div class="mt-3 pt-3 border-top small text-center text-muted">
-                                <i class="fa fa-id-card-o me-1"></i> RM: <t t-esc="state.statusInfo.rm_name"/>
-                            </div>
-                        </t>
-                    </div>
-                    
-                    <nav class="sidebar-nav mt-3">
-                        <a href="/personal_profile" class="nav-item">
-                            <i class="fa fa-user"></i> Thông tin cá nhân
-                        </a>
-                        <a href="/bank_info" class="nav-item">
-                            <i class="fa fa-university"></i> TK Ngân hàng
-                        </a>
-                        <a href="/address_info" class="nav-item active">
-                            <i class="fa fa-map-marker"></i> Thông tin địa chỉ
-                        </a>
-                        <a href="/verification" class="nav-item">
-                            <i class="fa fa-shield"></i> Xác thực &amp; eKYC
-                        </a>
-                    </nav>
-                </aside>
+                <InvestorSidebar profile="this.state.profile" statusInfo="this.state.statusInfo" activePage="'address'" />
                 
                 <!-- Main Content -->
                 <div class="investor-content">

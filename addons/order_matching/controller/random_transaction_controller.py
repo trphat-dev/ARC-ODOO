@@ -70,6 +70,12 @@ class RandomTransactionController(http.Controller):
             count = min(max(1, count), 50)
             
             # Lấy danh sách quỹ có sẵn
+            if 'portfolio.fund' not in request.env:
+                return self._make_secure_response({
+                    'success': False,
+                    'message': 'Model portfolio.fund không tồn tại. Vui lòng cài đặt module quản lý quỹ.',
+                    'created_count': 0
+                }, status=200)
             funds = request.env['portfolio.fund'].search([], limit=10)
             if not funds:
                 return self._make_secure_response({
@@ -394,5 +400,5 @@ class RandomTransactionController(http.Controller):
                 'success': False,
                 'message': f'Lỗi hệ thống: {str(e)}',
                 'created_count': 0
-            }, status=500)
+            }, status=200)
 

@@ -395,6 +395,9 @@ class OverviewFundManagementController(http.Controller):
                     'profit_loss': profit_loss,
                     'profit_loss_percentage': round(profit_loss_percentage, 2),
                     'color': fund_color,
+                    'reference_price': getattr(fund, 'reference_price', 0.0),
+                    'ceiling_price': getattr(fund, 'ceiling_price', 0.0),
+                    'floor_price': getattr(fund, 'floor_price', 0.0),
                 })
             
             return {'funds': funds_data}

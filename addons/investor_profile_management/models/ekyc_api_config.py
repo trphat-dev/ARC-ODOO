@@ -181,6 +181,62 @@ class EKYCApiConfig(models.Model):
             'params': {'title': _('VNPT eKYC'), 'message': message, 'type': 'success'},
         }
 
+    def action_check_connection(self):
+        """Check connection to VNPT eKYC"""
+        self.ensure_one()
+        
+        results = []
+        has_error = False
+        
+        # 1. Check Configuration
+        if not self.base_url:
+            results.append("❌ Base URL chưa được cấu hình")
+            has_error = True
+        else:
+            results.append(f"✅ Base URL: {self.base_url}")
+            
+        if not self.access_token:
+            results.append("❌ Access Token chưa được cấu hình")
+            has_error = True
+        else:
+            results.append("✅ Access Token đã được nhập")
+            
+        # 2. Check Expiration
+        if self.token_expiration:
+            if self.token_expiration < fields.Datetime.now():
+                results.append(f"⚠️ Access Token đã hết hạn vào {self.token_expiration}. Hệ thống sẽ thử tự động làm mới khi gọi API.")
+            else:
+                results.append(f"✅ Access Token còn hạn đến {self.token_expiration}")
+        else:
+            results.append("⚠️ Chưa có thông tin hết hạn token")
+
+        # 3. Check Network Connection (Ping Base URL)
+        try:
+            # Just check if we can reach the base URL (timeout 5s)
+            response = requests.get(self.base_url, timeout=5)
+            if response.status_code < 500:
+                results.append("✅ Kết nối mạng đến VNPT OK")
+            else:
+                results.append(f"⚠️ Server VNPT trả về lỗi: {response.status_code}")
+        except Exception as e:
+            results.append(f"❌ Không thể kết nối đến VNPT: {str(e)}")
+            has_error = True
+
+        # Show notification
+        title = "Kết quả kiểm tra kết nối"
+        message = "\n".join(results)
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': title, 
+                'message': message, 
+                'type': 'danger' if has_error else 'success', 
+                'sticky': True
+            },
+        }
+
     def action_view_api_records(self):
         """View API records for this configuration"""
         self.ensure_one()

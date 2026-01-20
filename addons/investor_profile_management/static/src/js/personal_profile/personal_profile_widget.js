@@ -51,62 +51,13 @@ class PersonalProfileWidget extends Component {
         }
     };
 
+    static components = { InvestorSidebar: window.InvestorSidebar };
+
     static template = xml`
         <div class="investor-page">
             <div class="investor-layout">
                 <!-- Sidebar -->
-                <aside class="investor-sidebar">
-                    <div class="sidebar-header">
-                        <div class="logo-container">
-                            <i class="fa fa-user-circle"></i>
-                        </div>
-                        <h3><t t-esc="state.profile.name || 'Investor'" /></h3>
-                        <div class="mt-2">
-                             <span t-if="state.statusInfo.account_status == 'approved'" class="status-badge status-complete">Đã duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'pending'" class="status-badge status-incomplete">Chờ duyệt</span>
-                             <span t-elif="state.statusInfo.account_status == 'rejected'" class="status-badge status-incomplete">Từ chối</span>
-                             <span t-else="" class="status-badge status-incomplete">Chưa có</span>
-                        </div>
-                        
-                        <div class="mt-4 px-2">
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Số TK:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.account_number || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Mã GT:</span>
-                                <span class="fw-bold text-dark"><t t-esc="state.statusInfo.referral_code || '---'" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 small">
-                                <span class="text-muted">Hồ sơ:</span>
-                                
-                                <span t-if="state.statusInfo.profile_status == 'complete'" class="text-success fw-bold">Đã hoàn tất</span>
-                                <span t-else="" class="text-warning fw-bold">Chưa hoàn tất</span>
-                            </div>
-                        </div>
-
-                        <t t-if="state.statusInfo.rm_name">
-                            <div class="mt-3 pt-3 border-top small text-center text-muted">
-                                <i class="fa fa-id-card-o me-1"></i> RM: <t t-esc="state.statusInfo.rm_name"/>
-                            </div>
-                        </t>
-                    </div>
-                    
-                    <nav class="sidebar-nav mt-3">
-                        <a href="/personal_profile" class="nav-item active" data-step="1">
-                            <i class="fa fa-user"></i> Thông tin cá nhân
-                        </a>
-                        <a href="/bank_info" class="nav-item" data-step="2" t-att-class="{'is-completed': state.statusInfo.has_bank_info}">
-                            <i class="fa fa-university"></i> TK Ngân hàng
-                        </a>
-                        <a href="/address_info" class="nav-item" data-step="3" t-att-class="{'is-completed': state.statusInfo.has_address_info}">
-                            <i class="fa fa-map-marker"></i> Thông tin địa chỉ
-                        </a>
-                        <a href="/verification" class="nav-item" data-step="4" t-att-class="{'is-completed': state.statusInfo.ekyc_verified}">
-                            <i class="fa fa-shield"></i> Xác thực &amp; eKYC
-                        </a>
-                    </nav>
-                </aside>
+                <InvestorSidebar profile="this.state.profile" statusInfo="this.state.statusInfo" activePage="'personal'" />
 
                 <!-- Main Content -->
                 <div class="investor-content">
@@ -1446,7 +1397,12 @@ class PersonalProfileWidget extends Component {
                 updatedFields.push('Ngày sinh');
             }
             if (ocrData.gender) {
-                this.state.formData.gender = (ocrData.gender === 'Nam' || ocrData.gender === 'Male') ? 'male' : 'female';
+                const g = ocrData.gender.toString().toLowerCase();
+                if (g.includes('nam') || g.includes('male') || g === 'm') {
+                    this.state.formData.gender = 'male';
+                } else if (g.includes('nữ') || g.includes('female') || g === 'f') {
+                    this.state.formData.gender = 'female';
+                }
                 updatedFields.push('Giới tính');
             }
             if (ocrData.nationality) {
@@ -2290,24 +2246,12 @@ class PersonalProfileWidget extends Component {
                 // Get list of updated fields with their values
                 const updatedFieldsList = this.getUpdatedFieldsList(result);
 
-                // Build success message with table
+                // Build simplified success message
                 let successMessage = '<div style="text-align: left;">';
                 successMessage += '<p style="margin-bottom: 15px; font-weight: 600;">Xác thực eKYC thành công!</p>';
 
                 if (updatedFieldsList.length > 0) {
-                    successMessage += `<p style="margin-bottom: 10px;">Đã tự động điền <strong>${updatedFieldsList.length}</strong> trường thông tin:</p>`;
-                    successMessage += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">';
-                    successMessage += '<thead><tr style="background-color: #f8f9fa;"><th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Trường</th><th style="padding: 8px; text-align: left; border: 1px solid #dee2e6;">Giá trị</th></tr></thead>';
-                    successMessage += '<tbody>';
-
-                    updatedFieldsList.forEach(field => {
-                        successMessage += '<tr>';
-                        successMessage += `<td style="padding: 8px; border: 1px solid #dee2e6; font-weight: 600;">${field.label}</td>`;
-                        successMessage += `<td style="padding: 8px; border: 1px solid #dee2e6;">${field.value || '<em style="color: #6c757d;">N/A</em>'}</td>`;
-                        successMessage += '</tr>';
-                    });
-
-                    successMessage += '</tbody></table>';
+                    successMessage += `<p style="margin-bottom: 10px;">Đã tự động điền <strong>${updatedFieldsList.length}</strong> trường thông tin.</p>`;
                     successMessage += '<p style="color: #28a745; font-weight: 600;"><i class="fas fa-check-circle"></i> Vui lòng kiểm tra và hoàn thiện các thông tin còn lại.</p>';
                 } else {
                     successMessage += '<p style="color: #ffc107;">Không tìm thấy dữ liệu OCR để điền tự động. Vui lòng nhập thủ công.</p>';
@@ -2557,15 +2501,70 @@ class PersonalProfileWidget extends Component {
             updatedFields.push('Ngày cấp');
         }
 
+        // Logic for formatting issue place (Nơi cấp)
+        // Ensure we don't have leading commas if district is missing
         if (ocrFields.issue_place) {
-            this.state.formData.id_issue_place = ocrFields.issue_place.trim();
+            let placeObj = ocrFields.issue_place;
+            // Handle if issue_place is already a string
+            if (typeof placeObj === 'string') {
+                 this.state.formData.id_issue_place = placeObj.trim();
+            } else {
+                // If it's undefined or complex object, rely on extracting it
+                // Re-use logic for extracting place string from getUpdatedFieldsList if needed
+                // But typically it's passed as a string here from the ocrFields mapping
+                this.state.formData.id_issue_place = String(placeObj).trim();
+            }
             updatedFields.push('Nơi cấp');
-            console.log('✅ Set issue_place:', ocrFields.issue_place);
+            console.log('✅ Set issue_place:', this.state.formData.id_issue_place);
         } else {
-            console.warn('⚠️ issue_place not found. Available OCR keys:', Object.keys(ocrData));
-            console.warn('⚠️ issue_place value:', ocrData.issue_place);
-            console.warn('⚠️ post_code:', ocrData.post_code);
-            console.warn('⚠️ new_post_code:', ocrData.new_post_code);
+            // Try to construct from logic similar to getUpdatedFieldsList
+            const extractionLogic = () => {
+                const data = ocrData;
+                if (data.issue_place && data.issue_place !== '-') return data.issue_place;
+                
+                const altFields = [data.noi_cap, data.place_of_issue, data.co_quan_cap, data.issued_by, data.noiCap, data.coQuanCap];
+                for (const f of altFields) {
+                    if (f && f !== '-') return f;
+                }
+
+                // Check post_code
+                if (Array.isArray(data.post_code) && data.post_code.length > 0) {
+                    const info = data.post_code[0];
+                    const city = info?.city?.[1];
+                    const district = info?.district?.[1];
+                    
+                    if (city) {
+                        if (district && typeof district === 'string' && district.trim()) {
+                            return `${district.trim()}, ${city}`;
+                        }
+                        return city;
+                    }
+                }
+                
+                // Check new_post_code
+                if (Array.isArray(data.new_post_code) && data.new_post_code.length > 0) {
+                     const info = data.new_post_code[0];
+                     const city = info?.city?.[1];
+                     const district = info?.district?.[1];
+                     
+                     if (city) {
+                         if (district && typeof district === 'string' && district.trim()) {
+                             return `${district.trim()}, ${city}`;
+                         }
+                         return city;
+                     }
+                }
+                return null;
+            };
+
+            const extractedPlace = extractionLogic();
+            if (extractedPlace) {
+                this.state.formData.id_issue_place = extractedPlace;
+                updatedFields.push('Nơi cấp');
+                console.log('✅ Set issue_place (extracted):', extractedPlace);
+            } else {
+                console.warn('⚠️ issue_place not found even after extraction attempt');
+            }
         }
 
         // Propagate address-related data for AddressInfoWidget via sessionStorage
@@ -2725,7 +2724,9 @@ class PersonalProfileWidget extends Component {
                             const cityName = addressInfo.city[1];
                             if (addressInfo.district && Array.isArray(addressInfo.district) && addressInfo.district.length > 1) {
                                 const districtName = addressInfo.district[1];
-                                return `${districtName}, ${cityName}`;
+                                if (districtName && typeof districtName === 'string' && districtName.trim() !== '') {
+                                    return `${districtName.trim()}, ${cityName}`;
+                                }
                             }
                             return cityName;
                         }
@@ -2737,7 +2738,9 @@ class PersonalProfileWidget extends Component {
                             const cityName = addressInfo.city[1];
                             if (addressInfo.district && Array.isArray(addressInfo.district) && addressInfo.district.length > 1) {
                                 const districtName = addressInfo.district[1];
-                                return `${districtName}, ${cityName}`;
+                                if (districtName && typeof districtName === 'string' && districtName.trim() !== '') {
+                                    return `${districtName.trim()}, ${cityName}`;
+                                }
                             }
                             return cityName;
                         }
@@ -2778,37 +2781,42 @@ class PersonalProfileWidget extends Component {
     }
 
     formatDateForInput(dateStr) {
-        if (!dateStr) return '';
+        if (!dateStr || dateStr === '-') return '';
 
         const cleanDateStr = dateStr.toString().trim();
         console.log(`📅 Formatting date: "${cleanDateStr}"`);
 
-        const patterns = [
-            /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/,
-            /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/,
-            /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/,
-            /^(\d{4})\.(\d{1,2})\.(\d{1,2})$/
-        ];
+        // Handle simple DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+        // Also handles YYYY-MM-DD (ISO)
+        const ddmmyyyy = /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/;
+        const yyyymmdd = /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/;
 
-        for (const pattern of patterns) {
-            const match = cleanDateStr.match(pattern);
+        let day, month, year;
+        let match = cleanDateStr.match(ddmmyyyy);
+
+        if (match) {
+            day = parseInt(match[1], 10);
+            month = parseInt(match[2], 10);
+            year = parseInt(match[3], 10);
+        } else {
+            match = cleanDateStr.match(yyyymmdd);
             if (match) {
-                let day, month, year;
-
-                if (pattern.source.startsWith('^(\\d{4})')) {
-                    year = match[1];
-                    month = match[2];
-                    day = match[3];
-                } else {
-                    day = match[1];
-                    month = match[2];
-                    year = match[3];
-                }
-
-                const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                console.log(`📅 Date formatted: "${cleanDateStr}" -> "${formattedDate}"`);
-                return formattedDate;
+                year = parseInt(match[1], 10);
+                month = parseInt(match[2], 10);
+                day = parseInt(match[3], 10);
             }
+        }
+
+        if (day && month && year) {
+            // Validate ranges
+            if (month < 1 || month > 12 || day < 1 || day > 31) {
+                console.warn(`⚠️ Invalid date values: ${day}/${month}/${year}`);
+                return '';
+            }
+            
+            const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            console.log(`📅 Date formatted: "${cleanDateStr}" -> "${formattedDate}"`);
+            return formattedDate;
         }
 
         console.log(`⚠️ Date format not recognized: "${cleanDateStr}"`);

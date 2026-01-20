@@ -41,13 +41,13 @@ export class InvestorListWidget extends Component {
             <div class="bo-stat-card__label">Chờ KYC</div>
           </div>
           
-          <div class="bo-stat-card bo-stat-card--clickable bo-stat-card--success" t-on-click="() => this.setStatusFilter('kyc')">
+          <div class="bo-stat-card bo-stat-card--clickable bo-stat-card--success" t-on-click="() => this.setStatusFilter('active')">
             <div class="bo-stat-card__header">
               <div class="bo-stat-card__icon bo-stat-card__icon--success">
                 <i class="fas fa-check-circle"></i>
               </div>
             </div>
-            <div class="bo-stat-card__value"><t t-esc="state.kycCount || 0"/></div>
+            <div class="bo-stat-card__value"><t t-esc="state.activeCount || 0"/></div>
             <div class="bo-stat-card__label">Đã KYC</div>
           </div>
           
@@ -103,10 +103,10 @@ export class InvestorListWidget extends Component {
               <span>Chờ KYC</span>
               <span class="bo-filter-pill__count"><t t-esc="state.pendingCount || 0"/></span>
             </button>
-            <button t-att-class="'bo-filter-pill bo-filter-pill--success ' + (state.statusFilter === 'kyc' ? 'active' : '')" t-on-click="() => this.setStatusFilter('kyc')">
+            <button t-att-class="'bo-filter-pill bo-filter-pill--success ' + (state.statusFilter === 'active' ? 'active' : '')" t-on-click="() => this.setStatusFilter('active')">
               <i class="fas fa-check-circle"></i>
               <span>KYC</span>
-              <span class="bo-filter-pill__count"><t t-esc="state.kycCount || 0"/></span>
+              <span class="bo-filter-pill__count"><t t-esc="state.activeCount || 0"/></span>
             </button>
             <button t-att-class="'bo-filter-pill bo-filter-pill--info ' + (state.statusFilter === 'vsd' ? 'active' : '')" t-on-click="() => this.setStatusFilter('vsd')">
               <i class="fas fa-shield-alt"></i>
@@ -226,6 +226,11 @@ export class InvestorListWidget extends Component {
                           <span t-att-class="'bo-badge bo-badge--' + this.getStatusBadge(investor.status)">
                             <t t-esc="this.getStatusDisplayValue(investor.status)"/>
                           </span>
+                          <t t-if="investor.status === 'pending' || investor.status === 'draft'">
+                            <button class="bo-btn bo-btn--success bo-btn--sm" t-on-click="() => this.approveInvestor(investor.id)" title="Duyệt">
+                              <i class="fas fa-check"></i>
+                            </button>
+                          </t>
                           <button class="bo-btn bo-btn--ghost bo-btn--sm bo-btn--icon" t-on-click="() => this.editInvestor(investor)" title="Chỉnh sửa">
                             <i class="fas fa-edit"></i>
                           </button>
@@ -317,25 +322,7 @@ export class InvestorListWidget extends Component {
                         <input type="text" class="form-control" t-model="state.editingInvestor.province_city"/>
                       </div>
                       
-                      <!-- Thông tin bổ sung -->
-                      <div class="col-md-6">
-                        <label class="form-label">Nguồn <span class="text-danger">*</span></label>
-                        <select class="form-select" t-model="state.editingInvestor.source" required="required">
-                          <option value="tpb2">TPB2</option>
-                          <option value="fpla1">FPLA1</option>
-                          <option value="scb">SCB</option>
-                          <option value="other">Khác</option>
-                        </select>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">BDA</label>
-                        <select class="form-select" t-model="state.editingInvestor.bda_user">
-                          <option value="">Chọn BDA</option>
-                          <t t-foreach="state.bdaUsers" t-as="user" t-key="user.id">
-                            <option t-att-value="user.id"><t t-esc="user.name" /></option>
-                          </t>
-                        </select>
-                      </div>
+
                       
                       <!-- Trạng thái TK đầu tư -->
                       <div class="col-md-6">
@@ -358,10 +345,11 @@ export class InvestorListWidget extends Component {
                       <div class="col-md-6">
                         <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
                         <select class="form-select" t-model="state.editingInvestor.status" required="required">
+                          <option value="draft">Chưa cập nhật</option>
                           <option value="pending">Chờ KYC</option>
-                          <option value="kyc">KYC</option>
+                          <option value="active">KYC</option>
                           <option value="vsd">VSD</option>
-                          <option value="incomplete">Chưa cập nhật</option>
+                          <option value="rejected">Từ chối</option>
                         </select>
                       </div>
                     </div>
@@ -681,10 +669,11 @@ export class InvestorListWidget extends Component {
 
   getStatusBadge(status) {
     switch (status) {
+      case 'draft': return 'warning';
       case 'pending': return 'pending';
-      case 'kyc': return 'success';
+      case 'active': return 'success';
       case 'vsd': return 'info';
-      case 'incomplete': return 'danger';
+      case 'rejected': return 'danger';
       default: return 'primary';
     }
   }
@@ -848,10 +837,11 @@ export class InvestorListWidget extends Component {
 
   calculateStats() {
     this.state.totalInvestors = this.state.investors.length;
-    this.state.incompleteCount = this.state.investors.filter(investor => investor.status === 'incomplete').length;
+    this.state.incompleteCount = this.state.investors.filter(investor => investor.status === 'draft').length;
     this.state.pendingCount = this.state.investors.filter(investor => investor.status === 'pending').length;
-    this.state.kycCount = this.state.investors.filter(investor => investor.status === 'kyc').length;
+    this.state.activeCount = this.state.investors.filter(investor => investor.status === 'active').length;
     this.state.vsdCount = this.state.investors.filter(investor => investor.status === 'vsd').length;
+    this.state.rejectedCount = this.state.investors.filter(investor => investor.status === 'rejected').length;
   }
 
   exportData() {
@@ -891,10 +881,11 @@ export class InvestorListWidget extends Component {
 
   getStatusDisplayValue(status) {
     const statusMap = {
+      'draft': 'Chưa cập nhật',
       'pending': 'Chờ KYC',
-      'kyc': 'KYC',
+      'active': 'KYC',
       'vsd': 'VSD',
-      'incomplete': 'Chưa cập nhật'
+      'rejected': 'Từ chối'
     };
     return statusMap[status] || status;
   }
@@ -972,29 +963,51 @@ export class InvestorListWidget extends Component {
 
   autoUpdateStatus() {
     if (this.state.editingInvestor) {
-      const hasBasicInfo = (
-        this.state.editingInvestor.partner_name && 
-        this.state.editingInvestor.phone && 
-        this.state.editingInvestor.email && 
-        this.state.editingInvestor.id_number && 
-        this.state.editingInvestor.province_city
-      );
-      
-      if (!hasBasicInfo) {
-        this.state.editingInvestor.status = 'incomplete';
+      // New algorithm: Based on account_status and profile_status
+      if (this.state.editingInvestor.account_status === 'rejected') {
+        this.state.editingInvestor.status = 'rejected';
+      } else if (this.state.editingInvestor.account_status === 'approved') {
+        this.state.editingInvestor.status = 'active';
+      } else if (this.state.editingInvestor.profile_status === 'complete') {
+        this.state.editingInvestor.status = 'pending';
       } else {
-        if (this.state.editingInvestor.profile_status === 'incomplete' && this.state.editingInvestor.account_status === 'pending') {
-          this.state.editingInvestor.status = 'incomplete';
-        } else if (this.state.editingInvestor.profile_status === 'complete' && this.state.editingInvestor.account_status === 'pending') {
-          this.state.editingInvestor.status = 'pending';
-        } else if (this.state.editingInvestor.profile_status === 'complete' && this.state.editingInvestor.account_status === 'approved') {
-          this.state.editingInvestor.status = 'kyc';
-        } else if (this.state.editingInvestor.account_status === 'rejected') {
-          this.state.editingInvestor.status = 'pending';
-        } else {
-          this.state.editingInvestor.status = 'incomplete';
-        }
+        this.state.editingInvestor.status = 'draft';
       }
+    }
+  }
+
+  async approveInvestor(investorId) {
+    if (!confirm('Bạn có chắc chắn muốn duyệt nhà đầu tư này?')) return;
+    
+    try {
+      const response = await fetch(`/web/dataset/call_kw/investor.list/write`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'call',
+          params: {
+            model: 'investor.list',
+            method: 'write',
+            args: [[investorId], { account_status: 'approved', status_manual: true }],
+            kwargs: {}
+          }
+        })
+      });
+      
+      const result = await response.json();
+      if (result.result) {
+        this.showUpdateNotification('Đã duyệt nhà đầu tư thành công!');
+        await this.loadDataFromAPI();
+      } else {
+        alert('Lỗi: ' + (result.error?.message || 'Không thể duyệt'));
+      }
+    } catch (error) {
+      console.error('Error approving investor:', error);
+      alert('Lỗi kết nối. Vui lòng thử lại!');
     }
   }
 
