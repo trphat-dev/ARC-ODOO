@@ -117,7 +117,7 @@ export class SmartOtpModal extends Component {
                     </button>
                 </div>
                 
-                <!-- Debug Mode Toggle -->
+                {/* DEBUG MODE TOGGLE - DISABLED
                 <div class="mt-4 pt-3 border-top" style="border-color: #e2e8f0;">
                     <label class="d-flex align-items-center justify-content-between" style="cursor: pointer;">
                         <div class="d-flex align-items-center">
@@ -139,9 +139,11 @@ export class SmartOtpModal extends Component {
                         Chế độ debug đang bật - OTP sẽ được bỏ qua xác thực
                     </p>
                 </div>
+                */}
             </div>
         </div>
     `;
+
 
     setup() {
         this.messages = MESSAGES;

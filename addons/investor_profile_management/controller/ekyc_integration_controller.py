@@ -1281,10 +1281,10 @@ class EKYCIntegrationController(http.Controller):
                 ], limit=1)
                 if status_info:
                     status_info.sudo().write({
-                        'ekyc_verified': True,
-                        'account_status': 'approved'
+                        'ekyc_verified': True
                     })
-                    _logger.info(f"✅ Auto-set eKYC Verified and Approved for user {current_user.login}")
+                    _logger.info(f"✅ eKYC Verified for user {current_user.login}. Approval will happen on verification complete.")
+
 
             return self._make_success_response(result, result.get('message'))
                 
