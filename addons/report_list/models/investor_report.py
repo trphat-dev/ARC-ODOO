@@ -23,6 +23,19 @@ class InvestorReport(models.Model):
         ('pending', 'Chờ duyệt'),
     ], string='Trạng thái', default='pending', required=True)
 
+    customer_type = fields.Selection([
+        ('individual', 'Cá nhân'),
+        ('organization', 'Tổ chức'),
+    ], string='Loại khách hàng')
+    
+    nationality_type = fields.Selection([
+        ('resident', 'Người cư trú'),
+        ('non_resident', 'Người không cư trú'),
+    ], string='Loại cư trú')
+    
+    unit = fields.Char(string='Đơn vị')
+    account_manager_id = fields.Many2one('res.users', string='Nhân viên quản lý')
+
 
     
     @api.model
@@ -71,7 +84,10 @@ class InvestorReport(models.Model):
                 'phone_number': rec.phone_number,
                 'email': rec.email,
                 'status': dict(rec._fields['status'].selection).get(rec.status),
-
+                'customer_type': dict(rec._fields['customer_type'].selection).get(rec.customer_type) if rec.customer_type else '',
+                'nationality_type': dict(rec._fields['nationality_type'].selection).get(rec.nationality_type) if rec.nationality_type else '',
+                'unit': rec.unit or '',
+                'account_manager': rec.account_manager_id.name if rec.account_manager_id else '',
             })
 
         return {
@@ -100,6 +116,9 @@ class InvestorReport(models.Model):
                 'phone_number': rec.phone_number,
                 'email': rec.email,
                 'status': dict(rec._fields['status'].selection).get(rec.status),
-
+                'customer_type': dict(rec._fields['customer_type'].selection).get(rec.customer_type) if rec.customer_type else '',
+                'nationality_type': dict(rec._fields['nationality_type'].selection).get(rec.nationality_type) if rec.nationality_type else '',
+                'unit': rec.unit or '',
+                'account_manager': rec.account_manager_id.name if rec.account_manager_id else '',
             })
         return export_data
