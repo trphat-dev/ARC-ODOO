@@ -1,0 +1,7 @@
+pandas
+numpy
+stable-baselines3
+finrl @ git+https://github.com/AI4Finance-Foundation/FinRL.git
+gymnasium
+scikit-learn
+ssi-fc-data

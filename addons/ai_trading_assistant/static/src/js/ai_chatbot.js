@@ -18,12 +18,13 @@ export class AIChatbot extends Component {
                 {
                     id: 0,
                     sender: 'bot',
-                    text: 'Xin chào! Tôi là ARC - Chuyên gia tư vấn đầu tư chứng khoán của bạn. Tôi có thể giúp gì cho danh mục đầu tư của bạn hôm nay?',
+                    text: 'Xin chào! Tôi là ARC - Chuyên gia tư vấn đầu tư của bạn. Tôi có thể giúp gì cho danh mục đầu tư của bạn hôm nay?',
                     isHtml: false
                 }
             ],
             msgCounter: 1
         });
+
     }
 
     toggleChat() {
@@ -33,11 +34,7 @@ export class AIChatbot extends Component {
         }
     }
 
-    sendSuggestedMessage(text) {
-        if (this.state.isTyping) return;
-        this.state.inputValue = text;
-        this.sendMessage();
-    }
+
 
     async sendMessage() {
         const text = this.state.inputValue.trim();
@@ -99,7 +96,24 @@ export class AIChatbot extends Component {
 
 AIChatbot.template = "ai_trading_assistant.AIChatbot";
 
-// Đăng ký component vào systray để đảm bảo nạp toàn cầu trên backend
-registry.category("systray").add("ai_trading_assistant.AIChatbot", {
+// Đăng ký component vào main_components cho Odoo 18 để widget tự động nổi trên toàn bộ màn hình backend
+// Đăng ký component vào main_components cho Odoo 18 để widget tự động nổi trên toàn bộ màn hình backend
+registry.category("main_components").add("ai_trading_assistant.AIChatbot", {
     Component: AIChatbot,
+});
+
+// Thêm vào frontend cho các trang Controller public (Website)
+import { mountComponent } from "@web/env";
+import { getTemplate } from "@web/core/templates";
+
+registry.category("website_frontend_ready").add("ai_trading_assistant.AIChatbot_init", () => {
+    // Chờ DOM sẵn sàng
+    if (document.body) {
+        // Tạo container cho Chatbot
+        const chatbotContainer = document.createElement("div");
+        document.body.appendChild(chatbotContainer);
+
+        // Mount OWL component thẳng vào container
+        mountComponent(AIChatbot, chatbotContainer);
+    }
 });

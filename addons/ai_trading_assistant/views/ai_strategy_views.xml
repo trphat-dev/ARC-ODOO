@@ -4,10 +4,10 @@
         <field name="name">ai.strategy.tree</field>
         <field name="model">ai.strategy</field>
         <field name="arch" type="xml">
-            <list string="AI Strategies">
+            <list string="AI Strategies" decoration-info="status == 'draft'" decoration-warning="status == 'training'" decoration-success="status == 'active'" decoration-muted="status == 'trained'">
                 <field name="name"/>
                 <field name="algorithm"/>
-                <field name="status"/>
+                <field name="status" widget="badge" decoration-info="status == 'draft'" decoration-warning="status == 'training'" decoration-success="status == 'active'" decoration-muted="status == 'trained'"/>
                 <field name="sharpe_ratio"/>
             </list>
         </field>
@@ -19,26 +19,39 @@
         <field name="arch" type="xml">
             <form string="AI Strategy">
                 <header>
-                    <button name="action_activate" string="Sử dụng chiến lược này" type="object" class="oe_highlight" invisible="status == 'active'"/>
-                    <button name="action_draft" string="Chuyển về Nháp" type="object" invisible="status == 'draft'"/>
+                     <button name="action_activate" string="Sử dụng chiến lược này" type="object" class="oe_highlight" invisible="status == 'active'"/>
+                     <button name="action_draft" string="Chuyển về Nháp" type="object" invisible="status == 'draft'"/>
                     <field name="status" widget="statusbar" statusbar_visible="draft,trained,active"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Active" bg_color="bg-success" invisible="status != 'active'"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Tên chiến lược..."/>
                         </h1>
                     </div>
                     <group>
-                        <group>
+                        <group string="Thông tin Chung">
                             <field name="algorithm"/>
                             <field name="ticker_ids" widget="many2many_tags" placeholder="Chọn các mã áp dụng model này..."/>
                             <field name="model_file" filename="model_filename"/>
                             <field name="model_filename" invisible="1"/>
                         </group>
-                        <group>
+                        <group string="Cấu hình Hyperparameters">
+                            <field name="learning_rate"/>
+                            <field name="batch_size"/>
+                            <field name="ent_coef"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Chỉ số Kết quả (Backtest)">
                             <field name="sharpe_ratio"/>
                             <field name="expected_return"/>
+                            <field name="max_drawdown"/>
+                        </group>
+                        <group string="Hệ thống">
+                            <field name="training_time"/>
+                            <field name="framework_version"/>
                         </group>
                     </group>
                     <label for="description"/>

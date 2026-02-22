@@ -10,10 +10,17 @@ class AITrainingHistory(models.Model):
     tickers = fields.Char(string='Mã Chứng Khoán')
     epochs = fields.Integer(string='Tổng Epochs')
     
+    # Hyperparameters
+    learning_rate = fields.Float(string='Learning Rate')
+    batch_size = fields.Integer(string='Batch Size')
+    ent_coef = fields.Float(string='Entropy Coefficient')
+
     # Kết quả
     final_loss = fields.Float(string='Final Loss')
-    final_reward = fields.Float(string='Final Reward')
+    episode_reward_mean = fields.Float(string='Mean Reward')
     sharpe_ratio = fields.Float(string='Sharpe Ratio')
+    max_drawdown = fields.Float(string='Max Drawdown (%)')
+    training_time = fields.Char(string='Thời gian huấn luyện')
     
     # File Model đính kèm
     model_file = fields.Binary(string='File Mô hình (.zip)', attachment=True)

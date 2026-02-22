@@ -5,12 +5,12 @@
         <field name="name">stock.ticker.tree</field>
         <field name="model">stock.ticker</field>
         <field name="arch" type="xml">
-            <list string="Stock Tickers">
-                <field name="name"/>
+            <list string="Stock Tickers" decoration-muted="not is_active">
+                <field name="name" string="Mã CK"/>
                 <field name="market"/>
-                <field name="company_name"/>
-                <field name="sector"/>
-                <field name="is_active"/>
+                <field name="company_name" string="Tên Công Ty"/>
+                <field name="sector" string="Ngành nghề"/>
+                <field name="is_active" widget="boolean_toggle"/>
             </list>
         </field>
     </record>
@@ -21,6 +21,7 @@
         <field name="arch" type="xml">
             <form string="Stock Ticker">
                 <sheet>
+                    <widget name="web_ribbon" title="Ngừng GD" bg_color="bg-danger" invisible="is_active"/>
                     <div class="oe_title">
                         <h1>
                             <field name="name" placeholder="Symbol (VD: FPT)"/>
@@ -33,13 +34,13 @@
                         </group>
                         <group>
                             <field name="sector"/>
-                            <field name="is_active"/>
+                            <field name="is_active" widget="boolean_toggle"/>
                         </group>
                     </group>
                     <notebook>
-                        <page string="Lịch sử giá (OHLCV)">
-                            <field name="candle_ids">
-                                <list editable="bottom" limit="50">
+                        <page string="Dữ liệu Lịch sử (OHLCV)">
+                            <field name="candle_ids" readonly="1">
+                                <list limit="100" default_order="date desc">
                                     <field name="date"/>
                                     <field name="open"/>
                                     <field name="high"/>

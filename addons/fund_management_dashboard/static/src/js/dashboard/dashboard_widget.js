@@ -9,140 +9,154 @@ export class DashboardWidget extends Component {
         <div class="fund-dashboard-container">
             <div class="dashboard-shell">
                 <t t-if="state.showSidebar">
-                <SidebarPanel/>
+                    <SidebarPanel/>
                 </t>
 
                 <main class="dashboard-main">
-                    <div class="dashboard-top-bar"></div>
+                    <!-- Top Bar -->
+                    <div class="dashboard-top-bar">
+                        <div class="d-flex align-items-center">
+                            <h1>Dashboard</h1>
+                        </div>
+                        <div class="realtime-clock">
+                            <span class="realtime-label">Thời gian</span>
+                            <div class="realtime-time" t-esc="state.currentTime"/>
+                        </div>
+                    </div>
 
+                    <!-- Products Section -->
                     <section class="dashboard-section">
                         <div class="section-header">
                             <div>
-                                <p class="section-kicker">Tổng quan</p>
+                                <h4 class="section-kicker">Tổng quan</h4>
                                 <h3>Thông kê sản phẩm</h3>
                             </div>
-                            <div class="realtime-clock">
-                                <span class="realtime-label">Thời gian</span>
-                                <div class="realtime-time" t-esc="state.currentTime"/>
-                            </div>
-                                </div>
-                        <t t-set="productCards" t-value="this.getProductCards()"/>
-                        <div class="card-grid cols-3">
-                            <t t-foreach="productCards" t-as="card" t-key="card.label">
-                                <div t-attf-class="info-card #{card.variant}">
-                                    <div class="card-icon">
-                                        <i t-att-class="card.icon"/>
-                            </div>
-                                    <div class="card-content">
-                                        <p class="card-label" t-esc="card.label"/>
-                                        <h4 class="card-value" t-esc="card.value"/>
-                                        <p class="card-description" t-if="card.description" t-esc="card.description"/>
                         </div>
-                    </div>
+                        <t t-set="productCards" t-value="this.getProductCards()"/>
+                        <div class="fmd-grid">
+                            <t t-foreach="productCards" t-as="card" t-key="card.label">
+                                <div t-attf-class="stat-card #{card.variant}">
+                                    <div class="stat-icon">
+                                        <i t-att-class="card.icon"/>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-label" t-esc="card.label" t-att-title="card.label"/>
+                                        <div class="stat-value" t-esc="card.value"/>
+                                        <div class="stat-desc" t-if="card.description" t-esc="card.description" t-att-title="card.description"/>
+                                    </div>
+                                </div>
                             </t>
-                </div>
+                        </div>
                     </section>
 
+                    <!-- Funds Section -->
                     <section class="dashboard-section">
                         <div class="section-header">
                             <div>
-                                <p class="section-kicker">Nguồn vốn</p>
+                                <h4 class="section-kicker">Nguồn vốn</h4>
                                 <h3>Thống kê số dư (VND)</h3>
                             </div>
-                            </div>
+                        </div>
                         <t t-set="balanceCards" t-value="this.getBalanceCards()"/>
-                        <div class="card-grid cols-3">
+                        <div class="fmd-grid">
                             <t t-foreach="balanceCards" t-as="card" t-key="card.label">
-                                <div t-attf-class="info-card #{card.variant}">
-                                    <div class="card-icon">
+                                <div t-attf-class="stat-card #{card.variant}">
+                                    <div class="stat-icon">
                                         <i t-att-class="card.icon"/>
-                        </div>
-                                    <div class="card-content">
-                                        <p class="card-label" t-esc="card.label"/>
-                                        <h4 class="card-value" t-esc="card.value"/>
-                                        <p class="card-description" t-if="card.description" t-esc="card.description"/>
-                    </div>
-                            </div>
-                            </t>
-                            </div>
-                    </section>
-
-                    <section class="dashboard-section two-column">
-                        <div class="panel">
-                            <div class="section-header">
-                                <div>
-                                    <p class="section-kicker">Người dùng</p>
-                                    <h3>Thống kê người dùng</h3>
-                            </div>
-                                <span class="section-note">
-                                    Tổng cộng <t t-esc="this.formatNumber(state.accounts.total || 0)"/> nhà đầu tư
-                                    </span>
-                            </div>
-                            <ul class="user-status-list">
-                                <t t-foreach="this.getUserStatusRows()" t-as="row" t-key="row.label">
-                                    <li>
-                                        <div class="user-status-info">
-                                            <span t-attf-class="status-dot #{row.variant}"></span>
-                                            <span class="user-status-label" t-esc="row.label"/>
-                        </div>
-                                        <div class="user-status-value">
-                                            <span class="value" t-esc="row.value"/>
-                                            <span class="badge" t-if="row.badge" t-attf-class="badge #{row.badgeVariant}">
-                                                <t t-esc="row.badge"/>
-                                            </span>
-                    </div>
-                                    </li>
-                                </t>
-                            </ul>
-                </div>
-
-                        <div class="panel transactions">
-                            <div class="section-header">
-                                <div>
-                                    <p class="section-kicker">Giao dịch</p>
-                                    <h3>Thống kê giao dịch</h3>
-                            </div>
-                                <span class="section-note">
-                                    Tổng giá trị <t t-esc="this.formatCurrency(state.summary.today_total_amount)"/>
-                                </span>
-                                            </div>
-                            <div class="transaction-card-grid">
-                                <t t-foreach="this.getTransactionCards()" t-as="card" t-key="card.label">
-                                    <div t-attf-class="transaction-card #{card.variant}">
-                                        <div class="transaction-card-meta">
-                                            <p class="label" t-esc="card.label"/>
-                                            <span class="chip" t-if="card.status" t-esc="card.status"/>
-                                            </div>
-                                        <h4 t-esc="card.value"/>
-                                        <p t-if="card.description" t-esc="card.description"/>
-                                        </div>
-                                </t>
-                                </div>
-                            </div>
-                    </section>
-
-                    <!-- NEW: Chart Sections -->
-                    <section class="dashboard-section">
-                        <div class="two-column">
-                            <div class="panel chart-panel">
-                                <div class="section-header">
-                                    <div>
-                                        <p class="section-kicker">Xu hướng</p>
-                                        <h3>Biểu đồ giao dịch</h3>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-label" t-esc="card.label" t-att-title="card.label"/>
+                                        <div class="stat-value" t-esc="card.value"/>
+                                        <div class="stat-desc" t-if="card.description" t-esc="card.description" t-att-title="card.description"/>
                                     </div>
                                 </div>
-                                <div class="chart-container">
+                            </t>
+                        </div>
+                    </section>
+
+                    <!-- Users & Transactions Section -->
+                    <section class="dashboard-section">
+                        <div class="fmd-grid-panels">
+                            <!-- User Stats -->
+                            <div class="fmd-panel">
+                                <div class="section-header">
+                                    <div>
+                                        <h4 class="section-kicker">Người dùng</h4>
+                                        <h3>Thống kê nhà đầu tư</h3>
+                                    </div>
+                                    <span class="section-note">
+                                        Tổng <t t-esc="this.formatNumber(state.accounts.total || 0)"/> NĐT
+                                    </span>
+                                </div>
+                                <div class="list-group">
+                                    <t t-foreach="this.getUserStatusRows()" t-as="row" t-key="row.label">
+                                        <div class="list-item">
+                                            <div class="user-stat-info">
+                                                <span t-attf-class="dot #{row.variant}"></span>
+                                                <span class="label" t-esc="row.label" t-att-title="row.label"/>
+                                            </div>
+                                            <div class="user-stat-values">
+                                                <span class="number" t-esc="row.value"/>
+                                                <span class="fmd-badge" t-if="row.badge" t-attf-class="#{row.badgeVariant}">
+                                                    <t t-esc="row.badge"/>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Transactions -->
+                            <div class="fmd-panel">
+                                <div class="section-header">
+                                    <div>
+                                        <h4 class="section-kicker">Giao dịch</h4>
+                                        <h3>Trạng thái lệnh</h3>
+                                    </div>
+                                    <span class="section-note text-right">
+                                        Giá trị <t t-esc="this.formatCurrency(state.summary.today_total_amount)"/>
+                                    </span>
+                                </div>
+                                <div class="fmd-grid-sm mt-2">
+                                    <t t-foreach="this.getTransactionCards()" t-as="card" t-key="card.label">
+                                        <div t-attf-class="tx-card #{card.variant}">
+                                            <div class="tx-meta">
+                                                <div class="tx-label" t-esc="card.label" t-att-title="card.label"/>
+                                                <span class="tx-chip" t-if="card.status" t-esc="card.status"/>
+                                            </div>
+                                            <div>
+                                                <h4 class="tx-value" t-esc="card.value" t-att-title="card.value"/>
+                                                <div class="tx-desc" t-if="card.description" t-esc="card.description" t-att-title="card.description"/>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Charts Section -->
+                    <section class="dashboard-section">
+                        <div class="fmd-grid-panels">
+                            <div class="fmd-panel chart-panel">
+                                <div class="section-header">
+                                    <div>
+                                        <h4 class="section-kicker">Xu hướng</h4>
+                                        <h3>Biểu đồ mua bán</h3>
+                                    </div>
+                                </div>
+                                <div class="chart-wrapper">
                                     <canvas id="transactionTrendChart"></canvas>
                                 </div>
                             </div>
-                            <div class="panel chart-panel">
+                            <div class="fmd-panel chart-panel">
                                 <div class="section-header">
                                     <div>
-                                        <p class="section-kicker">Phân bổ</p>
-                                        <h3>Tỷ trọng danh mục đầu tư</h3>
+                                        <h4 class="section-kicker">Phân bổ</h4>
+                                        <h3>Tỷ trọng danh mục</h3>
                                     </div>
                                 </div>
-                                <div class="chart-container">
+                                <div class="chart-wrapper">
                                     <canvas id="fundDistributionChart"></canvas>
                                 </div>
                             </div>
@@ -369,6 +383,8 @@ export class DashboardWidget extends Component {
                 setTimeout(() => {
                     this.renderTransactionTrendChart();
                     this.renderFundDistributionChart();
+                    this.renderBuySellComparisonChart();
+                    this.renderNavOpeningPriceChart();
                 }, 100);
             } else {
                 // Retry after 100ms if Chart.js not loaded yet

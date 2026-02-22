@@ -27,6 +27,11 @@
             'ai_trading_assistant/static/src/js/ai_chatbot.js',
             'ai_trading_assistant/static/src/xml/ai_chatbot.xml',
         ],
+        'web.assets_frontend': [
+            'ai_trading_assistant/static/src/scss/ai_chatbot.scss',
+            'ai_trading_assistant/static/src/js/ai_chatbot.js',
+            'ai_trading_assistant/static/src/xml/ai_chatbot.xml',
+        ],
     },
     'application': True,
     'installable': True,

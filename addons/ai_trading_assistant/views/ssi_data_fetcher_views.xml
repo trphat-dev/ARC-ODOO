@@ -21,6 +21,7 @@
                             <group>
                                 <group>
                                     <field name="ticker_id" options="{'no_create': True, 'no_open': True}"/>
+                                    <div class="text-muted" style="font-size: 11px; margin-top: 5px;">(Để trống nếu muốn cập nhật toàn bộ thị trường)</div>
                                 </group>
                                 <group>
                                     <field name="from_date"/>

@@ -15,19 +15,33 @@ class SSIDataFetcher(models.TransientModel):
     to_date = fields.Date(string='Đến ngày', default=fields.Date.context_today)
     
     def action_fetch_ohlcv(self):
-        if not self.ticker_id or not self.from_date or not self.to_date:
-            raise exceptions.UserError('Vui lòng nhập đầy đủ Mã CK, Từ ngày và Đến ngày!')
+        if not self.from_date or not self.to_date:
+            raise exceptions.UserError('Vui lòng nhập đầy đủ Từ ngày và Đến ngày!')
             
         from_str = self.from_date.strftime('%d/%m/%Y')
         to_str = self.to_date.strftime('%d/%m/%Y')
         
-        count = self.fetch_daily_ohlcv(self.ticker_id.name, from_str, to_str)
+        tickers = self.env['stock.ticker'].search([('name', '=', self.ticker_id.name)]) if self.ticker_id else self.env['stock.ticker'].search([])
+        if not tickers:
+            raise exceptions.UserError('Không có mã chứng khoán nào trong hệ thống để đồng bộ!')
+            
+        total_count = 0
+        for ticker in tickers:
+            try:
+                count = self.fetch_daily_ohlcv(ticker.name, from_str, to_str)
+                total_count += count
+            except Exception as e:
+                _logger.error(f'Error fetching OHLCV for {ticker.name}: {e}')
+                continue
+            
+        msg = f'Đã cập nhật {total_count} cây nến giá cho mã {self.ticker_id.name}.' if self.ticker_id else f'Đã cập nhật tổng cộng {total_count} cây nến trải đều cho {len(tickers)} mã chứng khoán toàn thị trường.'
+        
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': 'Hoàn tất Đồng bộ',
-                'message': f'Đã cập nhật {count} cây nến giá cho mã {self.ticker_id.name}.',
+                'message': msg,
                 'sticky': False,
                 'type': 'success',
             }
@@ -87,7 +101,10 @@ class SSIDataFetcher(models.TransientModel):
             else:
                 raise exceptions.UserError(f"API Error: {data.get('message')}")
         except json.JSONDecodeError:
-            raise exceptions.UserError("Không thể parse dữ liệu trả về từ SSI")
+            _logger.error(f'SSI API returned raw text instead of JSON: {res}')
+            raise exceptions.UserError("Không thể parse dữ liệu trả về từ SSI. Vui lòng kiểm tra lại cấu hình kết nối.")
+        except Exception as e:
+            raise exceptions.UserError(f"Lỗi khi tải danh sách mã: {str(e)}")
             
     def fetch_daily_ohlcv(self, ticker_symbol, from_date_str, to_date_str):
         """Lấy dữ liệu OHLCV hàng ngày"""
@@ -138,4 +155,8 @@ class SSIDataFetcher(models.TransientModel):
                 _logger.error(f"API Error fetching OHLCV for {ticker_symbol}: {data.get('message')}")
                 return 0
         except json.JSONDecodeError:
-            raise exceptions.UserError("Không thể parse dữ liệu trả về từ SSI")
+            _logger.error(f'SSI API returned raw text instead of JSON: {res}')
+            raise exceptions.UserError("Lỗi cấu trúc dữ liệu trả về từ SSI (Không phải JSON).")
+        except Exception as e:
+            _logger.error(f'System error storing OHLCV line: {str(e)}')
+            return 0
