@@ -24,6 +24,8 @@ Key Features:
         'mail',
         'portal',
         'web',
+        # ARC Addons
+        'investor_profile_management',
     ],
     'data': [
         # Security

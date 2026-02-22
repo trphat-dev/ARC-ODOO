@@ -41,22 +41,22 @@ class InvestorList(models.Model):
         ('active', 'KYC'),                # eKYC thành công
         ('vsd', 'VSD'),                   # Đã lên VSD
         ('rejected', 'Từ chối')           # Từ chối
-    ], string='Trạng thái', default='draft')
+    ], string='Trạng thái', compute='_compute_lifecycle_status', store=True, readonly=False)
     
     # Track xem trạng thái đã được set thủ công hay chưa
     status_manual = fields.Boolean(string='Manual Status', default=False)
     
-    # Thông tin từ status.info - có thể chỉnh sửa
+    # Thông tin từ status.info - Chuyển thành compute để tự động đồng bộ
     account_status = fields.Selection([
         ('approved', 'Approved'),
         ('pending', 'Pending'),
         ('rejected', 'Rejected')
-    ], string='Account Status', default='pending')
+    ], string='Account Status', compute='_compute_status_info_fields', store=True, readonly=False)
     
     profile_status = fields.Selection([
         ('complete', 'Complete'),
         ('incomplete', 'Incomplete')
-    ], string='Profile Status', default='incomplete')
+    ], string='Profile Status', compute='_compute_status_info_fields', store=True, readonly=False)
     
     # Các trường tính toán
     @api.depends('partner_id')
@@ -133,6 +133,24 @@ class InvestorList(models.Model):
                 # Chỉ cập nhật nếu chưa được chỉnh sửa thủ công
                 if not record.province_city_manual:
                     record.province_city = ''
+
+    @api.depends('partner_id')
+    def _compute_status_info_fields(self):
+        """Đồng bộ account_status và profile_status từ status.info"""
+        for record in self:
+            if record.partner_id:
+                status_info = self.env['status.info'].search([
+                    ('partner_id', '=', record.partner_id.id)
+                ], limit=1)
+                if status_info:
+                    record.account_status = status_info.account_status
+                    record.profile_status = status_info.profile_status
+                else:
+                    record.account_status = 'pending'
+                    record.profile_status = 'incomplete'
+            else:
+                record.account_status = 'pending'
+                record.profile_status = 'incomplete'
     
     @api.onchange('account_status', 'profile_status')
     def _onchange_status_info(self):
@@ -149,11 +167,9 @@ class InvestorList(models.Model):
                         'account_status': record.account_status,
                         'profile_status': record.profile_status
                     })
-                
-                # Cập nhật trạng thái dựa trên thông tin mới
-                self._update_status_from_status_info()
     
-    def _update_status_from_status_info(self):
+    @api.depends('account_status', 'profile_status', 'status_manual')
+    def _compute_lifecycle_status(self):
         """
         New International Standard Algorithm for Status Calculation:
         - Draft: Profile not complete.
@@ -187,9 +203,6 @@ class InvestorList(models.Model):
         
         record = super().create(vals)
         
-        # Cập nhật trạng thái sau khi tạo
-        record._update_status_from_status_info()
-        
         # Gửi bus notification
         record._notify_investor_change('create')
         
@@ -212,13 +225,8 @@ class InvestorList(models.Model):
         
         result = super().write(vals)
         
-        # Chỉ tự động cập nhật trạng thái nếu chưa được set thủ công
-        if ('account_status' in vals or 'profile_status' in vals) and not vals.get('status_manual', False):
-            self._update_status_from_status_info()
-        
         # Gửi bus notification
         self._notify_investor_change('write')
-        
         
         return result
     
@@ -258,7 +266,8 @@ class InvestorList(models.Model):
             record._compute_account_number()
             record._compute_profile_info()
             record._compute_address_info()
-            record._update_status_from_status_info()
+            record._compute_status_info_fields()
+            record._compute_lifecycle_status()
         return True
     
     def reset_manual_fields(self):
@@ -273,7 +282,8 @@ class InvestorList(models.Model):
             # Trigger recompute
             record._compute_profile_info()
             record._compute_address_info()
-            record._update_status_from_status_info()
+            record._compute_status_info_fields()
+            record._compute_lifecycle_status()
         return True
     
     @api.model
@@ -302,3 +312,19 @@ class InvestorList(models.Model):
                 'sticky': False,
             }
         } 
+
+class StatusInfo(models.Model):
+    _inherit = 'status.info'
+
+    def write(self, vals):
+        res = super(StatusInfo, self).write(vals)
+        # Nếu thay đổi trạng thái, kích hoạt tính toán lại trong investor.list
+        if any(field in vals for field in ['account_status', 'profile_status']):
+            for record in self:
+                investor_records = self.env['investor.list'].sudo().search([
+                    ('partner_id', '=', record.partner_id.id)
+                ])
+                if investor_records:
+                    # Kích hoạt recompute cho các trường phụ thuộc
+                    investor_records.modified(['account_status', 'profile_status'])
+        return res
