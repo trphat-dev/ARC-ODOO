@@ -119,15 +119,14 @@ def train_model(ticker_input, algorithm="ppo", epochs=1000, from_date="01/01/202
     print(f"[*] Tải dữ liệu từ SSI ({from_date} - {to_date}):")
     for i, tic in enumerate(tickers, 1):
         try:
-            # Vẽ thanh tiến trình Update trên 1 dòng
+            # Vẽ thanh tiến trình Update ngắn gọn để tránh bị tràn dòng (wrap) trong Terminal nhỏ
             percent = (i / total) * 100
-            bar_len = 40
+            bar_len = 20
             filled_len = int(bar_len * i // total)
             bar = '█' * filled_len + '-' * (bar_len - filled_len)
             
-            # Dùng \r để lùi về đầu dòng và in đè, thêm spaces để xóa dòng cũ nếu nó dài hơn
-            sys.stdout.write(f'\r    |{bar}| {percent:.1f}% ({i}/{total}) - Đang tải {tic:<10}          ')
-            sys.stdout.flush()
+            # Dùng \r và độ dài chuỗi < 80 ký tự để luôn nằm trên 1 dòng
+            print(f'\r[{bar}] {percent:.1f}% ({i}/{total}) Tải: {tic:<6}   ', end='', flush=True)
             
             df = fetch_data_from_ssi(tic, from_date, to_date, ssi_id, ssi_secret, api_url)
             time.sleep(0.5) # Tránh rate limit của SSI MDE
