@@ -6,14 +6,14 @@ export class UserPermissionWidget extends Component {
     static props = {
         initialData: { type: Object, optional: true },
     };
-    
+
     setup() {
         // Get data from props or fallback to URL
         const initialData = this.props.initialData || {};
         let permissionType = initialData.permission_type || '';
         let pageTitle = initialData.page_title || 'Quản lý Phân quyền Hệ thống';
         let breadcrumbTitle = initialData.breadcrumb_title || 'Quản lý Phân quyền Hệ thống';
-        
+
         // Fallback to URL if no data from props
         if (!permissionType) {
             const currentPath = window.location.pathname;
@@ -31,7 +31,7 @@ export class UserPermissionWidget extends Component {
                 breadcrumbTitle = 'Danh sách nhân viên quản lý quỹ';
             }
         }
-        
+
         this.state = useState({
             users: [],
             loading: true,
@@ -108,7 +108,7 @@ export class UserPermissionWidget extends Component {
         const totalPages = this.getTotalPages();
         const currentPage = this.state.currentPage;
         const pages = [];
-        
+
         if (totalPages <= 7) {
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
@@ -136,7 +136,7 @@ export class UserPermissionWidget extends Component {
                 pages.push(totalPages);
             }
         }
-        
+
         return pages;
     }
 
@@ -156,7 +156,7 @@ export class UserPermissionWidget extends Component {
         this.state.loading = true;
         try {
             const domain = [];
-            
+
             if (this.state.statusFilter) {
                 domain.push(['active', '=', this.state.statusFilter === 'active']);
             }
@@ -240,7 +240,7 @@ export class UserPermissionWidget extends Component {
 
     validateForm() {
         const errors = {};
-        
+
         if (!this.state.editingUser) {
             // Khi tạo mới, validate các field bắt buộc
             if (!this.state.formData.name || !this.state.formData.name.trim()) {
@@ -261,9 +261,9 @@ export class UserPermissionWidget extends Component {
                 errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
             }
         }
-        
+
         // Chức vụ không bắt buộc nữa
-        
+
         this.state.formErrors = errors;
         return Object.keys(errors).length === 0;
     }
@@ -274,17 +274,17 @@ export class UserPermissionWidget extends Component {
         }
 
         try {
-            const url = this.state.editingUser 
+            const url = this.state.editingUser
                 ? '/api/user-permission/update'
                 : '/api/user-permission/create';
-            
+
             const payload = {
                 notes: this.state.formData.position, // Store position in notes field
                 permission_type: this.state.formData.permission_type,
                 active: this.state.formData.active,
                 phone: this.state.formData.phone || '',
             };
-            
+
             if (!this.state.editingUser) {
                 // Khi tạo mới, gửi thông tin user mới
                 // Sử dụng email làm login
@@ -301,14 +301,14 @@ export class UserPermissionWidget extends Component {
                 // Nếu user có permission record (có id), gửi id
                 // Nếu user chưa có permission record (id là null), gửi user_id để tạo mới
                 if (this.state.editingUser.id) {
-                payload.id = this.state.editingUser.id;
+                    payload.id = this.state.editingUser.id;
                 } else if (this.state.editingUser.user_id) {
                     payload.user_id = this.state.editingUser.user_id;
                 } else {
                     this.showNotification('Không thể xác định user để cập nhật', 'danger');
                     return;
                 }
-                
+
                 // Include password if provided
                 if (this.state.formData.password && this.state.formData.password.trim()) {
                     payload.password = this.state.formData.password;
@@ -327,7 +327,7 @@ export class UserPermissionWidget extends Component {
                 body: JSON.stringify(payload),
             });
             const data = await response.json();
-            
+
             if (data && data.success) {
                 this.showNotification(data.message || 'Lưu thành công', 'success');
                 this.closeModal();
@@ -351,24 +351,24 @@ export class UserPermissionWidget extends Component {
         if (!user.has_permission && !user.user_id) {
             return;
         }
-        
+
         const currentValue = user.is_market_maker || false;
         const newValue = !currentValue;
-        
+
         // Hiển thị popup xác nhận
         const actionText = newValue ? 'bật' : 'tắt';
         const confirmMessage = `Bạn có chắc chắn muốn ${actionText} "Nhà tạo lập" cho ${user.name}?\n\n${newValue ? 'User này sẽ được phép truy cập trang sổ lệnh (order_matching).' : 'User này sẽ không còn được phép truy cập trang sổ lệnh (order_matching).'}`;
-        
+
         if (!confirm(confirmMessage)) {
             // User hủy, không làm gì cả
             return;
         }
-        
+
         try {
             const payload = {
                 is_market_maker: newValue,
             };
-            
+
             // Nếu có permission record, gửi id
             if (user.id) {
                 payload.id = user.id;
@@ -383,7 +383,7 @@ export class UserPermissionWidget extends Component {
                 this.loadUsers();
                 return;
             }
-            
+
             const response = await fetch('/api/user-permission/toggle-market-maker', {
                 method: 'POST',
                 headers: {
@@ -391,9 +391,9 @@ export class UserPermissionWidget extends Component {
                 },
                 body: JSON.stringify(payload),
             });
-            
+
             const data = await response.json();
-            
+
             if (data && data.success) {
                 const statusText = newValue ? 'bật' : 'tắt';
                 this.showNotification(`Đã ${statusText} "Nhà tạo lập" cho ${user.name} thành công`, 'success');
@@ -428,7 +428,7 @@ export class UserPermissionWidget extends Component {
                 body: JSON.stringify({ id: user.id }),
             });
             const data = await response.json();
-            
+
             if (data && data.success) {
                 this.showNotification('Xóa user thành công', 'success');
                 this.loadUsers();
@@ -468,14 +468,14 @@ export class UserPermissionWidget extends Component {
             container.className = 'notification-container';
             document.body.appendChild(container);
         }
-        
+
         // Tạo notification element
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
-        
+
         const messageSpan = document.createElement('span');
         messageSpan.textContent = message;
-        
+
         const closeButton = document.createElement('button');
         closeButton.className = 'notification-close';
         closeButton.innerHTML = '&times;';
@@ -483,11 +483,11 @@ export class UserPermissionWidget extends Component {
             notification.style.animation = 'slideOut 0.3s ease-out';
             setTimeout(() => notification.remove(), 300);
         };
-        
+
         notification.appendChild(messageSpan);
         notification.appendChild(closeButton);
         container.appendChild(notification);
-        
+
         // Tự động xóa sau 5 giây
         setTimeout(() => {
             if (notification.parentNode) {
@@ -656,7 +656,7 @@ export class UserPermissionWidget extends Component {
                     <div class="modal-container">
                         <div class="modal-header">
                             <h3 class="modal-title">
-                                <i class="fas fa-user-plus me-2"></i>
+                                <i t-attf-class="fas #{state.editingUser ? 'fa-user-edit' : 'fa-user-plus'} me-2"></i>
                                 <t t-esc="state.editingUser ? 'Chỉnh sửa tài khoản' : 'Tạo mới tài khoản'"/>
                             </h3>
                             <button type="button" class="modal-close" t-on-click="closeModal">
@@ -667,7 +667,7 @@ export class UserPermissionWidget extends Component {
                             <div class="form-grid">
                                 <t t-if="!state.editingUser">
                                     <!-- Khi tạo mới: Form tạo user mới -->
-                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                    <div class="form-group full-width">
                                         <label class="form-label">
                                             <i class="fas fa-user me-1"></i>Tên người dùng <span class="required">*</span>
                                         </label>
@@ -681,21 +681,21 @@ export class UserPermissionWidget extends Component {
                                             <div class="error-message" t-esc="state.formErrors.name"/>
                                         </t>
                                     </div>
-                                        <div class="form-group">
-                                            <label class="form-label">
-                                            <i class="fas fa-envelope me-1"></i>Email (dùng để đăng nhập) <span class="required">*</span>
-                                            </label>
-                                            <input 
-                                                type="email" 
-                                                class="form-input" 
-                                                t-model="state.formData.email" 
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <i class="fas fa-envelope me-1"></i>Email <span class="required">*</span>
+                                        </label>
+                                        <input 
+                                            type="email" 
+                                            class="form-input" 
+                                            t-model="state.formData.email" 
                                             t-att-class="state.formErrors.email ? 'is-invalid' : ''"
                                             placeholder="email@example.com"/>
                                         <t t-if="state.formErrors.email">
                                             <div class="error-message" t-esc="state.formErrors.email"/>
                                         </t>
-                                        <small class="form-hint">Email này sẽ được dùng để đăng nhập vào hệ thống</small>
-                                        </div>
+                                        <small class="form-hint">Dùng để đăng nhập vào hệ thống</small>
+                                    </div>
                                     <div class="form-group">
                                         <label class="form-label">
                                             <i class="fas fa-lock me-1"></i>Mật khẩu <span class="required">*</span>
@@ -709,12 +709,12 @@ export class UserPermissionWidget extends Component {
                                         <t t-if="state.formErrors.password">
                                             <div class="error-message" t-esc="state.formErrors.password"/>
                                         </t>
-                                        <small class="form-hint">Mật khẩu phải có ít nhất 6 ký tự</small>
+                                        <small class="form-hint">Ít nhất 6 ký tự</small>
                                     </div>
                                 </t>
                                 <t t-if="state.editingUser">
                                     <!-- Khi chỉnh sửa: Hiển thị thông tin readonly -->
-                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                    <div class="form-group full-width">
                                         <label class="form-label">
                                             <i class="fas fa-user me-1"></i>Tên người dùng
                                         </label>
@@ -722,19 +722,17 @@ export class UserPermissionWidget extends Component {
                                             type="text" 
                                             class="form-input" 
                                             t-model="state.formData.name" 
-                                            readonly="readonly"
-                                            style="background: #f8fafc;"/>
+                                            readonly="readonly"/>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">
-                                            <i class="fas fa-envelope me-1"></i>Email (dùng để đăng nhập)
+                                            <i class="fas fa-envelope me-1"></i>Email
                                         </label>
                                         <input 
                                             type="email" 
                                             class="form-input" 
                                             t-model="state.formData.email" 
-                                            readonly="readonly"
-                                            style="background: #f8fafc;"/>
+                                            readonly="readonly"/>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">
@@ -745,7 +743,7 @@ export class UserPermissionWidget extends Component {
                                             class="form-input" 
                                             t-model="state.formData.password" 
                                             placeholder="••••••••"/>
-                                        <small class="form-hint">Để trống nếu không muốn thay đổi mật khẩu</small>
+                                        <small class="form-hint">Để trống nếu không muốn đổi</small>
                                     </div>
                                 </t>
                                 <div class="form-group">
@@ -773,19 +771,18 @@ export class UserPermissionWidget extends Component {
                                     </t>
                                 </div>
                                 <t t-if="state.formData.permission_type === 'investor_user'">
-                                    <div class="form-group" style="grid-column: 1 / -1;">
-                                        <label class="form-label toggle-button-label">
+                                    <div class="form-group full-width">
+                                        <label class="form-label toggle-button-label" t-on-click="() => this.toggleFormMarketMaker()">
                                             <div 
                                                 class="toggle-button"
-                                                t-att-class="state.formData.is_market_maker ? 'active' : ''"
-                                                t-on-click="() => this.toggleFormMarketMaker()">
+                                                t-att-class="state.formData.is_market_maker ? 'active' : ''">
                                                 <span class="toggle-button-slider"></span>
                                             </div>
                                             <span>
-                                                <i class="fas fa-user-shield me-1"></i>Nhà tạo lập
+                                                <i class="fas fa-user-shield me-1"></i>Nhà tạo lập (Market Maker)
                                             </span>
                                         </label>
-                                        <small class="form-hint">Bật tùy chọn này để cho phép Portal User truy cập trang sổ lệnh (order_matching)</small>
+                                        <small class="form-hint">Truy cập trang sổ lệnh (order_matching)</small>
                                     </div>
                                 </t>
                             </div>

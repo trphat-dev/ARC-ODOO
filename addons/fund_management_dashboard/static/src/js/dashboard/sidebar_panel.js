@@ -107,11 +107,31 @@ export class SidebarPanel extends Component {
 
     isUserMenuActive(permissionType) {
         const currentPath = this.state.currentPath || window.location.pathname;
-        const menuItem = this.userMenu.find(item => item.permissionType === permissionType);
-        if (menuItem) {
-            return currentPath === menuItem.href || currentPath.startsWith(menuItem.href + '/');
+        if (permissionType) {
+            const menuItem = this.userMenu.find(item => item.permissionType === permissionType);
+            if (menuItem) {
+                return currentPath === menuItem.href || currentPath.startsWith(menuItem.href + '/');
+            }
+            return false;
         }
-        return false;
+        // If no permissionType provided, check if any item in userMenu is active
+        return this.userMenu.some(item =>
+            currentPath === item.href || currentPath.startsWith(item.href + '/')
+        );
+    }
+
+    isProductMenuActive() {
+        const currentPath = this.state.currentPath || window.location.pathname;
+        return this.productMenu.some(item =>
+            currentPath === item.href || currentPath.startsWith(item.href + '/')
+        );
+    }
+
+    isDataMenuActive() {
+        const currentPath = this.state.currentPath || window.location.pathname;
+        return this.dataMenu.some(item =>
+            currentPath === item.href || currentPath.startsWith(item.href + '/')
+        );
     }
 
     isDashboardActive() {
@@ -136,7 +156,7 @@ export class SidebarPanel extends Component {
                 </ul>
 
                 <div class="sidebar-dropdown">
-                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('user') ? 'active expanded' : ''}"
+                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('user') ? 'expanded' : ''} #{this.isUserMenuActive() ? 'active' : ''}"
                             type="button"
                             t-on-click="() => this.toggleMenu('user')">
                         <span class="d-flex align-items-center">
@@ -157,7 +177,7 @@ export class SidebarPanel extends Component {
                 </div>
 
                 <div class="sidebar-dropdown">
-                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('product') ? 'active expanded' : ''}"
+                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('product') ? 'expanded' : ''} #{this.isProductMenuActive() ? 'active' : ''}"
                             type="button"
                             t-on-click="() => this.toggleMenu('product')">
                         <span class="d-flex align-items-center">
@@ -178,7 +198,7 @@ export class SidebarPanel extends Component {
                 </div>
 
                 <div class="sidebar-dropdown">
-                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('data') ? 'active expanded' : ''}"
+                    <button t-attf-class="nav-main-item justify-content-between #{this.isMenuOpen('data') ? 'expanded' : ''} #{this.isDataMenuActive() ? 'active' : ''}"
                             type="button"
                             t-on-click="() => this.toggleMenu('data')">
                         <span class="d-flex align-items-center">
@@ -197,10 +217,9 @@ export class SidebarPanel extends Component {
                         </a>
                     </div>
                 </div>
-
-                </div>
-
-                <div class="sidebar-footer">
+            </div> <!-- end sidebar-menu -->
+            
+            <div class="sidebar-footer">
                     <div class="user-info">
                         <div class="user-avatar">
                             <i class="fas fa-user-circle"></i>
