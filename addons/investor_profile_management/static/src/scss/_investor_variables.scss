@@ -14,10 +14,7 @@ $font-weight-medium: 500;
 $font-weight-semibold: 600;
 $font-weight-bold: 700;
 
-// ============================================
-// COLOR PALETTE - Warm Orange/Gold Theme
-// ============================================
-// Primary Colors (Gradient)
+// Primary Colors (Warm Orange/Gold Theme)
 $primary-start: #ff8c42; // Warm Orange
 $primary-end: #f9a825; // Golden Yellow
 $primary-gradient: linear-gradient(
@@ -35,7 +32,7 @@ $primary-gradient-hover: linear-gradient(
 $secondary-start: #1a1a2e;
 $secondary-end: #16213e;
 
-// Background Gradient (Animated)
+// Background
 $bg-gradient: linear-gradient(-45deg, #ffecd2, #fcb69f, #ff9a56, #f9a825);
 
 // Text Colors
@@ -47,39 +44,43 @@ $text-white: #ffffff;
 
 // Background Colors
 $bg-white: #ffffff;
-$bg-light: #f8f9fa;
+$bg-light: #f8fafc;
 $bg-lighter: #f1f5f9;
 
 // State Colors
 $success: #10b981;
-$success-light: #d1fae5;
+$success-light: rgba(16, 185, 129, 0.15);
 $success-dark: #047857;
 $warning: #f59e0b;
-$warning-light: #fffbe6;
+$warning-light: rgba(245, 158, 11, 0.15);
 $danger: #ef4444;
-$danger-light: #fee2e2;
+$danger-light: rgba(239, 68, 68, 0.15);
 $danger-dark: #dc2626;
 $info: #3b82f6;
-$info-light: #dbeafe;
+$info-light: rgba(59, 130, 246, 0.15);
 
 // ============================================
-// GLASSMORPHISM
+// PREMIUM GLASSMORPHISM
 // ============================================
-$glass-bg: rgba(255, 255, 255, 0.95);
-$glass-bg-light: rgba(255, 255, 255, 0.85);
-$glass-border: rgba(255, 255, 255, 0.3);
-$glass-border-heavy: rgba(255, 255, 255, 0.5);
-$glass-blur: 20px;
+$glass-bg: rgba(255, 255, 255, 0.65);
+$glass-bg-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%);
+$glass-bg-light: rgba(255, 255, 255, 0.45);
+$glass-border: rgba(255, 255, 255, 0.6);
+$glass-border-heavy: rgba(255, 255, 255, 0.9);
+$glass-blur: 24px;
 $glass-blur-light: 12px;
-$glass-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-$glass-shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+$glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+$glass-shadow-heavy: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+
+// Highlight / Inner Shadow for Glass (creates 3D feel)
+$glass-inner-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.9), inset 1px 0 0 0 rgba(255, 255, 255, 0.6);
 
 // ============================================
 // BORDERS
 // ============================================
-$border-color: #e2e8f0;
-$border-color-light: #f1f5f9;
-$border-focus: $primary-end;
+$border-color: rgba(255, 255, 255, 0.4);
+$border-color-light: rgba(255, 255, 255, 0.2);
+$border-focus: $primary-start;
 
 // Border Radius
 $radius-sm: 8px;

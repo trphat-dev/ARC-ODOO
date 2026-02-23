@@ -18,8 +18,8 @@
         'views/stock_ticker_views.xml',
         'views/ssi_config_views.xml',
         'views/ssi_data_fetcher_views.xml',
-        'views/ai_training_history_views.xml',
         'views/ai_strategy_views.xml',
+        'views/ai_training_history_views.xml',
     ],
     'assets': {
         'web.assets_backend': [

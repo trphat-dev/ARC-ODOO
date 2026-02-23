@@ -184,10 +184,37 @@
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
-    overflow-y: auto;
     font-family: $font-family-base;
     font-weight: 400; // Body Regular
     -webkit-font-smoothing: antialiased;
+
+    // Premium orbs for glass backdrops
+    &::before, &::after {
+        content: '';
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(100px);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    &::before {
+        width: 60vw;
+        height: 60vh;
+        background: rgba($primary-start, 0.15);
+        top: -10vh;
+        left: -10vw;
+        animation: float 20s ease-in-out infinite alternate;
+    }
+
+    &::after {
+        width: 50vw;
+        height: 50vh;
+        background: rgba($primary-end, 0.12);
+        bottom: -10vh;
+        right: -10vw;
+        animation: float 15s ease-in-out infinite alternate-reverse;
+    }
 }
 
 // ============================================
@@ -216,12 +243,14 @@
 .investor-sidebar {
     flex: 0 0 $sidebar-width;
     width: $sidebar-width;
-    background: $glass-bg;
+    background: $glass-bg-gradient;
     backdrop-filter: blur($glass-blur);
     -webkit-backdrop-filter: blur($glass-blur);
     border-radius: $radius-xl;
     border: 1px solid $glass-border;
-    box-shadow: $glass-shadow;
+    border-top: 1px solid $glass-border-heavy;
+    border-left: 1px solid $glass-border-heavy;
+    box-shadow: $glass-shadow-heavy, $glass-inner-highlight;
     padding: $spacing-lg;
     
     // Normal positioning - flows with content
@@ -567,18 +596,20 @@
 // CARD STYLES
 // ============================================
 .investor-card {
-    background: $glass-bg;
+    background: $glass-bg-gradient;
     backdrop-filter: blur($glass-blur);
     -webkit-backdrop-filter: blur($glass-blur);
     border-radius: $radius-2xl;
     border: 1px solid $glass-border;
-    box-shadow: $glass-shadow;
+    border-top: 1px solid $glass-border-heavy;
+    border-left: 1px solid $glass-border-heavy;
+    box-shadow: $glass-shadow-heavy, $glass-inner-highlight;
     padding: $card-padding;
     position: relative;
     overflow: hidden;
     animation: cardEntrance 0.7s $transition-spring;
     
-    // Subtle gradient overlay at top
+    // Subtle gradient overlay at top for 3D depth
     &::before {
         content: '';
         position: absolute;
@@ -587,7 +618,8 @@
         right: 0;
         height: 4px;
         background: $primary-gradient;
-        opacity: 0.8;
+        box-shadow: 0 2px 10px rgba($primary-start, 0.4);
+        opacity: 0.9;
     }
     
     @media (max-width: $breakpoint-md) {
@@ -702,32 +734,35 @@
     // Input & Select styles
     .form-control,
     .form-select {
-        border: 2px solid $border-color;
+        border: 1px solid $border-color-light;
         border-radius: $radius-md;
         padding: 0.75rem $spacing-md;
         font-size: 0.9rem;
         transition: all $transition-smooth;
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(4px);
         width: 100%;
         font-variant-numeric: tabular-nums;
+        color: $text-dark;
         
         &::placeholder {
-            color: $text-light;
+            color: $text-muted;
         }
         
         &:focus {
-            border-color: $primary-end;
-            box-shadow: $shadow-input-focus;
-            background: $bg-white;
+            border-color: $border-focus;
+            box-shadow: 0 0 0 4px rgba($primary-start, 0.2);
+            background: rgba(255, 255, 255, 0.8);
             outline: none;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
         
         &:disabled,
         &[readonly] {
-            background-color: $bg-lighter;
+            background-color: rgba(255, 255, 255, 0.1);
             color: $text-muted;
             cursor: not-allowed;
+            border-style: dashed;
         }
         
         // Validation states
@@ -735,7 +770,7 @@
             border-color: $success;
             
             &:focus {
-                box-shadow: 0 0 0 4px rgba($success, 0.15);
+                box-shadow: 0 0 0 4px $success-light;
             }
         }
         
@@ -743,7 +778,7 @@
             border-color: $danger;
             
             &:focus {
-                box-shadow: 0 0 0 4px rgba($danger, 0.15);
+                box-shadow: 0 0 0 4px $danger-light;
             }
         }
     }

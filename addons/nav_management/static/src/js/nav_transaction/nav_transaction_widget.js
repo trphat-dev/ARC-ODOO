@@ -3,7 +3,7 @@
 import { Component, xml, useState, onMounted, onWillUnmount } from "@odoo/owl";
 
 export class NavTransactionWidget extends Component {
-  
+
   static template = xml`
     <div class="nav-management-fund-overview-container">
       <div class="container-fluid">
@@ -191,13 +191,6 @@ export class NavTransactionWidget extends Component {
                   <th></th>
                   <th></th>
                   <th>
-                    <button class="nav-management-btn-modern nav-management-btn-primary-modern" 
-                            style="font-size: 0.7rem; padding: 0.25rem 0.5rem;" 
-                            t-att-disabled="!state.navCalculated || this.getSelectedCount()===0" 
-                            t-att-title="!state.navCalculated ? 'Vui lòng tính NAV trước' : (this.getSelectedCount()===0 ? 'Chọn ít nhất 1 giao dịch' : 'Thực hiện giao dịch với NTL')"
-                            t-on-click="() => this.handleMmBulkAction()">
-                      <i class="fas fa-exchange-alt me-1"></i>Giao dịch (<t t-esc="this.getSelectedCount()"/>)
-                    </button>
                   </th>
                 </tr>
               </thead>
@@ -365,13 +358,12 @@ export class NavTransactionWidget extends Component {
                       <i t-att-class="'fas ms-1 ' + this.getMmSortIcon('term')"></i>
                     </th>
                     <th>Phiên GD</th>
-                    <th style="width: 80px;">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 <t t-if="state.mmLoading">
                     <tr>
-                      <td colspan="11" class="text-center py-4">
+                      <td colspan="10" class="text-center py-4">
                         <div class="nav-management-loading-state">
                           <i class="fas fa-spinner fa-spin nav-management-loading-icon"></i>
                           <h3 class="nav-management-loading-title">Đang tải dữ liệu...</h3>
@@ -382,7 +374,7 @@ export class NavTransactionWidget extends Component {
                 </t>
                 <t t-elif="state.mmError">
                     <tr>
-                      <td colspan="11" class="text-center py-4">
+                      <td colspan="10" class="text-center py-4">
                         <div class="nav-management-error-state">
                           <i class="fas fa-exclamation-triangle nav-management-error-icon"></i>
                           <h3 class="nav-management-error-title">Lỗi tải dữ liệu</h3>
@@ -480,21 +472,12 @@ export class NavTransactionWidget extends Component {
                           </div>
                         </td>
                         
-                        <!-- Thao tác -->
-                        <td class="text-center">
-                          <button class="btn-send-exchange" 
-                                  t-att-data-pair-id="(order.buy_id || '') + '-' + (order.sell_id || '')"
-                                  title="Gửi lên sàn"
-                                  style="background:#f97316;color:white;border:1px solid #f97316;border-radius:4px;padding:5px 8px;cursor:pointer;transition:all 0.3s;font-size:12px;">
-                            <i class="fas fa-paper-plane"></i>
-                          </button>
-                        </td>
                     </tr>
                   </t>
                 </t>
                   <t t-else="">
                     <tr>
-                      <td colspan="11" class="text-center py-5">
+                      <td colspan="10" class="text-center py-5">
                         <div class="nav-management-empty-state">
                           <i class="fas fa-handshake nav-management-empty-state-icon"></i>
                           <h3 class="nav-management-empty-state-title">Không có dữ liệu</h3>
@@ -552,8 +535,8 @@ export class NavTransactionWidget extends Component {
       // Sort state
       sortColumn: 'transaction_date',
       sortDirection: 'desc',
-        // Selection state for bulk MM actions
-        selectedTxIds: new Set(),
+      // Selection state for bulk MM actions
+      selectedTxIds: new Set(),
       // Selection state for matched orders
       selectedMatchedOrderIds: new Set(),
       loading: false,
@@ -598,7 +581,7 @@ export class NavTransactionWidget extends Component {
       chartPoints: [], // [{x: timestamp, y: nav_value}]
       chartMin: 0,
       chartMax: 0,
-        navCalculated: false,
+      navCalculated: false,
       calculatedTransactions: [], // Lưu kết quả tính toán NAV
       showCalculatedResults: false, // Flag để hiển thị kết quả tính toán thay vì dữ liệu gốc
     });
@@ -616,7 +599,7 @@ export class NavTransactionWidget extends Component {
       this.loadConfigs();
       // Render chart on first mount and on resize
       window.addEventListener('resize', () => this.updateChartFromAllFundData());
-      
+
       // Thêm event listener cho button gửi lên sàn
       document.addEventListener('click', (e) => {
         if (e.target.closest('.btn-send-exchange')) {
@@ -624,7 +607,7 @@ export class NavTransactionWidget extends Component {
           e.stopPropagation();
           const btn = e.target.closest('.btn-send-exchange');
           const pairId = btn.getAttribute('data-pair-id');
-          
+
           // Kiểm tra xem đã gửi chưa
           if (btn.classList.contains('sent')) {
             this.showPopup({
@@ -634,7 +617,7 @@ export class NavTransactionWidget extends Component {
             });
             return;
           }
-          
+
           this.sendPairToExchange(pairId, btn);
         }
       });
@@ -674,7 +657,7 @@ export class NavTransactionWidget extends Component {
       `Price 1: ${this.formatCurrency(transaction.price1 || 0)}`,
       `Price 2: ${this.formatCurrency(transaction.price2 || 0)}`,
     ].join('\n');
-    
+
     alert(`Transaction Details\n${'─'.repeat(30)}\n${details}`);
   }
 
@@ -713,15 +696,15 @@ export class NavTransactionWidget extends Component {
   applySorting() {
     const col = this.state.sortColumn;
     const dir = this.state.sortDirection;
-    
+
     const sortFn = (a, b) => {
       let valA = a[col];
       let valB = b[col];
-      
+
       // Handle null/undefined
       if (valA == null) valA = '';
       if (valB == null) valB = '';
-      
+
       // Handle dates
       if (col === 'transaction_date' || col === 'created_at') {
         valA = new Date(valA || 0).getTime();
@@ -737,12 +720,12 @@ export class NavTransactionWidget extends Component {
         valA = String(valA).toLowerCase();
         valB = String(valB).toLowerCase();
       }
-      
+
       if (valA < valB) return dir === 'asc' ? -1 : 1;
       if (valA > valB) return dir === 'asc' ? 1 : -1;
       return 0;
     };
-    
+
     this.state.filteredTransactions.sort(sortFn);
     if (this.state.calculatedTransactions) {
       this.state.calculatedTransactions.sort(sortFn);
@@ -769,12 +752,12 @@ export class NavTransactionWidget extends Component {
   applyMmSorting() {
     const col = this.state.mmSortColumn;
     const dir = this.state.mmSortDirection;
-    
+
     // Sort filteredMatchedOrders instead of matchedOrders
     this.state.filteredMatchedOrders.sort((a, b) => {
       let valA = a[col] || a['_' + col] || a[col.replace('matched_', '')] || '';
       let valB = b[col] || b['_' + col] || b[col.replace('matched_', '')] || '';
-      
+
       // Handle numbers
       if (['matched_price', 'matched_ccq', 'order_value', 'interest_rate', 'term'].includes(col)) {
         valA = parseFloat(valA) || 0;
@@ -783,12 +766,12 @@ export class NavTransactionWidget extends Component {
         valA = String(valA).toLowerCase();
         valB = String(valB).toLowerCase();
       }
-      
+
       if (valA < valB) return dir === 'asc' ? -1 : 1;
       if (valA > valB) return dir === 'asc' ? 1 : -1;
       return 0;
     });
-    
+
     this.updateMatchedOrdersPagination();
   }
 
@@ -863,12 +846,12 @@ export class NavTransactionWidget extends Component {
     try {
       return (items || []).map((raw) => {
         const tx = { ...raw };
-        
+
         // Ưu tiên sử dụng data từ server (đã tính toán bằng compute_transaction_metrics_full)
         // Nếu server đã trả về đầy đủ các field mới, sử dụng chúng
-        if (tx.sell_value1 !== undefined || tx.sell_value2 !== undefined || 
-            tx.sell_price1 !== undefined || tx.sell_price2 !== undefined ||
-            tx.purchase_value !== undefined || tx.price_with_fee !== undefined) {
+        if (tx.sell_value1 !== undefined || tx.sell_value2 !== undefined ||
+          tx.sell_price1 !== undefined || tx.sell_price2 !== undefined ||
+          tx.purchase_value !== undefined || tx.price_with_fee !== undefined) {
           // Server đã tính toán đầy đủ, chỉ cần format date
           return {
             ...tx,
@@ -878,31 +861,31 @@ export class NavTransactionWidget extends Component {
             purchase_date_formatted: tx.purchase_date || tx.transaction_date ? this.formatDateOnly(tx.purchase_date || tx.transaction_date) : null,
           };
         }
-        
+
         // Fallback: tính toán local nếu server chưa trả về đầy đủ
         const nav = Number(tx.nav_value || 0);
         const units = Number((tx.remaining_units != null ? tx.remaining_units : tx.units) || 0);
         const rate = Number(tx.interest_rate || 0);
         const orderValue = Number(tx.trade_price || tx.amount || (units * nav) || 0);
-        
+
         // days: ưu tiên server, sau đó tính theo kỳ hạn
         let days = Number(tx.days_effective != null ? tx.days_effective : (tx.days || 0));
         if (!days || days <= 0) {
           days = this.computeDays(tx);
         }
-        
+
         // Giá trị bán 1 (U) = Giá trị mua * Lãi suất / 365 * Số ngày + Giá trị mua
         let sellValue1 = Number(tx.sell_value1 || tx.sell_value || 0);
         if (!sellValue1 && orderValue > 0 && rate >= 0 && days > 0) {
           sellValue1 = orderValue * (rate / 100) / 365 * days + orderValue;
         }
-        
+
         // Giá bán 1 (S) = ROUND(Giá trị bán 1 / Units, 0)
         let sellPrice1 = Number(tx.sell_price1 || tx.price1 || 0);
         if (!sellPrice1 && sellValue1 && units > 0) {
           sellPrice1 = Math.round(sellValue1 / units);
         }
-        
+
         // Giá bán 2 (T) = MROUND(Giá bán 1, 50)
         let step = Number(tx.round_step || 50);
         if (!step || step <= 0) step = 50;
@@ -910,20 +893,20 @@ export class NavTransactionWidget extends Component {
         if (!sellPrice2 && sellPrice1) {
           sellPrice2 = Math.round(sellPrice1 / step) * step;
         }
-        
+
         // Giá trị bán 2 (V) = Units * Giá bán 2
         let sellValue2 = Number(tx.sell_value2 || 0);
         if (!sellValue2 && units > 0 && sellPrice2 > 0) {
           sellValue2 = units * sellPrice2;
         }
-        
+
         // Lãi suất quy đổi (O) = (Giá bán 2 / Giá mua - 1) * 365 / Số ngày * 100
         const pricePerUnit = Number(tx.price_per_unit || tx.price || nav || 0);
         let convertedRate = (tx.converted_rate != null) ? Number(tx.converted_rate) : null;
         if ((convertedRate === null || Number.isNaN(convertedRate)) && pricePerUnit > 0 && days > 0 && sellPrice2) {
           convertedRate = ((sellPrice2 / pricePerUnit) - 1) * 365 / days * 100;
         }
-        
+
         // Chênh lệch lãi suất (Q) = Lãi suất quy đổi - Lãi suất
         let delta = (tx.interest_delta != null) ? Number(tx.interest_delta) : null;
         if ((delta === null || Number.isNaN(delta)) && convertedRate != null && !Number.isNaN(rate)) {
@@ -957,17 +940,17 @@ export class NavTransactionWidget extends Component {
     // Set ngày hôm nay vào single date filter
     const today = new Date();
     const todayString = today.toISOString().split('T')[0]; // yyyy-mm-dd format
-    
+
     // Wait for DOM to be ready
     setTimeout(() => {
-      
+
       const singleDateFilter = document.getElementById('singleDateFilter');
       const quickDateFilter = document.getElementById('quickDateFilter');
-      
+
       if (singleDateFilter) {
         singleDateFilter.value = todayString;
       }
-      
+
       if (quickDateFilter) {
         quickDateFilter.value = 'today';
       }
@@ -1127,7 +1110,7 @@ export class NavTransactionWidget extends Component {
     // Reset quick filter when manual date is selected
     const quickDateFilter = document.getElementById('quickDateFilter');
     if (quickDateFilter) quickDateFilter.value = '';
-    
+
     // Gọi lại API để áp dụng ngày đã chọn
     this.state.navCalculated = false;
     this.state.showCalculatedResults = false;
@@ -1141,12 +1124,12 @@ export class NavTransactionWidget extends Component {
   onQuickDateFilterChange(event) {
     const value = event.target.value;
     const singleDateFilter = document.getElementById('singleDateFilter');
-    
+
     if (!value) return;
-    
+
     const today = new Date();
     let targetDate = null;
-    
+
     switch (value) {
       case 'today':
         targetDate = today;
@@ -1164,12 +1147,12 @@ export class NavTransactionWidget extends Component {
       default:
         return;
     }
-    
+
     // Set single date filter
     if (targetDate && singleDateFilter) {
       singleDateFilter.value = targetDate.toISOString().split('T')[0];
     }
-    
+
     this.state.navCalculated = false;
     this.state.showCalculatedResults = false;
     this.state.calculatedTransactions = [];
@@ -1203,15 +1186,15 @@ export class NavTransactionWidget extends Component {
         console.error('State chưa được khởi tạo. Component chưa được setup.');
         return;
       }
-      
+
       this.state.loading = true;
       this.state.error = null;
-      
+
       // Load danh sách quỹ từ props (đã có sẵn)
       if (this.props.funds && this.props.funds.length > 0) {
         this.state.funds = this.props.funds;
       }
-      
+
       // Lấy fund_id từ state hoặc URL, ưu tiên state; nếu rỗng sẽ dùng fund đầu tiên (đã set ở setup)
       const urlParams = new URLSearchParams(window.location.search);
       let fundId = this.state.selectedFundId || urlParams.get('fund_id') || (this.state.funds && this.state.funds.length ? this.state.funds[0].id : null);
@@ -1243,7 +1226,7 @@ export class NavTransactionWidget extends Component {
       }
 
       const result = await response.json();
-      
+
       if (result.result && result.result.nav_transactions) {
         // Loại bỏ giao dịch bị xóa (soft delete) ngay từ đầu
         const validTransactions = result.result.nav_transactions.filter(tx => tx.active !== false);
@@ -1260,7 +1243,7 @@ export class NavTransactionWidget extends Component {
         this.updatePagination();
         this.loadChartData();
       }
-      
+
       this.state.loading = false;
       if (typeof window.hideSpinner === 'function') {
         window.hideSpinner();
@@ -1315,7 +1298,7 @@ export class NavTransactionWidget extends Component {
     try {
       if (!this.state.selectedTxIds) this.state.selectedTxIds = new Set();
       if (checked) this.state.selectedTxIds.add(tx.id); else this.state.selectedTxIds.delete(tx.id);
-    } catch (_) {}
+    } catch (_) { }
   }
 
   toggleSelectAll(force) {
@@ -1327,7 +1310,7 @@ export class NavTransactionWidget extends Component {
       if (shouldSelect) {
         for (const tx of all) this.state.selectedTxIds.add(tx.id);
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 
   getSelectedCount() {
@@ -1342,7 +1325,7 @@ export class NavTransactionWidget extends Component {
 
     const currentData = this.state.showCalculatedResults ? this.state.calculatedTransactions : this.state.filteredTransactions;
     const selected = (currentData || []).filter(tx => ids.includes(tx.id));
-    
+
     if (!selected.length) {
       return { valid: false, error: 'Không tìm thấy giao dịch đã chọn.' };
     }
@@ -1367,8 +1350,8 @@ export class NavTransactionWidget extends Component {
       return { valid: false, error: 'Các giao dịch đã chọn không còn units để xử lý (đã khớp hết).' };
     }
 
-    return { 
-      valid: true, 
+    return {
+      valid: true,
       data: {
         selected: validRemaining,
         buys: validRemaining.filter(tx => tx.transaction_type.toLowerCase() === 'buy'),
@@ -1380,25 +1363,25 @@ export class NavTransactionWidget extends Component {
   async handleMmBulkAction() {
     try {
       if (!this.state.navCalculated || !this.state.showCalculatedResults) {
-        this.showPopup({ 
-          title: 'Chưa đủ điều kiện', 
-          message: 'Vui lòng tính NAV và có kết quả lãi trước khi thực hiện MM.', 
-          type: 'warning' 
+        this.showPopup({
+          title: 'Chưa đủ điều kiện',
+          message: 'Vui lòng tính NAV và có kết quả lãi trước khi thực hiện MM.',
+          type: 'warning'
         });
         return;
       }
-      
+
       // Validate selected transactions
       const validation = this.validateSelectedTransactionsForMM();
       if (!validation.valid) {
-        this.showPopup({ 
-          title: 'Validation lỗi', 
-          message: validation.error, 
-          type: 'warning' 
+        this.showPopup({
+          title: 'Validation lỗi',
+          message: validation.error,
+          type: 'warning'
         });
         return;
       }
-      
+
       const { buys, sells } = validation.data;
 
       // Lọc lại theo tập ID có lãi từ server để đảm bảo đồng nhất backend
@@ -1420,30 +1403,30 @@ export class NavTransactionWidget extends Component {
 
       const res = await fetch('/api/transaction-list/market-maker/handle-remaining', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'X-Requested-With': 'XMLHttpRequest' 
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({ 
-          remaining_buys, 
-          remaining_sells 
+        body: JSON.stringify({
+          remaining_buys,
+          remaining_sells
         })
       });
-      
+
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
-      
+
       const data = await res.json();
       const ok = data && data.success;
-      
+
       // Tạo message chi tiết từ response
       let successMessage = '';
       if (ok && data.handled) {
         const buysHandled = data.handled.buys ? data.handled.buys.length : 0;
         const sellsHandled = data.handled.sells ? data.handled.sells.length : 0;
         const totalPairs = data.matched_pairs ? data.matched_pairs.length : 0;
-        
+
         successMessage = `Đã xử lý thành công:
         • ${buysHandled} lệnh mua của nhà đầu tư (NTL bán)
         • ${sellsHandled} lệnh bán của nhà đầu tư (NTL mua)
@@ -1452,16 +1435,16 @@ export class NavTransactionWidget extends Component {
 
       this.showPopup({
         title: ok ? 'Market Maker thành công' : 'Market Maker thất bại',
-        message: ok ? 
-          (successMessage || `Hệ thống đã xử lý ${remaining_buys.length} lệnh mua và ${remaining_sells.length} lệnh bán.`) : 
+        message: ok ?
+          (successMessage || `Hệ thống đã xử lý ${remaining_buys.length} lệnh mua và ${remaining_sells.length} lệnh bán.`) :
           ((data && data.error) || (data && data.message) || 'Có lỗi xảy ra từ server.'),
         type: ok ? 'success' : 'error'
       });
-      
+
       if (ok) {
         // Reset selection
         this.state.selectedTxIds = new Set();
-        
+
         // Hiển thị kết quả khớp nếu có (không chuyển tab)
         if (data.matched_pairs && data.matched_pairs.length > 0) {
           // Lưu matched pairs để hiển thị ở tab MM (nếu user muốn xem)
@@ -1469,17 +1452,17 @@ export class NavTransactionWidget extends Component {
             ...pair,
             _sourceType: 'market_maker'
           }));
-          
+
           // KHÔNG chuyển sang tab MM - chỉ hiển thị popup thành công
           // Cập nhật pagination cho matched orders (để sẵn sàng nếu user chuyển tab)
           this.state.matchedOrdersPagination.totalItems = this.state.matchedOrders.length;
           this.state.matchedOrdersPagination.currentPage = 1;
           this.updateMatchedOrdersDisplay();
         }
-        
+
         // Làm mới dữ liệu để cập nhật trạng thái
         await this.loadData();
-        
+
         // Giữ nguyên trạng thái sau khi MM: áp dụng lại tính NAV (nếu đang bật)
         if (this.state.navCalculated && this.state.showCalculatedResults) {
           await this.calculateNavValue();
@@ -1487,10 +1470,10 @@ export class NavTransactionWidget extends Component {
       }
     } catch (error) {
       console.error('Error in MM bulk action:', error);
-      this.showPopup({ 
-        title: 'Lỗi hệ thống', 
-        message: `Có lỗi xảy ra: ${error.message}`, 
-        type: 'error' 
+      this.showPopup({
+        title: 'Lỗi hệ thống',
+        message: `Có lỗi xảy ra: ${error.message}`,
+        type: 'error'
       });
     } finally {
       this.state.mmLoading = false;
@@ -1560,7 +1543,7 @@ export class NavTransactionWidget extends Component {
   getCcqRemainingClass(buyUnits, sellUnits, matchedCcq) {
     const buyRemaining = (buyUnits || 0) - (matchedCcq || 0);
     const sellRemaining = (sellUnits || 0) - (matchedCcq || 0);
-    
+
     if (buyRemaining > 0) return 'ccq-remaining-positive';
     if (buyRemaining < 0) return 'ccq-remaining-negative';
     return 'ccq-remaining-zero';
@@ -1590,14 +1573,14 @@ export class NavTransactionWidget extends Component {
           id: Math.floor(Math.random() * 1000000)
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const result = data.result;
-      
+
       if (result && result.funds) {
         this.state.funds = result.funds;
         console.log('Funds loaded:', result.funds.length, 'funds');
@@ -1615,7 +1598,7 @@ export class NavTransactionWidget extends Component {
     try {
       this.state.mmLoading = true;
       this.state.mmError = null;
-      
+
       // Load funds trước nếu chưa có
       if (!this.state.funds || this.state.funds.length === 0) {
         try {
@@ -1627,7 +1610,7 @@ export class NavTransactionWidget extends Component {
       } else {
         console.log('Funds already loaded:', this.state.funds.length, 'funds');
       }
-      
+
       // Gọi API để lấy danh sách cặp lệnh đã khớp (chỉ nhà tạo lập)
       // Thử HTTP endpoint trước
       let response;
@@ -1665,16 +1648,16 @@ export class NavTransactionWidget extends Component {
           })
         });
       }
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       console.log('Matched orders API response:', data);
       console.log('Response status:', response.status, 'OK:', response.ok);
-      
+
       // Handle both HTTP and JSON-RPC responses
       let result;
       if (data.result) {
@@ -1686,7 +1669,7 @@ export class NavTransactionWidget extends Component {
       } else {
         throw new Error('Invalid response format');
       }
-      
+
       if (result && result.success) {
         let allOrders = result.matched_pairs || result.data || [];
         console.log('All orders loaded:', allOrders.length, 'orders');
@@ -1718,13 +1701,13 @@ export class NavTransactionWidget extends Component {
 
         // Tạo filter động dựa trên dữ liệu thực tế
         this.createDynamicFilter(allOrders);
-        
+
         console.log('Matched orders loaded successfully:', {
           total: allOrders.length,
           displayed: this.state.displayedMatchedOrders.length,
           funds: this.state.fundOptions.length
         });
-        
+
         // Nếu không có dữ liệu, hiển thị thông báo
         if (allOrders.length === 0) {
           this.state.mmError = 'Không có lệnh mua bán của nhà tạo lập trong ngày';
@@ -1745,11 +1728,11 @@ export class NavTransactionWidget extends Component {
     // Phân tích tất cả các field có thể liên quan đến usertype
     const fieldAnalysis = {};
     const possibleFields = [
-      '_pairType', '_buyUserType', '_sellUserType', 
+      '_pairType', '_buyUserType', '_sellUserType',
       'buy_source', 'sell_source', 'buy_user_type', 'sell_user_type',
       'is_market_maker', 'buy_is_market_maker', 'sell_is_market_maker'
     ];
-    
+
     allOrders.forEach((order, index) => {
       if (index < 5) { // Chỉ phân tích 5 order đầu
         console.log(`Order ${index + 1} (ID: ${order.id}):`);
@@ -1765,7 +1748,7 @@ export class NavTransactionWidget extends Component {
         });
       }
     });
-    
+
     // In ra tất cả giá trị unique cho mỗi field
     // Tạo filter dựa trên phân tích
     this.state.dynamicFilter = fieldAnalysis;
@@ -1777,7 +1760,7 @@ export class NavTransactionWidget extends Component {
     const marketMakerOrders = allOrders.filter(order => {
       const buyUserType = order.buy_user_type || '';
       const sellUserType = order.sell_user_type || '';
-      
+
       // Lọc lệnh có ít nhất một bên là market maker
       return buyUserType === 'market_maker' || sellUserType === 'market_maker';
     });
@@ -1799,11 +1782,11 @@ export class NavTransactionWidget extends Component {
           id: Math.floor(Math.random() * 1000000)
         })
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       return data.result;
     } catch (error) {
@@ -1894,9 +1877,9 @@ export class NavTransactionWidget extends Component {
       }
 
       const [buyId, sellId] = pairId.split('-');
-      
+
       // Tìm thông tin cặp lệnh từ state
-      const matchedOrder = this.state.matchedOrders.find(order => 
+      const matchedOrder = this.state.matchedOrders.find(order =>
         String(order.buy_id) === buyId && String(order.sell_id) === sellId
       );
 
@@ -1934,14 +1917,14 @@ export class NavTransactionWidget extends Component {
       });
 
       const result = await response.json();
-      
+
       if (result.result && result.result.success) {
         // Thành công
         btnElement.innerHTML = '<i class="fas fa-check"></i>';
         btnElement.classList.add('sent');
         btnElement.style.backgroundColor = '#28a745';
         btnElement.title = 'Đã gửi lên sàn';
-        
+
         // Làm mờ row
         const row = btnElement.closest('tr');
         if (row) {
@@ -1960,7 +1943,7 @@ export class NavTransactionWidget extends Component {
         // Thất bại
         btnElement.innerHTML = originalHTML;
         btnElement.disabled = false;
-        
+
         this.showPopup({
           title: 'Gửi lên sàn thất bại',
           message: result.result?.message || 'Có lỗi xảy ra khi gửi lên sàn',
@@ -1969,11 +1952,11 @@ export class NavTransactionWidget extends Component {
       }
     } catch (error) {
       console.error('Error sending to exchange:', error);
-      
+
       // Reset button
       btnElement.innerHTML = '<i class="fas fa-paper-plane"></i>';
       btnElement.disabled = false;
-      
+
       this.showPopup({
         title: 'Lỗi hệ thống',
         message: `Có lỗi xảy ra: ${error.message}`,
@@ -1997,7 +1980,7 @@ export class NavTransactionWidget extends Component {
   restoreSentPairStates() {
     try {
       const sentPairs = JSON.parse(localStorage.getItem('sentExchangePairs') || '[]');
-      
+
       setTimeout(() => {
         sentPairs.forEach(pairId => {
           const btn = document.querySelector(`[data-pair-id="${pairId}"]`);
@@ -2006,7 +1989,7 @@ export class NavTransactionWidget extends Component {
             btn.classList.add('sent');
             btn.style.backgroundColor = '#28a745';
             btn.title = 'Đã gửi lên sàn';
-            
+
             const row = btn.closest('tr');
             if (row) {
               row.style.opacity = '0.6';
@@ -2029,13 +2012,13 @@ export class NavTransactionWidget extends Component {
   updateMatchedOrdersPagination() {
     this.state.matchedOrdersPagination.totalItems = this.state.filteredMatchedOrders.length;
     const { currentPage, itemsPerPage, totalItems } = this.state.matchedOrdersPagination;
-    
+
     // Ensure current page is valid
     const maxPage = Math.max(1, Math.ceil(totalItems / itemsPerPage));
     if (this.state.matchedOrdersPagination.currentPage > maxPage) {
-        this.state.matchedOrdersPagination.currentPage = maxPage;
+      this.state.matchedOrdersPagination.currentPage = maxPage;
     }
-    
+
     // Use filteredMatchedOrders instead of matchedOrders
     const start = (this.state.matchedOrdersPagination.currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
@@ -2219,7 +2202,7 @@ export class NavTransactionWidget extends Component {
 
       const body = document.createElement('div');
       body.className = 'nav-management-modal-body';
-      
+
       // Thêm icon lớn cho popup success
       if (type === 'success') {
         const iconContainer = document.createElement('div');
@@ -2234,7 +2217,7 @@ export class NavTransactionWidget extends Component {
         `;
         body.appendChild(iconContainer);
       }
-      
+
       const messageDiv = document.createElement('div');
       messageDiv.className = 'nav-management-modal-message';
       messageDiv.innerHTML = message || '';
@@ -2273,36 +2256,36 @@ export class NavTransactionWidget extends Component {
     // Chỉ tính cho quỹ đã chọn
     const fundId = this.state.selectedFundId ? Number(this.state.selectedFundId) : null;
     // Sử dụng filteredTransactions nếu có, ngược lại dùng transactions; sau đó lọc theo fund
-    const baseData = this.state.filteredTransactions && this.state.filteredTransactions.length > 0 
-      ? this.state.filteredTransactions 
+    const baseData = this.state.filteredTransactions && this.state.filteredTransactions.length > 0
+      ? this.state.filteredTransactions
       : this.state.transactions;
     const dataToCalculate = fundId
       ? baseData.filter(tx => Number(tx.fund_id || tx.buy_fund_id || tx.sell_fund_id || 0) === fundId)
       : baseData;
-    
+
     this.state.totalTransactions = dataToCalculate.length;
-    
+
     // Tính tổng giá trị NAV dựa trên remaining_units (số lượng còn lại)
     this.state.totalNavValue = dataToCalculate.reduce((sum, transaction) => {
       const navValue = Number(transaction.nav_value || 0);
       const remainingUnits = Number(transaction.remaining_units || (transaction.units - (transaction.matched_units || 0)) || 0);
       return sum + (navValue * remainingUnits);
     }, 0);
-    
+
     // Tính NAV trung bình theo weighted average (có trọng số theo remaining_units)
     const totalWeightedNav = dataToCalculate.reduce((sum, transaction) => {
       const navValue = Number(transaction.nav_value || 0);
       const remainingUnits = Number(transaction.remaining_units || (transaction.units - (transaction.matched_units || 0)) || 0);
       return sum + (navValue * remainingUnits);
     }, 0);
-    
+
     const totalUnits = dataToCalculate.reduce((sum, transaction) => {
       const remainingUnits = Number(transaction.remaining_units || (transaction.units - (transaction.matched_units || 0)) || 0);
       return sum + remainingUnits;
     }, 0);
-    
+
     this.state.averageNavValue = totalUnits > 0 ? totalWeightedNav / totalUnits : 0;
-    
+
     // Đếm giao dịch được tạo trong ngày hôm nay (theo quỹ đã chọn)
     this.calculateTodayTransactions(dataToCalculate);
   }
@@ -2310,32 +2293,32 @@ export class NavTransactionWidget extends Component {
   async calculateStatsFromAllTransactions(allTransactions) {
     // Tính statcard từ tất cả giao dịch (chờ khớp + khớp lệnh)
     const fundId = this.state.selectedFundId ? Number(this.state.selectedFundId) : null;
-    
+
     // Lọc giao dịch theo quỹ và loại bỏ giao dịch bị xóa (active = false)
     const dataToCalculate = allTransactions.filter(tx => {
       // Lọc theo quỹ
       const txFundId = Number(tx.fund_id || tx.buy_fund_id || tx.sell_fund_id || 0);
       if (fundId && txFundId !== fundId) return false;
-      
+
       // Loại bỏ giao dịch bị xóa (soft delete)
       if (tx.active === false) return false;
-      
+
       return true;
     });
-    
+
     // Tổng phiên giao dịch của quỹ - lấy tất cả giao dịch (chờ khớp + khớp lệnh)
     this.state.totalTransactions = dataToCalculate.length;
-    
+
     // Tổng giá trị NAV - lấy tổng giá trị NAV của tất cả giao dịch
     this.state.totalNavValue = dataToCalculate.reduce((sum, transaction) => {
       const navValue = Number(transaction.nav_value || 0);
       const units = Number(transaction.units || 0);
       return sum + (navValue * units);
     }, 0);
-    
+
     // Giá trị NAV trung bình - lấy từ tồn kho cuối ngày (theo công thức weighted average)
     await this.loadAverageNavPrice(fundId);
-    
+
     // Phiên ngày - chỉ lấy giao dịch trong ngày (chờ khớp + khớp lệnh)
     this.calculateTodayTransactions(dataToCalculate);
   }
@@ -2343,7 +2326,7 @@ export class NavTransactionWidget extends Component {
   async loadAverageNavPrice(fundId) {
     try {
       console.log(`Loading average NAV price for fund ${fundId}...`);
-      
+
       const response = await fetch('/nav_management/api/nav_average_price', {
         method: 'POST',
         headers: {
@@ -2360,11 +2343,11 @@ export class NavTransactionWidget extends Component {
           }
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('NAV average price API response:', result);
-        
+
         if (result.result && result.result.success) {
           const averagePrice = result.result.average_nav_price || 0;
           console.log(`Setting average NAV price: ${averagePrice}`);
@@ -2382,30 +2365,30 @@ export class NavTransactionWidget extends Component {
       this.state.averageNavValue = 0;
     }
   }
-  
+
 
   calculateTodayTransactions(scopedData) {
     // Lấy ngày hiện tại (chỉ ngày, không tính giờ)
     const today = new Date();
     const todayString = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toDateString();
-    
+
     // Dữ liệu đã lọc theo quỹ truyền vào; fallback như cũ nếu thiếu
     const dataToCount = Array.isArray(scopedData) && scopedData.length
       ? scopedData
-      : (this.state.filteredTransactions && this.state.filteredTransactions.length > 0 
-        ? this.state.filteredTransactions 
+      : (this.state.filteredTransactions && this.state.filteredTransactions.length > 0
+        ? this.state.filteredTransactions
         : this.state.transactions);
-    
+
     // Chỉ lấy giao dịch trong ngày (chờ khớp + khớp lệnh) và loại bỏ giao dịch bị xóa
     this.state.todayTransactions = dataToCount.filter(transaction => {
       // Loại bỏ giao dịch bị xóa (soft delete)
       if (transaction.active === false) return false;
-      
+
       // Ưu tiên created_at (có cả giờ phút), fallback về transaction_date hoặc create_date
       const dateToCheck = transaction.created_at || transaction.transaction_date || transaction.create_date;
-      
+
       if (!dateToCheck) return false;
-      
+
       // So sánh theo local-date để tránh lệch UTC
       const transactionDate = this.parseDateStringToLocal(dateToCheck);
       if (!(transactionDate instanceof Date) || isNaN(transactionDate)) return false;
@@ -2414,7 +2397,7 @@ export class NavTransactionWidget extends Component {
         transactionDate.getMonth(),
         transactionDate.getDate()
       ).toDateString();
-      
+
       return transactionDateString === todayString;
     }).length;
   }
@@ -2426,17 +2409,17 @@ export class NavTransactionWidget extends Component {
     this.state.totalPages = Math.ceil(totalItems / this.state.pageSize);
     this.state.startIndex = (this.state.currentPage - 1) * this.state.pageSize;
     this.state.endIndex = Math.min(this.state.startIndex + this.state.pageSize, totalItems);
-    
+
     // Generate page numbers
     const pages = [];
     const maxPages = 5;
     let startPage = Math.max(1, this.state.currentPage - Math.floor(maxPages / 2));
     let endPage = Math.min(this.state.totalPages, startPage + maxPages - 1);
-    
+
     if (endPage - startPage + 1 < maxPages) {
       startPage = Math.max(1, endPage - maxPages + 1);
     }
-    
+
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
@@ -2487,11 +2470,11 @@ export class NavTransactionWidget extends Component {
     // Date filter (single date or 7 days range)
     const singleDate = document.getElementById('singleDateFilter')?.value;
     const quickDateFilter = document.getElementById('quickDateFilter')?.value || '';
-    
+
     if (singleDate || quickDateFilter === 'last7days') {
       let fromTime = null;
       let toTime = null;
-      
+
       if (quickDateFilter === 'last7days') {
         // Lấy 7 ngày gần nhất
         const today = new Date();
@@ -2505,7 +2488,7 @@ export class NavTransactionWidget extends Component {
         fromTime = rng.fromTime;
         toTime = rng.toTime;
       }
-      
+
       if (fromTime !== null && toTime !== null) {
         filtered = filtered.filter(t => {
           const when = this.parseDateStringToLocal(t.created_at || t.transaction_date || t.create_date || null);
@@ -2560,13 +2543,13 @@ export class NavTransactionWidget extends Component {
     const arr = [];
     for (const tx of items) {
       if (fundId && tx.fund_id && Number(tx.fund_id) !== Number(fundId)) continue;
-      
+
       // Loại bỏ giao dịch bị xóa (soft delete)
       if (tx.active === false) continue;
-      
+
       // Chỉ lấy giao dịch đã khớp (completed) cho biểu đồ NAV
       if (tx.status !== 'approved' && tx.db_status !== 'completed') continue;
-      
+
       const dtStr = tx.created_at || tx.transaction_date || tx.create_date;
       if (!dtStr) continue;
       // Sử dụng parseDateStringToLocal để đảm bảo timezone đúng
@@ -2576,7 +2559,7 @@ export class NavTransactionWidget extends Component {
       const nav = Number(tx.nav_value || 0);
       arr.push({ x: ts, y: nav });
     }
-    arr.sort((a,b) => a.x - b.x);
+    arr.sort((a, b) => a.x - b.x);
     return arr;
   }
 
@@ -2612,10 +2595,10 @@ export class NavTransactionWidget extends Component {
       // destroy old chart bound to this canvas if any (Chart.js v4)
       const bound = window.Chart.getChart(canvas);
       if (bound) {
-        try { bound.destroy(); } catch (e) {}
+        try { bound.destroy(); } catch (e) { }
       }
       if (this._chart && typeof this._chart.destroy === 'function') {
-        try { this._chart.destroy(); } catch (e) {}
+        try { this._chart.destroy(); } catch (e) { }
         this._chart = null;
       }
 
@@ -2627,14 +2610,14 @@ export class NavTransactionWidget extends Component {
       const data = points.map(p => p.y);
 
       // Moving Averages theo số điểm (MA7/25/99)
-      const ma7  = this.computeMA(points, 7);
+      const ma7 = this.computeMA(points, 7);
       const ma25 = this.computeMA(points, 25);
       const ma99 = this.computeMA(points, 99);
 
       const minY = Math.min(...data);
       const maxY = Math.max(...data);
       const dataRange = maxY - minY;
-      
+
       // Đảm bảo padding tối thiểu 0.5% của giá trị trung bình để chart hiển thị rõ biến động
       const avgValue = (minY + maxY) / 2;
       const minPadding = avgValue * 0.005; // 0.5% của giá trị trung bình
@@ -2759,7 +2742,7 @@ export class NavTransactionWidget extends Component {
 
   exportData() {
     const dataToExport = this.state.filteredTransactions || [];
-    
+
     if (dataToExport.length === 0) {
       alert('Không có dữ liệu để xuất!');
       return;
@@ -2782,15 +2765,15 @@ export class NavTransactionWidget extends Component {
     ]);
 
     const csvContent = this.convertToCSV([headers, ...csvData]);
-    
+
     const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     const fileName = `nav_phiên_giao_dịch_${timestamp}.csv`;
-    
+
     this.downloadCSV(csvContent, fileName);
   }
 
   convertToCSV(data) {
-    return data.map(row => 
+    return data.map(row =>
       row.map(cell => {
         const cellStr = String(cell || '');
         if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
@@ -2804,7 +2787,7 @@ export class NavTransactionWidget extends Component {
   downloadCSV(content, fileName) {
     const blob = new Blob(['\ufeff' + content], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
@@ -2821,7 +2804,7 @@ export class NavTransactionWidget extends Component {
   async calculateNavValue() {
     try {
       console.log('Calculating NAV value...');
-      
+
       // Kiểm tra xem có quỹ được chọn không
       if (!this.state.selectedFundId) {
         this.showPopup({
@@ -2835,12 +2818,12 @@ export class NavTransactionWidget extends Component {
 
       // Hiển thị loading
       this.state.isCalculating = true;
-      
+
       // Lấy cấu hình cap - bắt buộc phải có từ backend (thử nạp lại nếu chưa có)
       if (!this.state.capConfig || this.state.capConfig.cap_upper == null || this.state.capConfig.cap_lower == null) {
         try {
           await this.loadConfigs();
-        } catch (_) {}
+        } catch (_) { }
       }
       if (!this.state.capConfig || this.state.capConfig.cap_upper == null || this.state.capConfig.cap_lower == null) {
         this.showPopup({
@@ -2851,10 +2834,10 @@ export class NavTransactionWidget extends Component {
         });
         return;
       }
-      
+
       const capUpper = Number(this.state.capConfig.cap_upper);
       const capLower = Number(this.state.capConfig.cap_lower);
-      
+
       // Lấy bộ lọc ngày từ form hiện tại
       const { fromDate, toDate } = this.getDateFilter();
 
@@ -2884,7 +2867,7 @@ export class NavTransactionWidget extends Component {
       }
 
       const result = await response.json();
-      
+
       if (result.result && result.result.success) {
         let profitableTransactions = result.result.transactions || [];
 
@@ -2892,16 +2875,16 @@ export class NavTransactionWidget extends Component {
         profitableTransactions = await this.computeMetricsServer(profitableTransactions);
         const totalCount = result.result.data?.total || 0;
         const profitableCount = result.result.data?.profitable || 0;
-        
+
         // Cập nhật state để hiển thị kết quả tính toán
         this.state.calculatedTransactions = profitableTransactions;
         this.state.showCalculatedResults = true;
         this.state.navCalculated = profitableTransactions.length > 0;
-      this.state.currentPage = 1;
+        this.state.currentPage = 1;
         this.updatePagination();
-      
+
         this.showPopup({
-        title: 'Tính giá trị NAV thành công',
+          title: 'Tính giá trị NAV thành công',
           message: `Đã tính được ${profitableCount}/${totalCount} lệnh có lãi theo điều kiện chênh lệch lãi suất (${capUpper}% - ${capLower}%).`,
           type: 'success'
         });
@@ -2933,10 +2916,10 @@ export class NavTransactionWidget extends Component {
     // Helper function để lấy filter ngày một cách nhất quán
     const singleDate = document.getElementById('singleDateFilter')?.value || null;
     const quickDateFilter = document.getElementById('quickDateFilter')?.value || '';
-    
+
     let fromDate = null;
     let toDate = null;
-    
+
     if (quickDateFilter === 'today') {
       // Hôm nay
       const today = new Date();
@@ -2951,14 +2934,14 @@ export class NavTransactionWidget extends Component {
       const today = new Date();
       const sevenDaysAgo = new Date(today);
       sevenDaysAgo.setDate(today.getDate() - 7);
-      
+
       fromDate = sevenDaysAgo.toISOString().split('T')[0];
       toDate = today.toISOString().split('T')[0];
     } else if (singleDate) {
       // Lọc theo ngày cụ thể được chọn
       fromDate = toDate = singleDate;
     }
-    
+
     return { fromDate, toDate };
   }
 
@@ -2975,7 +2958,7 @@ export class NavTransactionWidget extends Component {
     console.log('Refreshing data...');
     window.location.reload();
   }
-  
+
   async recalculateInventoryAfterTransactionChange(transactionId) {
     try {
       const response = await fetch('/nav_management/api/recalculate_inventory', {
@@ -2993,7 +2976,7 @@ export class NavTransactionWidget extends Component {
           }
         })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.result && result.result.success) {
@@ -3037,7 +3020,7 @@ export class NavTransactionWidget extends Component {
           }
         })
       });
-      
+
       // Lấy dữ liệu cho statcard - lấy tất cả giao dịch (chờ khớp + khớp lệnh)
       const statsResponse = await fetch('/nav_management/api/nav_transaction', {
         method: 'POST',
@@ -3058,28 +3041,28 @@ export class NavTransactionWidget extends Component {
           }
         })
       });
-      
+
       if (!chartResponse.ok || !statsResponse.ok) return;
-      
+
       const chartResult = await chartResponse.json();
       const statsResult = await statsResponse.json();
-      
+
       // Dữ liệu cho biểu đồ NAV (chỉ giao dịch đã khớp và chưa bị xóa)
       const chartList = (chartResult && chartResult.result && chartResult.result.nav_transactions) ? chartResult.result.nav_transactions : [];
       const validChartList = chartList.filter(tx => tx.active !== false);
       const chartEnriched = await this.computeMetricsServer(validChartList);
-      
+
       // Dữ liệu cho statcard (tất cả giao dịch chưa bị xóa)
       const statsList = (statsResult && statsResult.result && statsResult.result.nav_transactions) ? statsResult.result.nav_transactions : [];
       const validStatsList = statsList.filter(tx => tx.active !== false);
       const statsEnriched = await this.computeMetricsServer(validStatsList);
-      
+
       // Cập nhật nguồn dữ liệu cho chart (chỉ giao dịch đã khớp)
       this.state.allFundTransactions = chartEnriched;
-      
+
       // Tính thống kê dựa trên tất cả giao dịch (chờ khớp + khớp lệnh)
       await this.calculateStatsFromAllTransactions(statsEnriched);
-      
+
       // Tính series cho chart từ giao dịch đã khớp
       const series = this.computeIntradaySeries(chartEnriched);
       this.state.chartPoints = series;
@@ -3097,12 +3080,12 @@ export class NavTransactionWidget extends Component {
     try {
       const fundId = this.state.selectedFundId;
       if (!fundId) return;
-      
+
       console.log('Updating stat card for fund:', fundId);
-      
+
       // Cập nhật giá NAV trung bình từ tồn kho cuối ngày
       await this.loadAverageNavPrice(fundId);
-      
+
       console.log('Stat card updated. Average NAV value:', this.state.averageNavValue);
     } catch (e) {
       console.error('Error updating stat card:', e);

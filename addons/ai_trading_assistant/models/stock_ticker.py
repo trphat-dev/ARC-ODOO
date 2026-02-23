@@ -337,20 +337,31 @@ Nhiệm vụ của bạn:
         
         # 3. Tính toán Chỉ báo (Chỉ chạy khi có model AI)
         # Tích hợp số liệu thực tế từ FinRL Backtest để có độ chính xác cao nhất
-        ai_return = active_strategy.expected_return or 15.0
+        ai_return = active_strategy.expected_return or 15.0 # Nay đã là CAGR (Lãi suất Kép Hàng Năm)
         ai_drawdown = abs(active_strategy.max_drawdown or 5.0)
         
-        # Vùng mua động: Tính rủi ro theo Max Drawdown của model
-        buy_zone_low = sma_val * (1 - (ai_drawdown * 0.3 / 100))
+        # Chiến lược Swing Trade giả định nắm giữ 1 tháng (~21 ngày giao dịch)
+        holding_days = 21
+        
+        # Lãi kỳ vọng (Swing Return) được chiết khấu từ Tỷ suất sinh lời năm (CAGR)
+        swing_return = (ai_return / 252) * holding_days
+        # Đảm bảo mức chốt lời tối thiểu 2% để AI có biên độ gợi ý thực tế
+        swing_return = max(swing_return, 2.0)
+        # Nếu model quá xuất sắc, chặn lãi ngắn hạn ở mức 15% để tránh tâm lý fomo
+        swing_return = min(swing_return, 15.0)
+        
+        # Rủi ro ngắn hạn (Risk Buffer) được chiết khấu từ Max Drawdown năm
+        risk_buffer = (ai_drawdown / 252) * holding_days
+        # Ít nhất phải cắt lỗ 1.5% - Tối đa 8%
+        risk_buffer = min(max(risk_buffer, 1.5), 8.0)
+        
+        # Vùng mua động
+        buy_zone_low = sma_val * (1 - (risk_buffer / 100))
         buy_zone_high = sma_val * 1.01
         
-        # Mục tiêu linh hoạt theo Lãi kỳ vọng (Expected Return) của model
-        target_1 = latest_price * (1 + (ai_return * 0.5 / 100))
-        target_2 = latest_price * (1 + (ai_return / 100))
-        
-        # Chốt chặn an toàn nếu model cho ra return quá thấp
-        if target_1 <= latest_price * 1.02: target_1 = latest_price * 1.04
-        if target_2 <= latest_price * 1.02: target_2 = latest_price * 1.08
+        # Mục tiêu chốt lời (Target)
+        target_1 = latest_price * (1 + (swing_return * 0.5 / 100))  # Chốt nửa hàng
+        target_2 = latest_price * (1 + (swing_return / 100))        # Chốt hết
         
         tech_signal = "TRUNG TÍNH"
         if rsi_val > 70: tech_signal = "QUÁ MUA (CẨN TRỌNG)"
