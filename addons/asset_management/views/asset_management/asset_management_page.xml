@@ -31,7 +31,7 @@
 
             <!-- Pass data from controller to JavaScript -->
             <script type="text/javascript">
-                window.assetManagementData = <t t-raw="asset_data"/>;
+                window.assetManagementData = <t t-out="asset_data"/>;
             </script>
 
             <!-- Import JavaScript -->

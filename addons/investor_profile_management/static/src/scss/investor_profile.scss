@@ -825,12 +825,12 @@
     // Input & Select styles
     .form-control,
     .form-select {
-        border: 1px solid $border-color-light;
+        border: 1px solid rgba(0, 0, 0, 0.1); // subtle dark border for visibility on light background
         border-radius: $radius-md;
         padding: 0.75rem $spacing-md;
         font-size: 0.9rem;
         transition: all $transition-smooth;
-        background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.6); // increased opacity for better contrast
         backdrop-filter: blur(4px);
         width: 100%;
         font-variant-numeric: tabular-nums;

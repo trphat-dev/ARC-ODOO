@@ -21,7 +21,7 @@
             <!-- Pass data to JavaScript -->
             <script type="text/javascript">
                 <t t-if="access_denied_data">
-                window.accessDeniedData = <t t-raw="access_denied_data"/>;
+                window.accessDeniedData = <t t-out="access_denied_data"/>;
                 </t>
                 <t t-if="not access_denied_data">
                 window.accessDeniedData = {

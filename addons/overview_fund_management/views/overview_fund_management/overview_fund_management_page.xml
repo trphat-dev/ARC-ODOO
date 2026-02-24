@@ -61,7 +61,7 @@
       
       <!-- Pass data from controller to JavaScript -->
       <script type="text/javascript">
-        window.allDashboardData = <t t-raw="all_dashboard_data"/>;
+        window.allDashboardData = <t t-out="all_dashboard_data"/>;
         
         // Hàm tiện ích để hiển thị lỗi
         window.showError = function(message) {

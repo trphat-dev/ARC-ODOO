@@ -55,8 +55,8 @@
             <!-- Pass data from controller to JavaScript -->
             <script type="text/javascript">
                 window.navMonthlyData = {
-                    funds: <t t-raw="funds"/>,
-                    selected_fund_id: <t t-raw="selected_fund_id"/>
+                    funds: <t t-out="funds"/>,
+                    selected_fund_id: <t t-out="selected_fund_id"/>
                 };
                 
                 // Hàm tiện ích để hiển thị lỗi

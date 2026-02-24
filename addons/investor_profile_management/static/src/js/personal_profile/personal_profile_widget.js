@@ -668,7 +668,7 @@ class PersonalProfileWidget extends Component {
                     <i class="fa fa-check-circle"></i>
                   </div>
                 </t>
-                <div t-raw="state.modalMessage" class="mt-3"></div>
+                <div t-out="state.modalMessage" class="mt-3"></div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn" style="background-color:#f97316;border-color:#f97316;color:white" t-on-click="closeModal">Đóng</button>
@@ -2507,7 +2507,7 @@ class PersonalProfileWidget extends Component {
             let placeObj = ocrFields.issue_place;
             // Handle if issue_place is already a string
             if (typeof placeObj === 'string') {
-                 this.state.formData.id_issue_place = placeObj.trim();
+                this.state.formData.id_issue_place = placeObj.trim();
             } else {
                 // If it's undefined or complex object, rely on extracting it
                 // Re-use logic for extracting place string from getUpdatedFieldsList if needed
@@ -2521,7 +2521,7 @@ class PersonalProfileWidget extends Component {
             const extractionLogic = () => {
                 const data = ocrData;
                 if (data.issue_place && data.issue_place !== '-') return data.issue_place;
-                
+
                 const altFields = [data.noi_cap, data.place_of_issue, data.co_quan_cap, data.issued_by, data.noiCap, data.coQuanCap];
                 for (const f of altFields) {
                     if (f && f !== '-') return f;
@@ -2532,7 +2532,7 @@ class PersonalProfileWidget extends Component {
                     const info = data.post_code[0];
                     const city = info?.city?.[1];
                     const district = info?.district?.[1];
-                    
+
                     if (city) {
                         if (district && typeof district === 'string' && district.trim()) {
                             return `${district.trim()}, ${city}`;
@@ -2540,19 +2540,19 @@ class PersonalProfileWidget extends Component {
                         return city;
                     }
                 }
-                
+
                 // Check new_post_code
                 if (Array.isArray(data.new_post_code) && data.new_post_code.length > 0) {
-                     const info = data.new_post_code[0];
-                     const city = info?.city?.[1];
-                     const district = info?.district?.[1];
-                     
-                     if (city) {
-                         if (district && typeof district === 'string' && district.trim()) {
-                             return `${district.trim()}, ${city}`;
-                         }
-                         return city;
-                     }
+                    const info = data.new_post_code[0];
+                    const city = info?.city?.[1];
+                    const district = info?.district?.[1];
+
+                    if (city) {
+                        if (district && typeof district === 'string' && district.trim()) {
+                            return `${district.trim()}, ${city}`;
+                        }
+                        return city;
+                    }
                 }
                 return null;
             };
@@ -2813,7 +2813,7 @@ class PersonalProfileWidget extends Component {
                 console.warn(`⚠️ Invalid date values: ${day}/${month}/${year}`);
                 return '';
             }
-            
+
             const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             console.log(`📅 Date formatted: "${cleanDateStr}" -> "${formattedDate}"`);
             return formattedDate;

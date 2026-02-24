@@ -55,8 +55,8 @@
             <!-- Pass data from controller to JavaScript -->
             <script type="text/javascript">
                 window.navTransactionData = {
-                    funds: <t t-raw="funds_json"/>,
-                    selected_fund_id: <t t-raw="selected_fund_id_json"/>
+                    funds: <t t-out="funds_json"/>,
+                    selected_fund_id: <t t-out="selected_fund_id_json"/>
                 };
                 
                 // Hàm tiện ích để hiển thị lỗi

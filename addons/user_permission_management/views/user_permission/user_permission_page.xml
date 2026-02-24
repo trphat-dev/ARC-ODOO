@@ -52,7 +52,7 @@
             <!-- Pass data and helper methods -->
             <script type="text/javascript">
                 <t t-if="user_permission_data">
-                window.userPermissionData = <t t-raw="user_permission_data"/>;
+                window.userPermissionData = <t t-out="user_permission_data"/>;
                 </t>
                 <t t-if="not user_permission_data">
                 window.userPermissionData = {};

@@ -53,7 +53,7 @@
 
             <!-- Pass data and helper methods (align with nav_transaction_page pattern) -->
             <script type="text/javascript">
-                window.dashboardData = <t t-raw="dashboard_data"/>;
+                window.dashboardData = <t t-out="dashboard_data"/>;
                 
                 window.showError = function(message) {
                     const errorContainer = document.getElementById('error-container');

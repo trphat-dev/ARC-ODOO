@@ -52,7 +52,7 @@
             <!-- Pass data to JavaScript -->
             <script type="text/javascript">
                 // Parse the JSON data from controller
-                var dashboardData = <t t-raw="all_dashboard_data or '{}'"/>;
+                var dashboardData = <t t-out="all_dashboard_data or '{}'"/>;
                 window.allDashboardData = {
                     investors: dashboardData.investors || []
                 };
