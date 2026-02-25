@@ -937,20 +937,24 @@ export class NegotiatedOrdersComponent extends Component {
                     const json = await resBulk.json();
                     const result = json.result || json; // Handle Odoo wrapper
 
-                    if (result && result.success) {
-                        // Case: Bulk success all
-                        successIds = [...ids];
-                    } else if (result && result.results) {
-                        // Case: Mixed results
+                    if (result && result.results && Array.isArray(result.results)) {
+                        // Backend new format: list of results per order
                         result.results.forEach(r => {
                             if (r.success) {
-                                successIds.push(String(r.id));
+                                successIds.push(String(r.matched_id || r.id));
                             } else {
-                                errors.push(r.message || `Lỗi không xác định (ID: ${r.id})`);
+                                if (r.errors && r.errors.length > 0) {
+                                    errors.push(...r.errors);
+                                } else {
+                                    errors.push(r.message || `Lỗi không xác định (ID: ${r.matched_id || r.id})`);
+                                }
                             }
                         });
+                    } else if (result && result.success) {
+                        // Fallback support logic cũ (nếu có update all success)
+                        successIds = [...ids];
                     } else {
-                        // Case: Global failure (e.g. no account config)
+                        // Global logic failure
                         throw new Error(result.message || result.error || "Gửi thất bại");
                     }
                 } else {
@@ -987,20 +991,57 @@ export class NegotiatedOrdersComponent extends Component {
 
                 // Thông báo thành công
                 const msg = `Đã gửi thành công ${successIds.length} lệnh lên sàn.`;
-                this.showToast(msg, 'success');
+                if (window.Swal) {
+                    window.Swal.fire({
+                        title: 'Thành công!',
+                        text: msg,
+                        icon: 'success',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    this.showToast(msg, 'success');
+                }
             }
 
             if (errors.length > 0) {
-                // Hiển thị lỗi đầu tiên hoặc tổng hợp
                 const uniqueErrors = [...new Set(errors)];
-                const errMsg = uniqueErrors.length === 1
-                    ? uniqueErrors[0]
-                    : `${uniqueErrors.length} lệnh gửi thất bại. ${uniqueErrors[0]}...`;
+                if (window.Swal) {
+                    let errorHtml = '<div style="text-align: left; max-height: 200px; overflow-y: auto;">';
+                    errorHtml += '<ul style="margin-top: 10px; padding-left: 20px;">';
+                    const displayErrors = uniqueErrors.slice(0, 10);
+                    displayErrors.forEach(err => {
+                        errorHtml += `<li>${err}</li>`;
+                    });
+                    errorHtml += '</ul>';
+                    if (uniqueErrors.length > 10) {
+                        errorHtml += `<div style="font-style: italic; margin-top: 10px;">... và ${uniqueErrors.length - 10} lỗi khác.</div>`;
+                    }
+                    errorHtml += '</div>';
 
-                // Hiển thị toast lỗi (quan trọng: hiển thị Error thay vì Success giả)
-                this.showToast(errMsg, 'danger');
+                    window.Swal.fire({
+                        title: 'Gửi lên sàn có lỗi',
+                        html: errorHtml,
+                        icon: 'error',
+                        confirmButtonText: 'Đóng'
+                    });
+                } else {
+                    const errMsg = uniqueErrors.length === 1
+                        ? uniqueErrors[0]
+                        : `${uniqueErrors.length} lệnh gửi thất bại. ${uniqueErrors[0]}...`;
+                    this.showToast(errMsg, 'danger');
+                }
             } else if (successIds.length === 0 && errors.length === 0) {
-                this.showToast("Không thể kết nối tới server hoặc phản hồi không hợp lệ.", 'danger');
+                if (window.Swal) {
+                    window.Swal.fire({
+                        title: 'Lỗi hệ thống',
+                        text: 'Không thể kết nối tới server hoặc phản hồi không hợp lệ.',
+                        icon: 'error',
+                        confirmButtonText: 'Đóng'
+                    });
+                } else {
+                    this.showToast("Không thể kết nối tới server hoặc phản hồi không hợp lệ.", 'danger');
+                }
             }
 
             // Reload data ngầm để sync status chính xác nhất

@@ -16,7 +16,7 @@ import { Component, useState, onMounted, onWillStart, xml } from "@odoo/owl";
 export class NormalOrderFormComponent extends Component {
     static template = xml`
         <div class="normal-order-form-container">
-            <div class="normal-order-form">
+            <div t-att-class="'normal-order-form' + (!state.eligible ? ' opacity-50 pe-none' : '')">
                 
                 <!-- Fund Selection (matching negotiated order form style) -->
                 <div class="mb-3">
@@ -198,7 +198,7 @@ export class NormalOrderFormComponent extends Component {
             selectedFundId: null,
             searchQuery: '',
             showDropdown: false,
-            
+
             // Market Info & Purchasing Power
             purchasingPower: 0,
             cashBalance: 0,
@@ -209,13 +209,13 @@ export class NormalOrderFormComponent extends Component {
             ceilingPrice: 0,
             floorPrice: 0,
             volume: 0,
-            
+
             // Order Types with time-based locking
             orderTypes: this.getDefaultOrderTypes(),
             orderType: '',
             isPriceReadonly: false,
             isMarketOrder: false,
-            
+
             // Form
             amount: 0,
             formattedAmount: '',
@@ -224,7 +224,7 @@ export class NormalOrderFormComponent extends Component {
             price: 0,
             formattedPrice: '',
             estimatedTotal: 0,
-            
+
             // Validation
             isValid: false,
             lotSizeError: '',
@@ -235,39 +235,43 @@ export class NormalOrderFormComponent extends Component {
             liquidityWarning: '',
             submitting: false,
             debugMode: false,
+            // Eligibility
+            accountApproved: false,
+            hasTradingAccount: false,
+            eligible: false,
         });
-        
+
         this.LOT_SIZE = 1;
-        
+
         onWillStart(async () => {
-             // Init with passed fundId if any
-             if (this.props.fundId) {
+            // Init with passed fundId if any
+            if (this.props.fundId) {
                 this.state.selectedFundId = this.props.fundId;
-             }
-             await this.loadMarketInfo();
-             this.updateOrderTypesAvailability();
+            }
+            await this.loadMarketInfo();
+            this.updateOrderTypesAvailability();
         });
-        
+
         onMounted(() => {
             // Refresh market info every 30s
             this.refreshInterval = setInterval(() => {
                 this.loadMarketInfo(true);
             }, 30000);
-            
+
             // Update order type availability every minute
             this.orderTypeInterval = setInterval(() => {
                 this.updateOrderTypesAvailability();
             }, 60000);
-            
+
             // Listen for submit trigger from main button
             this.submitHandler = () => this.submitNormalOrder();
             document.addEventListener('trigger-normal-submit', this.submitHandler);
-            
+
             // Close dropdown when clicking outside
             document.addEventListener('click', this.handleOutsideClick.bind(this));
         });
     }
-    
+
     willUnmount() {
         if (this.refreshInterval) clearInterval(this.refreshInterval);
         if (this.orderTypeInterval) clearInterval(this.orderTypeInterval);
@@ -276,42 +280,42 @@ export class NormalOrderFormComponent extends Component {
         }
         document.removeEventListener('click', this.handleOutsideClick.bind(this));
     }
-    
+
     handleOutsideClick(e) {
         if (!e.target.closest('.fund-search-wrapper')) {
             this.state.showDropdown = false;
         }
     }
-    
+
     getDefaultOrderTypes() {
         return [
-            { 
-                value: 'LO', 
-                label: 'LO', 
+            {
+                value: 'LO',
+                label: 'LO',
                 full_label: 'Lệnh giới hạn',
                 time_range: '09:00 - 14:30',
                 enabled: true,
                 reason: ''
             },
-            { 
-                value: 'ATO', 
-                label: 'ATO', 
+            {
+                value: 'ATO',
+                label: 'ATO',
                 full_label: 'Lệnh mở cửa',
                 time_range: '09:00 - 09:15',
                 enabled: true,
                 reason: ''
             },
-            { 
-                value: 'ATC', 
-                label: 'ATC', 
+            {
+                value: 'ATC',
+                label: 'ATC',
                 full_label: 'Lệnh đóng cửa',
                 time_range: '14:30 - 14:45',
                 enabled: true,
                 reason: ''
             },
-            { 
-                value: 'MTL', 
-                label: 'MTL', 
+            {
+                value: 'MTL',
+                label: 'MTL',
                 full_label: 'Lệnh thị trường',
                 time_range: '09:15 - 14:30',
                 enabled: true,
@@ -319,30 +323,30 @@ export class NormalOrderFormComponent extends Component {
             },
         ];
     }
-    
+
     // Search & Fund Selection
     onSearchInput(e) {
         const query = e.target.value.toLowerCase();
         this.state.searchQuery = e.target.value;
         this.state.showDropdown = true;
-        
+
         if (query.length === 0) {
             this.state.filteredFunds = this.state.funds;
         } else {
-            this.state.filteredFunds = this.state.funds.filter(fund => 
+            this.state.filteredFunds = this.state.funds.filter(fund =>
                 fund.ticker.toLowerCase().includes(query) ||
                 fund.name.toLowerCase().includes(query)
             );
         }
     }
-    
+
     selectFund(fund) {
         this.state.selectedFundId = fund.id;
         this.state.searchQuery = `${fund.ticker} - ${fund.name}`;
         this.state.showDropdown = false;
         this.updateFundInfo();
     }
-    
+
     async loadMarketInfo(silent = false) {
         try {
             const response = await fetch('/api/fund/normal-order/market-info', {
@@ -354,27 +358,73 @@ export class NormalOrderFormComponent extends Component {
                     params: {}
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.result && result.result.success) {
                 this.state.funds = result.result.funds || [];
                 this.state.filteredFunds = this.state.funds;
-                
+
+                // Eligibility
+                this.state.accountApproved = result.result.account_approved || false;
+                this.state.hasTradingAccount = result.result.has_trading_account || false;
+                this.state.eligible = result.result.eligible || false;
+
                 // If we have selected fund, update its info (NAV, Market)
                 if (this.state.selectedFundId) {
                     this.updateFundInfo(true); // Preserve user input on refresh
                 }
+
+                // Show popup warning if not eligible
+                if (!this.state.eligible) {
+                    let warningText = '';
+                    let confirmText = 'OK';
+                    let redirectUrl = '';
+
+                    if (!this.state.accountApproved && !this.state.hasTradingAccount) {
+                        warningText = 'Tài khoản của bạn cần được cập nhật thông tin cá nhân và liên kết tài khoản chứng khoán trước khi đặt lệnh.';
+                        confirmText = 'Đến Trang Tài Khoản';
+                        redirectUrl = '/my-account';
+                    } else if (!this.state.accountApproved) {
+                        warningText = 'Tài khoản của bạn cần được cập nhật thông tin cá nhân trước khi đặt lệnh.';
+                        confirmText = 'Cập Nhật Thông Tin';
+                        redirectUrl = '/personal_profile';
+                    } else if (!this.state.hasTradingAccount) {
+                        warningText = 'Bạn cần liên kết tài khoản chứng khoán trước khi đặt lệnh.';
+                        confirmText = 'Liên Kết Ngay';
+                        redirectUrl = '/my-account';
+                    }
+
+                    if (typeof Swal !== 'undefined') {
+                        // Prevent multiple popups if already shown
+                        if (!window.normalEligibilityAlertShown) {
+                            window.normalEligibilityAlertShown = true;
+                            Swal.fire({
+                                title: 'Chưa đủ điều kiện đặt lệnh',
+                                text: warningText,
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: confirmText,
+                                cancelButtonText: 'Đóng',
+                                confirmButtonColor: '#F26522'
+                            }).then((result) => {
+                                if (result.isConfirmed && redirectUrl) {
+                                    window.location.href = redirectUrl;
+                                }
+                            });
+                        }
+                    }
+                }
             }
-            
+
             // Load purchasing power from stock_trading API
             await this.loadPurchasingPower();
-            
+
         } catch (error) {
             console.error('[NormalOrderForm] Error loading market info:', error);
         }
     }
-    
+
     async loadPurchasingPower() {
         try {
             const response = await fetch('/api/trading/v1/purchasing-power', {
@@ -386,67 +436,67 @@ export class NormalOrderFormComponent extends Component {
                     params: {}
                 })
             });
-            
+
             const result = await response.json();
             console.log('[NormalOrderForm] Purchasing power API response:', result);
-            
+
             if (result.result) {
                 const data = result.result.data || {};
-                
+
                 // Parse values from API response
                 const purchasingPower = parseFloat(data.purchasing_power || 0);
                 const cashBalance = parseFloat(data.cash_balance || 0);
                 const availableCash = parseFloat(data.available_cash || 0);
-                
+
                 this.state.purchasingPower = purchasingPower;
                 this.state.cashBalance = cashBalance;
                 this.state.availableCash = availableCash;
-                
+
                 this.state.availableCash = availableCash;
-                
+
                 // Update max buy units if NAV is available
                 // Tính số lượng tối đa có thể mua (không làm tròn theo lô để hiển thị chính xác khả năng mua)
                 if (this.state.navPrice > 0) {
-                     let calcPrice = this.state.price > 0 ? this.state.price : this.state.navPrice;
-                     
-                     // If Market Order use Ceiling Price
-                     if (this.state.isMarketOrder) {
-                         // STRICT: Use Ceiling Price only. No mock data.
-                         calcPrice = this.state.ceilingPrice; 
-                     }
-                     
-                     if (calcPrice > 0) {
+                    let calcPrice = this.state.price > 0 ? this.state.price : this.state.navPrice;
+
+                    // If Market Order use Ceiling Price
+                    if (this.state.isMarketOrder) {
+                        // STRICT: Use Ceiling Price only. No mock data.
+                        calcPrice = this.state.ceilingPrice;
+                    }
+
+                    if (calcPrice > 0) {
                         this.state.maxBuyUnits = Math.floor(purchasingPower / calcPrice);
-                     } else {
+                    } else {
                         this.state.maxBuyUnits = 0;
-                     }
+                    }
                 }
-                
+
                 console.log('[NormalOrderForm] Purchasing power loaded:', { purchasingPower, cashBalance, availableCash });
             }
         } catch (error) {
             console.error('[NormalOrderForm] Error loading purchasing power:', error);
         }
     }
-    
+
     onFundChange(e) {
         const fundId = parseInt(e.target.value);
         this.state.selectedFundId = fundId || null;
         this.updateFundInfo();
-        
+
         // Reset calculation and selection
-        this.state.orderType = ''; 
+        this.state.orderType = '';
         // this.calculateQuantity(); // REMOVED as Amount input is gone
         this.validateForm();
-        
+
         // Load order types for this fund's market
         if (fundId) {
             this.loadOrderTypes();
         } else {
-             this.state.availableOrderTypes = [];
+            this.state.availableOrderTypes = [];
         }
     }
-    
+
     updateFundInfo(preserveInput = false) {
         if (!this.state.selectedFundId) {
             this.state.market = 'HOSE';
@@ -457,7 +507,7 @@ export class NormalOrderFormComponent extends Component {
             this.state.maxBuyUnits = 0;
             return;
         }
-        
+
         const fund = this.state.funds.find(f => f.id === this.state.selectedFundId);
         if (fund) {
             this.state.market = fund.market || 'HOSE';
@@ -467,41 +517,41 @@ export class NormalOrderFormComponent extends Component {
             this.state.ceilingPrice = fund.ceiling_price || fund.high_price || 0;
             this.state.floorPrice = fund.floor_price || fund.low_price || 0;
             this.state.volume = fund.volume || 0;
-            
+
             // Default price to NAV/Ref if Price Input is empty or new fund selected
             if (!this.state.isMarketOrder && !preserveInput) {
-                 this.state.price = this.state.navPrice;
-                 this.state.formattedPrice = this.state.navPrice.toLocaleString('vi-VN');
+                this.state.price = this.state.navPrice;
+                this.state.formattedPrice = this.state.navPrice.toLocaleString('vi-VN');
             }
 
-            
+
             this.checkOrderTypeConstraints();
-            
+
             // Recalculate max buy units
             if (this.state.navPrice > 0) {
-                 this.state.maxBuyUnits = Math.floor(this.state.purchasingPower / this.state.navPrice);
+                this.state.maxBuyUnits = Math.floor(this.state.purchasingPower / this.state.navPrice);
             } else {
-                 this.state.maxBuyUnits = 0;
+                this.state.maxBuyUnits = 0;
             }
         }
     }
-    
+
     checkOrderTypeConstraints() {
         if (this.state.orderType) {
             this.onOrderTypeChange({ target: { value: this.state.orderType } });
         }
     }
-    
+
     checkLotSize() {
         this.state.lotSizeError = '';
         this.state.liquidityWarning = '';
-        
+
         if (this.state.quantity > 0) {
             // Check Lot Size
             if (this.state.quantity % this.LOT_SIZE !== 0) {
                 this.state.lotSizeError = `Số lượng phải theo lô ${this.LOT_SIZE}`;
             }
-            
+
             // Check Liquidity Warning (ATC with > 10% Avg Volume)
             // Or general check. User said "ATC with large quantity".
             // Let's apply for all or just ATC? "Cảnh báo ... nếu user đặt lệnh ATC với số lượng quá lớn"
@@ -524,28 +574,28 @@ export class NormalOrderFormComponent extends Component {
                     params: { fund_id: fundId ? parseInt(fundId) : null }
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.result && result.result.success) {
                 const backendTypes = result.result.order_types || [];
                 const serverTime = result.result.server_time;
                 console.log(`[NormalOrderForm] Server Time: ${serverTime}, Types:`, backendTypes);
-                
+
                 // Strict mapping: Backend returns 'value' key, NOT 'code'
                 this.state.orderTypes = this.state.orderTypes.map(uiType => {
-                     const backendType = backendTypes.find(bt => bt.value === uiType.value);
-                     if (backendType) {
-                         return {
-                             ...uiType,
-                             enabled: backendType.enabled,
-                             reason: backendType.enabled ? '' : backendType.reason
-                         };
-                     }
-                     // Not found in backend => Disable strictly
-                     return { ...uiType, enabled: false, reason: 'Không hỗ trợ' };
+                    const backendType = backendTypes.find(bt => bt.value === uiType.value);
+                    if (backendType) {
+                        return {
+                            ...uiType,
+                            enabled: backendType.enabled,
+                            reason: backendType.enabled ? '' : backendType.reason
+                        };
+                    }
+                    // Not found in backend => Disable strictly
+                    return { ...uiType, enabled: false, reason: 'Không hỗ trợ' };
                 });
-                
+
                 // Re-validate current selection
                 if (this.state.orderType) {
                     const current = this.state.orderTypes.find(ot => ot.value === this.state.orderType);
@@ -578,11 +628,11 @@ export class NormalOrderFormComponent extends Component {
             this.state.orderTypes = this.state.orderTypes.map(t => ({ ...t, enabled: false, reason: 'Lỗi kết nối mạng' }));
         }
     }
-    
+
     updateOrderTypesAvailability() {
         this.loadOrderTypes();
     }
-    
+
     selectOrderType(ot) {
         if (ot.enabled) {
             this.onOrderTypeChange({ target: { value: ot.value } });
@@ -592,29 +642,29 @@ export class NormalOrderFormComponent extends Component {
     onOrderTypeChange(e) {
         const type = e.target.value;
         this.state.orderType = type;
-        
+
         const isMarket = ['ATO', 'ATC', 'MP', 'MTL', 'MOK', 'MAK'].includes(type);
         this.state.isMarketOrder = isMarket;
         this.state.isPriceReadonly = isMarket;
-        
+
         if (isMarket) {
             this.state.formattedPrice = type; // Display "ATO", "ATC"...
             this.state.price = 0; // Price 0 means use Market logic
         } else {
             // Restore price to NAV or last input if LO
-             // ONLY reset to NAV if current price is 0 (e.g. coming from Market Order)
-             if (this.state.price === 0 && this.state.navPrice > 0) {
-                 this.state.price = this.state.navPrice;
-                 this.state.formattedPrice = this.state.navPrice.toLocaleString('vi-VN');
-             } else if (this.state.price > 0) {
-                 // Keep existing custom price
-                 this.state.formattedPrice = this.state.price.toLocaleString('vi-VN');
-             } else {
-                 this.state.formattedPrice = '';
-                 this.state.price = 0;
-             }
+            // ONLY reset to NAV if current price is 0 (e.g. coming from Market Order)
+            if (this.state.price === 0 && this.state.navPrice > 0) {
+                this.state.price = this.state.navPrice;
+                this.state.formattedPrice = this.state.navPrice.toLocaleString('vi-VN');
+            } else if (this.state.price > 0) {
+                // Keep existing custom price
+                this.state.formattedPrice = this.state.price.toLocaleString('vi-VN');
+            } else {
+                this.state.formattedPrice = '';
+                this.state.price = 0;
+            }
         }
-        
+
         // Recalculate max buy units based on new constraint (Ceiling vs Price)
         // We trigger validation which triggers logic check
         this.validateForm();
@@ -627,13 +677,13 @@ export class NormalOrderFormComponent extends Component {
     onPriceInput(e) {
         // Only for LO
         if (this.state.isPriceReadonly) return;
-        
+
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         const price = parseInt(rawValue) || 0;
-        
+
         this.state.price = price;
         this.state.formattedPrice = price > 0 ? price.toLocaleString('vi-VN') : '';
-        
+
         this.calculateTotalFromPriceQuantity();
         this.validateForm(); // This updates isValid and priceError
         // updateRightSidebar is called inside validateForm, which disables the button
@@ -659,27 +709,27 @@ export class NormalOrderFormComponent extends Component {
             return Math.ceil(num / step) * step;
         }
     }
-    
+
     // ... Removed onAmountInput logic ...
-    
+
     onQuantityInput(e) {
         const rawValue = e.target.value.replace(/[^0-9]/g, '');
         const quantity = parseInt(rawValue) || 0;
-        
+
         this.state.quantity = quantity;
         this.state.formattedQuantity = quantity > 0 ? quantity.toLocaleString('vi-VN') : '';
-        
+
         this.calculateTotalFromPriceQuantity();
         this.validateForm();
     }
-    
+
     calculateTotalFromPriceQuantity() {
         // Use Input Price for LO, or Estimate Price (NAV) for Market - Display Purpose
         let calcPrice = this.state.price;
         if (this.state.isMarketOrder) {
-             calcPrice = this.state.navPrice;
+            calcPrice = this.state.navPrice;
         }
-        
+
         if (calcPrice > 0 && this.state.quantity > 0) {
             this.state.amount = calcPrice * this.state.quantity;
             this.state.formattedAmount = this.state.amount.toLocaleString('vi-VN');
@@ -691,13 +741,13 @@ export class NormalOrderFormComponent extends Component {
         }
         // Removed checkLotSize()
     }
-    
+
     // Removed calculateQuantityFromAmount
-    
+
     calculateAmountFromQuantity() {
         this.calculateTotalFromPriceQuantity();
     }
-    
+
     // Removed checkLotSize() implementation
 
     updateRightSidebar() {
@@ -714,26 +764,26 @@ export class NormalOrderFormComponent extends Component {
         }
 
         if (summaryUnits) summaryUnits.textContent = this.state.quantity > 0 ? this.state.quantity.toLocaleString('vi-VN') : '0';
-        
+
         // For Normal Order, Investment Amount ~= Total Amount (fee included or excluded depending on logic, keeping simple for now)
         if (summaryInvestAmount) summaryInvestAmount.textContent = this.state.amount > 0 ? this.state.amount.toLocaleString('vi-VN') + 'đ' : '0đ';
         if (summaryAmount) summaryAmount.textContent = this.state.amount > 0 ? this.state.amount.toLocaleString('vi-VN') + 'đ' : '0đ';
-        
+
         // Total Estimated
         if (summaryTotal) summaryTotal.textContent = this.state.estimatedTotal > 0 ? this.state.estimatedTotal.toLocaleString('vi-VN') + 'đ' : '0đ';
-        
+
         // Fee (Estimate or Real)
         // For now, set to 0 or calculate if needed. Fund Buy JS calculates it.
         // Fee (Estimate or Real)
         // For now, set to 0 or calculate if needed. Fund Buy JS calculates it.
-        if (summaryFee) summaryFee.textContent = '0đ'; 
-        
+        if (summaryFee) summaryFee.textContent = '0đ';
+
         // Update Submit Button State (Shared Button)
         const paymentBtn = document.getElementById('payment-btn');
         if (paymentBtn) {
             paymentBtn.disabled = !this.state.isValid;
             paymentBtn.style.opacity = this.state.isValid ? '1' : '0.5';
-            
+
             // Optional: Update text to indicate Normal Order action if needed
             // But 'Tiếp tục' is fine.
         }
@@ -741,20 +791,20 @@ export class NormalOrderFormComponent extends Component {
 
     validateForm() {
         const isTxBuy = this.props.transactionType !== 'sell';
-        
+
         // Price Validation (Limit Order)
         this.state.priceError = '';
         if (!this.state.debugMode && !this.state.isMarketOrder && this.state.selectedFundId && this.state.price > 0) {
             // Check Ceiling
             if (this.state.ceilingPrice > 0 && this.state.price > this.state.ceilingPrice) {
-                 this.state.priceError = `Giá đặt phải nhỏ hơn hoặc bằng giá trần (${this.formatNumber(this.state.ceilingPrice)})`;
+                this.state.priceError = `Giá đặt phải nhỏ hơn hoặc bằng giá trần (${this.formatNumber(this.state.ceilingPrice)})`;
             }
             // Check Floor
             else if (this.state.floorPrice > 0 && this.state.price < this.state.floorPrice) {
-                 this.state.priceError = `Giá đặt phải lớn hơn hoặc bằng giá sàn (${this.formatNumber(this.state.floorPrice)})`;
+                this.state.priceError = `Giá đặt phải lớn hơn hoặc bằng giá sàn (${this.formatNumber(this.state.floorPrice)})`;
             }
         }
-        
+
         // Purchasing Power Error (Warning Only - Allow Proceed)
         this.state.purchasingPowerError = '';
         /* 
@@ -768,22 +818,23 @@ export class NormalOrderFormComponent extends Component {
         */
 
         this.state.isValid = (
+            this.state.eligible &&
             this.state.selectedFundId &&
             this.state.quantity > 0 &&
             this.state.orderType &&
             // !this.state.purchasingPowerError &&  <-- REMOVED BLOCK
             !this.state.priceError
         );
-        
+
         // Update Sidebar whenever validation runs (state changed)
         this.updateRightSidebar();
     }
-    
+
     async submitNormalOrder() {
         if (!this.state.isValid || this.state.submitting) return;
-        
+
         this.state.submitting = true;
-        
+
         // 1. Show Loading
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -792,11 +843,11 @@ export class NormalOrderFormComponent extends Component {
                 didOpen: () => Swal.showLoading()
             });
         }
-        
+
         try {
             // 2. Refresh Market Info (Purchasing Power)
             await this.loadMarketInfo(true);
-            
+
             // 3. Calculate Required Amount
             let requiredAmount = this.state.amount;
             if (this.state.isMarketOrder) {
@@ -804,50 +855,50 @@ export class NormalOrderFormComponent extends Component {
                 const checkPrice = this.state.ceilingPrice > 0 ? this.state.ceilingPrice : this.state.navPrice;
                 requiredAmount = checkPrice * this.state.quantity;
             }
-            
+
             // 4. Check Purchasing Power
             const pp = this.state.purchasingPower;
             let ppStatus = 'sufficient';
             if (this.state.quantity > this.state.maxBuyUnits) {
                 ppStatus = 'insufficient';
             }
-            
+
             // 5. ALWAYS Save Session Data BEFORE any redirect or further action
             const fund = this.state.funds.find(f => f.id === this.state.selectedFundId);
-            
+
             sessionStorage.setItem('selectedFundId', this.state.selectedFundId);
             sessionStorage.setItem('selectedFundName', fund ? (fund.ticker || fund.name) : '');
             sessionStorage.setItem('selectedUnits', this.state.quantity);
             sessionStorage.setItem('selectedAmount', this.state.amount);
             sessionStorage.setItem('selectedTotalAmount', this.state.estimatedTotal);
-            
+
             sessionStorage.removeItem('selected_term_months');
             sessionStorage.removeItem('selected_interest_rate');
-            
+
             sessionStorage.setItem('selected_order_type', this.state.orderType);
             sessionStorage.setItem('selected_price', this.state.price);
             sessionStorage.setItem('is_market_order', this.state.isMarketOrder);
             sessionStorage.setItem('normal_order_pp_status', ppStatus);
-            
+
             console.log('[NormalOrderForm] Saved session data:', {
                 fundId: this.state.selectedFundId,
                 orderType: this.state.orderType,
                 quantity: this.state.quantity,
                 ppStatus
             });
-            
+
             // 6. Branch Logic based on Purchasing Power
             if (ppStatus === 'insufficient') {
                 // Insufficient -> Show notification and redirect to payment page
                 if (typeof Swal !== 'undefined') {
                     Swal.close();
                     await Swal.fire({
-                       title: "Sức mua không đủ",
-                       text: "Hệ thống đang chuyển sang trang thanh toán...",
-                       icon: "info",
-                       timer: 1500,
-                       showConfirmButton: false,
-                       allowOutsideClick: false
+                        title: "Sức mua không đủ",
+                        text: "Hệ thống đang chuyển sang trang thanh toán...",
+                        icon: "info",
+                        timer: 1500,
+                        showConfirmButton: false,
+                        allowOutsideClick: false
                     });
                 }
                 window.location.href = '/fund_confirm';
@@ -856,7 +907,7 @@ export class NormalOrderFormComponent extends Component {
                 if (typeof Swal !== 'undefined') Swal.close();
                 await this.triggerSmartOTP();
             }
-            
+
         } catch (error) {
             console.error('Error during submit check:', error);
             this.state.submitting = false;
@@ -865,7 +916,7 @@ export class NormalOrderFormComponent extends Component {
             }
         }
     }
-    
+
     async triggerSmartOTP() {
         try {
             // 1. Get OTP Config
@@ -879,17 +930,17 @@ export class NormalOrderFormComponent extends Component {
                 const configPayload = await configResponse.json().catch(() => ({}));
                 const configData = (configPayload.result || configPayload).result || configPayload.result || configPayload;
                 if (configData?.otp_type) otpType = configData.otp_type;
-                
+
                 // Bypass OTP if token valid
                 if (configData?.has_valid_write_token) {
-                     await this.createNormalOrder(); 
-                     return;
+                    await this.createNormalOrder();
+                    return;
                 }
             } catch (e) { console.warn("OTP Config Error", e); }
-            
+
             // 2. Show OTP Modal
             if (window.FundManagementSmartOTP && typeof window.FundManagementSmartOTP.open === 'function') {
-                 window.FundManagementSmartOTP.open({
+                window.FundManagementSmartOTP.open({
                     otpType: otpType,
                     onConfirm: async (otp, debugMode) => {
                         try {
@@ -900,23 +951,23 @@ export class NormalOrderFormComponent extends Component {
                             });
                             const data = await response.json();
                             const result = data.result || data;
-                            
+
                             if (!result || result.success !== true) {
                                 throw new Error(result?.message || 'Mã OTP không hợp lệ');
                             }
-                            
+
                             // OTP Success -> Create Order
                             await this.createNormalOrder();
-                            
+
                         } catch (err) {
                             throw err; // Passed to OTP Modal to show error
                         }
                     }
-                 });
+                });
             } else {
-                 // Fallback if no OTP component
-                 console.warn('SmartOTP Component not found. Proceeding without OTP.');
-                 await this.createNormalOrder();
+                // Fallback if no OTP component
+                console.warn('SmartOTP Component not found. Proceeding without OTP.');
+                await this.createNormalOrder();
             }
 
         } catch (err) {
@@ -925,17 +976,17 @@ export class NormalOrderFormComponent extends Component {
             if (typeof Swal !== 'undefined') Swal.fire("Lỗi OTP", "Không thể kích hoạt xác thực.", "error");
         }
     }
-    
+
     async createNormalOrder() {
         try {
             if (typeof Swal !== 'undefined') {
-                 Swal.fire({
+                Swal.fire({
                     title: "Đang tạo lệnh...",
                     allowOutsideClick: false,
                     didOpen: () => Swal.showLoading()
-                 });
+                });
             }
-            
+
             const rpcParams = {
                 jsonrpc: '2.0',
                 method: 'call',
@@ -957,87 +1008,87 @@ export class NormalOrderFormComponent extends Component {
             });
 
             const resultJson = await res.json();
-            
+
             if (resultJson.result && resultJson.result.success) {
-                 const result = resultJson.result;
-                 
-                 // Save Result Info for Result Page
-                 const fund = this.state.funds.find(f => f.id === this.state.selectedFundId);
-                 
-                 // Save with BOTH key formats for compatibility
-                 sessionStorage.setItem('selectedFundId', this.state.selectedFundId);
-                 sessionStorage.setItem('selectedFundName', fund ? (fund.ticker || fund.name) : '');
-                 sessionStorage.setItem('selectedUnits', this.state.quantity);
-                 sessionStorage.setItem('selectedAmount', this.state.amount);
-                 sessionStorage.setItem('selectedTotalAmount', this.state.estimatedTotal);
-                 sessionStorage.setItem('selected_order_type', this.state.orderType);
-                 sessionStorage.setItem('selected_price', this.state.price);
-                 
-                 sessionStorage.setItem('result_fund_name', fund ? (fund.ticker || fund.name) : '');
-                 sessionStorage.setItem('result_order_date', new Date().toLocaleString('vi-VN'));
-                 sessionStorage.setItem('result_amount', this.state.amount);
-                 sessionStorage.setItem('result_total_amount', this.state.estimatedTotal);
-                 sessionStorage.setItem('result_units', this.state.quantity);
-                 
-                 // CRITICAL: Save Transaction ID for Result Page
-                 if (result.order_id) {
-                     sessionStorage.setItem('transaction_id', String(result.order_id));
-                     console.log('[createNormalOrder] Saved transaction_id:', result.order_id);
-                 } else {
-                     console.warn('[createNormalOrder] No order_id returned from backend!');
-                 }
-                 
-                 // Save NAV Data if present
-                 if (result.nav_data) {
+                const result = resultJson.result;
+
+                // Save Result Info for Result Page
+                const fund = this.state.funds.find(f => f.id === this.state.selectedFundId);
+
+                // Save with BOTH key formats for compatibility
+                sessionStorage.setItem('selectedFundId', this.state.selectedFundId);
+                sessionStorage.setItem('selectedFundName', fund ? (fund.ticker || fund.name) : '');
+                sessionStorage.setItem('selectedUnits', this.state.quantity);
+                sessionStorage.setItem('selectedAmount', this.state.amount);
+                sessionStorage.setItem('selectedTotalAmount', this.state.estimatedTotal);
+                sessionStorage.setItem('selected_order_type', this.state.orderType);
+                sessionStorage.setItem('selected_price', this.state.price);
+
+                sessionStorage.setItem('result_fund_name', fund ? (fund.ticker || fund.name) : '');
+                sessionStorage.setItem('result_order_date', new Date().toLocaleString('vi-VN'));
+                sessionStorage.setItem('result_amount', this.state.amount);
+                sessionStorage.setItem('result_total_amount', this.state.estimatedTotal);
+                sessionStorage.setItem('result_units', this.state.quantity);
+
+                // CRITICAL: Save Transaction ID for Result Page
+                if (result.order_id) {
+                    sessionStorage.setItem('transaction_id', String(result.order_id));
+                    console.log('[createNormalOrder] Saved transaction_id:', result.order_id);
+                } else {
+                    console.warn('[createNormalOrder] No order_id returned from backend!');
+                }
+
+                // Save NAV Data if present
+                if (result.nav_data) {
                     sessionStorage.setItem('nav_data', JSON.stringify(result.nav_data));
-                 }
-                 
-                 // Show Success Message BEFORE redirect
-                 if (typeof Swal !== 'undefined') {
-                     Swal.close();
-                     await Swal.fire({
-                         title: "Đặt lệnh thành công!",
-                         text: "Lệnh mua CCQ đã được ghi nhận.",
-                         icon: "success",
-                         confirmButtonText: "Xem kết quả",
-                         confirmButtonColor: "#28a745",
-                         timer: 2000,
-                         timerProgressBar: true
-                     });
-                 }
-                 
-                 window.location.href = '/fund_result';
+                }
+
+                // Show Success Message BEFORE redirect
+                if (typeof Swal !== 'undefined') {
+                    Swal.close();
+                    await Swal.fire({
+                        title: "Đặt lệnh thành công!",
+                        text: "Lệnh mua CCQ đã được ghi nhận.",
+                        icon: "success",
+                        confirmButtonText: "Xem kết quả",
+                        confirmButtonColor: "#28a745",
+                        timer: 2000,
+                        timerProgressBar: true
+                    });
+                }
+
+                window.location.href = '/fund_result';
             } else {
-                 throw new Error(resultJson.result?.message || resultJson.error?.data?.message || 'Không thể tạo lệnh');
+                throw new Error(resultJson.result?.message || resultJson.error?.data?.message || 'Không thể tạo lệnh');
             }
-            
+
         } catch (err) {
             console.error("Create Order Error:", err);
             this.state.submitting = false;
-            
+
             // Check for Insufficient Funds (Edge Case if PP check passed but backend failed)
             const msg = err.message || '';
             if (msg.toLowerCase().includes('sức mua') || msg.toLowerCase().includes('không đủ tiền')) {
-                 if (typeof Swal !== 'undefined') Swal.close();
-                 // Redirect to Confirm Page to pay
-                 sessionStorage.setItem('normal_order_pp_status', 'insufficient');
-                 window.location.href = '/fund_confirm';
+                if (typeof Swal !== 'undefined') Swal.close();
+                // Redirect to Confirm Page to pay
+                sessionStorage.setItem('normal_order_pp_status', 'insufficient');
+                window.location.href = '/fund_confirm';
             } else {
-                 if (typeof Swal !== 'undefined') Swal.fire("Lỗi tạo lệnh", msg, "error");
+                if (typeof Swal !== 'undefined') Swal.fire("Lỗi tạo lệnh", msg, "error");
             }
         }
     }
-        
 
-    
+
+
     formatCurrency(value) {
         return Number(value || 0).toLocaleString('vi-VN') + ' VNĐ';
     }
-    
+
     formatNumber(value) {
         return Number(value || 0).toLocaleString('vi-VN');
     }
-    
+
     showNotification(message, type = 'info') {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -1049,8 +1100,8 @@ export class NormalOrderFormComponent extends Component {
                 toast: true
             });
         } else {
-             // Fallback
-             console.log(type.toUpperCase() + ": " + message);
+            // Fallback
+            console.log(type.toUpperCase() + ": " + message);
         }
     }
 }

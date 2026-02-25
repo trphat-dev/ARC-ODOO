@@ -383,7 +383,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initRealtimeClock(); // Realtime Order Time
 
+  checkNegotiatedEligibility(); // Check eligibility cho lệnh thỏa thuận
 });
+
+async function checkNegotiatedEligibility() {
+  try {
+    const response = await fetch('/api/fund/normal-order/market-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
+    });
+    const result = await response.json();
+    if (result.result && result.result.success) {
+      const eligible = result.result.eligible || false;
+      const accountApproved = result.result.account_approved || false;
+      const hasTradingAccount = result.result.has_trading_account || false;
+
+      const formEl = document.getElementById('fund-buy-form');
+      const paymentBtn = document.getElementById('payment-btn');
+
+      if (!eligible) {
+        if (formEl) {
+          formEl.classList.add('opacity-50', 'pe-none');
+        }
+        if (paymentBtn) {
+          paymentBtn.disabled = true;
+          paymentBtn.classList.add('opacity-50', 'pe-none');
+        }
+        // Save global state to block payment
+        window.isNegotiatedEligible = false;
+
+        // Show popup warning
+        let warningText = '';
+        let confirmText = 'OK';
+        let redirectUrl = '';
+
+        if (!accountApproved && !hasTradingAccount) {
+          warningText = 'Tài khoản của bạn cần được cập nhật thông tin cá nhân và liên kết tài khoản chứng khoán trước khi đặt lệnh.';
+          confirmText = 'Đến Trang Tài Khoản';
+          redirectUrl = '/my-account';
+        } else if (!accountApproved) {
+          warningText = 'Tài khoản của bạn cần được cập nhật thông tin cá nhân trước khi đặt lệnh.';
+          confirmText = 'Cập Nhật Thông Tin';
+          redirectUrl = '/personal_profile';
+        } else if (!hasTradingAccount) {
+          warningText = 'Bạn cần liên kết tài khoản chứng khoán trước khi đặt lệnh.';
+          confirmText = 'Liên Kết Ngay';
+          redirectUrl = '/my-account';
+        }
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: 'Chưa đủ điều kiện đặt lệnh',
+            text: warningText,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Đóng',
+            confirmButtonColor: '#F26522'
+          }).then((result) => {
+            if (result.isConfirmed && redirectUrl) {
+              window.location.href = redirectUrl;
+            }
+          });
+        }
+      } else {
+        window.isNegotiatedEligible = true;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to check negotiated eligibility', e);
+  }
+}
 
 // =============================================================================
 // ORDER MODE TABS - Chuyển đổi giữa Đặt lệnh thường / Đặt lệnh thỏa thuận
@@ -1412,6 +1483,15 @@ function initPaymentButton() {
     // Nếu đang ở chế độ lệnh thường, trigger event để component xử lý
     if (typeof currentOrderMode !== 'undefined' && currentOrderMode === 'normal') {
       document.dispatchEvent(new CustomEvent('trigger-normal-submit'));
+      return;
+    }
+
+    if (window.isNegotiatedEligible === false) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa đủ điều kiện',
+        text: 'Bạn cần hoàn thành xác minh eKYC và liên kết tài khoản chứng khoán để đặt lệnh phân phối khối lượng lớn.'
+      });
       return;
     }
 

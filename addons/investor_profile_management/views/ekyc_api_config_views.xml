@@ -32,7 +32,7 @@
                                 <group string="Thông tin xác thực">
                                     <field name="token_id" placeholder="4454b0b5-cb14-62fa-e063-62199f0ab40b"/>
                                     <field name="token_key" password="True" placeholder="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJB..."/>
-                                    <field name="access_token" readonly="1" password="True" widget="text"/>
+                                    <field name="access_token" password="True" widget="text"/>
                                     <field name="token_expiration" readonly="1"/>
                                 </group>
                                 <group string="Public Key">

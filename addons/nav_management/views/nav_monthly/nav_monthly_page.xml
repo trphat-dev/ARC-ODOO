@@ -54,9 +54,10 @@
 
             <!-- Pass data from controller to JavaScript -->
             <script type="text/javascript">
+                //<![CDATA[
                 window.navMonthlyData = {
-                    funds: <t t-out="funds"/>,
-                    selected_fund_id: <t t-out="selected_fund_id"/>
+                    funds: ]]><t t-out="funds"/><![CDATA[,
+                    selected_fund_id: ]]><t t-out="selected_fund_id"/><![CDATA[
                 };
                 
                 // Hàm tiện ích để hiển thị lỗi
@@ -66,7 +67,7 @@
                     const loadingSpinner = document.getElementById('loading-spinner');
                     const widgetContainer = document.getElementById('navMonthlyWidget');
                     
-                    if (errorContainer &amp;&amp; errorMessage) {
+                    if (errorContainer && errorMessage) {
                         errorMessage.textContent = message || 'Có lỗi xảy ra khi tải dữ liệu';
                         errorContainer.style.display = 'block';
                     }
@@ -98,8 +99,7 @@
                         widgetContainer.style.display = 'block';
                     }
                 };
-                
-                
+                //]]>
             </script>
 
             <!-- Import JavaScript -->

@@ -60,10 +60,10 @@ class ExchangeIntegrationController(http.Controller):
         sell_tx = matched.sell_order_id
         
         if not buy_tx or not buy_tx.exists():
-            raise http.JsonRPCException(message=_('Không tìm thấy lệnh mua trong cặp đã khớp'))
+            raise ValueError(_('Không tìm thấy lệnh mua trong cặp đã khớp'))
         
         if not sell_tx or not sell_tx.exists():
-            raise http.JsonRPCException(message=_('Không tìm thấy lệnh bán trong cặp đã khớp'))
+            raise ValueError(_('Không tìm thấy lệnh bán trong cặp đã khớp'))
 
         # Xác định instrument theo fund (cả 2 lệnh phải cùng fund)
         fund = buy_tx.fund_id
@@ -72,7 +72,7 @@ class ExchangeIntegrationController(http.Controller):
         
         instrument = self._find_instrument_by_fund(fund)
         if not instrument:
-            raise http.JsonRPCException(message=_('Không tìm thấy mã chứng khoán tương ứng với quỹ: %s') % (fund.name if fund else 'N/A'))
+            raise ValueError(_('Không tìm thấy mã chứng khoán tương ứng với quỹ: %s') % (fund.name if fund else 'N/A'))
 
         # Số lượng
         try:
@@ -80,25 +80,25 @@ class ExchangeIntegrationController(http.Controller):
         except Exception:
             qty = 0
         if qty <= 0:
-            raise http.JsonRPCException(message=_('Số lượng khớp không hợp lệ'))
+            raise ValueError(_('Số lượng khớp không hợp lệ'))
 
         # Lấy user và account cho buy order
         buy_user = buy_tx.user_id
         if not buy_user:
-            raise http.JsonRPCException(message=_('Lệnh mua không có thông tin người dùng'))
+            raise ValueError(_('Lệnh mua không có thông tin người dùng'))
         
         buy_account = self._get_user_account(buy_user.id)
         if not buy_account:
-            raise http.JsonRPCException(message=_('Không tìm thấy tài khoản giao dịch trong API Configuration của người dùng mua (user_id: %s). Vui lòng cấu hình `trading.config` (account) cho user này.') % buy_user.id)
+            raise ValueError(_('Không tìm thấy tài khoản giao dịch trong API Configuration của người dùng mua (user_id: %s). Vui lòng cấu hình `trading.config` (account) cho user này.') % buy_user.id)
 
         # Lấy user và account cho sell order
         sell_user = sell_tx.user_id
         if not sell_user:
-            raise http.JsonRPCException(message=_('Lệnh bán không có thông tin người dùng'))
+            raise ValueError(_('Lệnh bán không có thông tin người dùng'))
         
         sell_account = self._get_user_account(sell_user.id)
         if not sell_account:
-            raise http.JsonRPCException(message=_('Không tìm thấy tài khoản giao dịch trong API Configuration của người dùng bán (user_id: %s). Vui lòng cấu hình `trading.config` (account) cho user này.') % sell_user.id)
+            raise ValueError(_('Không tìm thấy tài khoản giao dịch trong API Configuration của người dùng bán (user_id: %s). Vui lòng cấu hình `trading.config` (account) cho user này.') % sell_user.id)
 
         # Tạo request_id cho từng lệnh
         # Lưu ý: RequestID chỉ được chứa [0-9][a-z][A-Z] và chỉ có 8 ký tự
@@ -147,8 +147,6 @@ class ExchangeIntegrationController(http.Controller):
             'quantity': qty,
             'price': buy_price,  # Lấy từ giao dịch gốc hoặc giá khớp
             'request_id': buy_request_id,  # Request ID để link với sell order
-            'matched_order_id': matched.id,  # Link đến matched pair
-            'is_matched_pair': True,  # Đánh dấu đây là lệnh trong cặp khớp
             'device_id': common_device_id,  # Cùng deviceId để sàn nhận biết
             'user_agent': common_user_agent,  # Cùng userAgent để sàn nhận biết
         }
@@ -176,9 +174,6 @@ class ExchangeIntegrationController(http.Controller):
             'quantity': qty,
             'price': sell_price,  # Lấy từ giao dịch gốc hoặc giá khớp
             'request_id': sell_request_id,  # Request ID để link với buy order
-            'matched_order_id': matched.id,  # Link đến matched pair
-            'is_matched_pair': True,  # Đánh dấu đây là lệnh trong cặp khớp
-            'related_order_id': buy_order.id,  # Link đến buy order
             'device_id': common_device_id,  # Cùng deviceId để sàn nhận biết
             'user_agent': common_user_agent,  # Cùng userAgent để sàn nhận biết
         }
@@ -197,9 +192,7 @@ class ExchangeIntegrationController(http.Controller):
                     buy_order.write({'related_order_id': sell_order.id})
                  except Exception:
                     pass
-            if 'related_order_id' in sell_order_vals: # If we didn't add it to create vals
-                 pass
-            else:
+            if 'related_order_id' not in sell_order:
                  try:
                     sell_order.write({'related_order_id': buy_order.id}) # Wait, logic was buy->sell
                  except Exception:
@@ -375,7 +368,7 @@ class ExchangeIntegrationController(http.Controller):
                 'sell_submit_success': sell_submit_success if auto_submit else None,
                 'message': _('Đã tạo%s cả lệnh mua và lệnh bán thành công') % (' và submit' if auto_submit else ''),
             }
-        except http.JsonRPCException as je:
+        except ValueError as je:
             return {'success': False, 'message': str(je)}
         except Exception as e:
             return {'success': False, 'message': _('Lỗi: %s') % str(e)}

@@ -2,6 +2,7 @@ from odoo import http
 from odoo.http import request
 import json
 import pytz
+from markupsafe import Markup
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
 
 
@@ -60,7 +61,7 @@ class InvestorListController(http.Controller):
         }
 
         return request.render('investor_list.investor_list_page', {
-            'all_dashboard_data': json.dumps(all_dashboard_data)
+            'all_dashboard_data': Markup(json.dumps(all_dashboard_data))
         })
 
     @http.route('/api/investor_list/<int:investor_id>', type='http', auth='user', methods=['PUT'], csrf=False)

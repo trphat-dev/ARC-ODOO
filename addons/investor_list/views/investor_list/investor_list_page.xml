@@ -51,8 +51,9 @@
 
             <!-- Pass data to JavaScript -->
             <script type="text/javascript">
+                //<![CDATA[
                 // Parse the JSON data from controller
-                var dashboardData = <t t-out="all_dashboard_data or '{}'"/>;
+                var dashboardData = ]]><t t-out="all_dashboard_data or '{}'"/><![CDATA[;
                 window.allDashboardData = {
                     investors: dashboardData.investors || []
                 };
@@ -63,7 +64,7 @@
                     const loadingSpinner = document.getElementById('loading-spinner');
                     const widgetContainer = document.getElementById('investor-list-widget');
                     
-                    if (errorContainer &amp;&amp; errorMessage) {
+                    if (errorContainer && errorMessage) {
                         errorMessage.textContent = message || 'Có lỗi xảy ra khi tải dữ liệu';
                         errorContainer.style.display = 'block';
                     }
@@ -94,6 +95,7 @@
                         widgetContainer.style.display = 'block';
                     }
                 };
+                //]]>
             </script>
 
             <t t-call-assets="web.assets_frontend" t-js="true"/>

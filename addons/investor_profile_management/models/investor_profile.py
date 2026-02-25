@@ -33,10 +33,8 @@ class InvestorProfile(models.Model):
     id_issue_place = fields.Char(string='Nơi cấp', required=True)
     id_front = fields.Binary(string='ID Front:', attachment=True)
     id_front_filename = fields.Char(string='ID Mặt Trước Filename')
-    id_front_path = fields.Char(string='ID Front Path', help='Path to front ID image in filesystem')
     id_back = fields.Binary(string='ID Back:', attachment=True)
     id_back_filename = fields.Char(string='ID Mặt Sau Filename')
-    id_back_path = fields.Char(string='ID Back Path', help='Path to back ID image in filesystem')
     phone = fields.Char(string='Phone Number:')
     email = fields.Char(string='Email:')
 
@@ -137,24 +135,10 @@ class InvestorProfile(models.Model):
         if 'id_front' in vals and vals['id_front']:
             if 'id_front_filename' not in vals:
                 vals['id_front_filename'] = 'cccd_front.jpg'
-            # Nếu có id_front_path, cập nhật nó thành binary
-            if vals.get('id_front_path'):
-                try:
-                    with open(vals['id_front_path'], 'rb') as f:
-                        vals['id_front'] = base64.b64encode(f.read())
-                except Exception as e:
-                    _logger.error('Error reading front ID image: %s', str(e))
 
         if 'id_back' in vals and vals['id_back']:
             if 'id_back_filename' not in vals:
                 vals['id_back_filename'] = 'cccd_back.jpg'
-            # Nếu có id_back_path, cập nhật nó thành binary
-            if vals.get('id_back_path'):
-                try:
-                    with open(vals['id_back_path'], 'rb') as f:
-                        vals['id_back'] = base64.b64encode(f.read())
-                except Exception as e:
-                    _logger.error('Error reading back ID image: %s', str(e))
         
         res = super().write(vals)
         if self.partner_id:
@@ -183,17 +167,13 @@ class InvestorProfile(models.Model):
 
     def get_id_front_url(self):
         """Get URL for front ID image"""
-        if self.id_front_path and os.path.exists(self.id_front_path):
-            return f"/id_images/{os.path.basename(self.id_front_path)}"
-        elif self.id_front:
+        if self.id_front:
             return f"/web/image?model=investor.profile&field=id_front&id={self.id}"
         return False
 
     def get_id_back_url(self):
         """Get URL for back ID image"""
-        if self.id_back_path and os.path.exists(self.id_back_path):
-            return f"/id_images/{os.path.basename(self.id_back_path)}"
-        elif self.id_back:
+        if self.id_back:
             return f"/web/image?model=investor.profile&field=id_back&id={self.id}"
         return False
 

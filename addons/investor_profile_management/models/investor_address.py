@@ -82,8 +82,8 @@ class InvestorAddress(models.Model):
     def _check_zip(self):
         for record in self:
             if record.zip:
-                if not record.zip.isdigit() or len(record.zip) != 6:
-                    raise ValidationError(_('Mã bưu điện phải gồm 6 chữ số.'))
+                if not record.zip.isdigit() or len(record.zip) > 5:
+                    raise ValidationError(_('Mã bưu điện tối đa 5 chữ số.'))
 
     @api.constrains('address_type')
     def _check_address_type(self):

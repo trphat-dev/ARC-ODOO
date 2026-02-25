@@ -81,15 +81,3 @@ class InvestorBankAccount(models.Model):
     def toggle_active(self):
         for record in self:
             record.active = not record.active
-
-    @api.constrains('bank_name', 'account_number')
-    def _check_unique_account(self):
-        for record in self:
-            if record.bank_name and record.account_number:
-                duplicate = self.search([
-                    ('bank_name', '=', record.bank_name),
-                    ('account_number', '=', record.account_number),
-                    ('id', '!=', record.id)
-                ])
-                if duplicate:
-                    raise ValidationError(_('Tài khoản ngân hàng này đã tồn tại trong hệ thống.')) 

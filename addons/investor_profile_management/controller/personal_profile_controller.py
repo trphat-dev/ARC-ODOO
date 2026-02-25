@@ -14,24 +14,7 @@ from odoo.addons.user_permission_management.utils.permission_checker import requ
 
 class PersonalProfileController(http.Controller):
 
-    @http.route('/id_images/<string:filename>', type='http', auth='user', methods=['GET'], csrf=False)
-    def serve_id_image(self, filename, **kwargs):
-        """Serve ID images saved on disk under the id_images folder."""
-        try:
-            data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-            base_folder = os.path.join(data_dir, 'id_images')
-            file_path = os.path.join(base_folder, filename)
-            if not os.path.isfile(file_path):
-                return request.make_response('Not found', [('Content-Type', 'text/plain')], 404)
-            with open(file_path, 'rb') as f:
-                content = f.read()
-            headers = [
-                ('Content-Type', 'image/jpeg'),
-                ('Cache-Control', 'max-age=86400'),
-            ]
-            return request.make_response(content, headers=headers)
-        except Exception as e:
-            return request.make_response(str(e), [('Content-Type', 'text/plain')], 500)
+
 
     @http.route('/personal_profile', type='http', auth='user', website=True)
     @require_module_access('investor_profile_management')
@@ -136,15 +119,9 @@ class PersonalProfileController(http.Controller):
                 for profile in personal_profiles:
                     id_front_url = ''
                     id_back_url = ''
-                    # Ưu tiên URL tĩnh từ file system nếu có
-                    if getattr(profile, 'id_front_path', False):
-                        id_front_url = f"/id_images/{os.path.basename(profile.id_front_path)}"
-                    elif profile.id_front:
+                    if profile.id_front:
                         id_front_url = f"/web/image?model=investor.profile&field=id_front&id={profile.id}"
-
-                    if getattr(profile, 'id_back_path', False):
-                        id_back_url = f"/id_images/{os.path.basename(profile.id_back_path)}"
-                    elif profile.id_back:
+                    if profile.id_back:
                         id_back_url = f"/web/image?model=investor.profile&field=id_back&id={profile.id}"
                     data.append({
                         'id': profile.id,
@@ -239,17 +216,6 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_front_{uname}_{ts}.jpg"
                         create_dict['id_front_filename'] = filename
-                        # Save to disk
-                        data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-                        static_folder = os.path.join(data_dir, 'id_images')
-                        try:
-                            os.makedirs(static_folder, exist_ok=True)
-                        except Exception:
-                            pass
-                        fs_path = os.path.join(static_folder, filename)
-                        with open(fs_path, 'wb') as f:
-                            f.write(front_binary)
-                        create_dict['id_front_path'] = fs_path
                         print(f"✅ Front CCCD image added to new profile ({len(front_binary)} bytes)")
                     except Exception as e:
                         print(f"❌ Error processing front CCCD image for new profile: {e}")
@@ -268,17 +234,6 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_back_{uname}_{ts}.jpg"
                         create_dict['id_back_filename'] = filename
-                        # Save to disk
-                        data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-                        static_folder = os.path.join(data_dir, 'id_images')
-                        try:
-                            os.makedirs(static_folder, exist_ok=True)
-                        except Exception:
-                            pass
-                        fs_path = os.path.join(static_folder, filename)
-                        with open(fs_path, 'wb') as f:
-                            f.write(back_binary)
-                        create_dict['id_back_path'] = fs_path
                         print(f"✅ Back CCCD image added to new profile ({len(back_binary)} bytes)")
                     except Exception as e:
                         print(f"❌ Error processing back CCCD image for new profile: {e}")
@@ -317,17 +272,6 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_front_{uname}_{ts}.jpg"
                     update_data['id_front_filename'] = filename
-                    # Lưu file ra thư mục static/id_images
-                    data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-                    static_folder = os.path.join(data_dir, 'id_images')
-                    try:
-                        os.makedirs(static_folder, exist_ok=True)
-                    except Exception:
-                        pass
-                    fs_path = os.path.join(static_folder, filename)
-                    with open(fs_path, 'wb') as f:
-                        f.write(front_binary)
-                    update_data['id_front_path'] = fs_path
                     print(f"✅ Front CCCD image saved to database ({len(front_binary)} bytes)")
                 except Exception as e:
                     print(f"❌ Error processing front CCCD image: {e}")
@@ -349,17 +293,6 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_back_{uname}_{ts}.jpg"
                     update_data['id_back_filename'] = filename
-                    # Lưu file ra thư mục static/id_images
-                    data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-                    static_folder = os.path.join(data_dir, 'id_images')
-                    try:
-                        os.makedirs(static_folder, exist_ok=True)
-                    except Exception:
-                        pass
-                    fs_path = os.path.join(static_folder, filename)
-                    with open(fs_path, 'wb') as f:
-                        f.write(back_binary)
-                    update_data['id_back_path'] = fs_path
                     print(f"✅ Back CCCD image saved to database ({len(back_binary)} bytes)")
                 except Exception as e:
                     print(f"❌ Error processing back CCCD image: {e}")
@@ -394,26 +327,15 @@ class PersonalProfileController(http.Controller):
                 return Response(json.dumps({'error': 'Thiếu file hoặc side'}), content_type='application/json', status=400)
 
             file_data = file.read()
-            # Build filename using login username
             login = (current_user.login or '').strip().lower()
             uname = re.sub(r'[^a-z0-9_-]+', '', login.replace('@', '_').replace('.', '_').replace(' ', '_')) or 'user'
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
             filename = f"cccd_{side}_{uname}_{ts}.jpg"
-            # Save to disk folder as well
-            data_dir = odoo_config.get('data_dir') or '/etc/odoo'
-            static_folder = os.path.join(data_dir, 'id_images')
-            try:
-                os.makedirs(static_folder, exist_ok=True)
-            except Exception:
-                pass
-            fs_path = os.path.join(static_folder, filename)
-            with open(fs_path, 'wb') as f:
-                f.write(file_data)
 
             if side == 'front':
-                profile.sudo().write({'id_front': file_data, 'id_front_filename': filename, 'id_front_path': fs_path})
+                profile.sudo().write({'id_front': file_data, 'id_front_filename': filename})
             else:
-                profile.sudo().write({'id_back': file_data, 'id_back_filename': filename, 'id_back_path': fs_path})
+                profile.sudo().write({'id_back': file_data, 'id_back_filename': filename})
 
             return Response(json.dumps({'success': True}), content_type='application/json')
         except Exception as e:

@@ -27,7 +27,7 @@ class IrHttp(models.AbstractModel):
                     "connect-src 'self' wss: https: http:",
                     "frame-src 'self' https://pay.payos.vn",
                     "frame-ancestors 'self'",
-                    "object-src 'none'",
+                    "object-src 'self' blob:",
                 ]
                 response.headers['Content-Security-Policy'] = "; ".join(csp_rules)
             

@@ -281,6 +281,7 @@ def require_module_access(module_name=None):
                 else:
                     # Trả về HTML response cho type='http' với layout OWL đẹp
                     import json
+                    from markupsafe import Markup
                     access_denied_data = json.dumps({
                         'error_title': 'Không có quyền truy cập',
                         'error_message': f'Bạn không có quyền truy cập trang này. '
@@ -288,7 +289,7 @@ def require_module_access(module_name=None):
                         'allowed_types': allowed_names
                     }, ensure_ascii=False)
                     return request.render('user_permission_management.access_denied_page', {
-                        'access_denied_data': access_denied_data
+                        'access_denied_data': Markup(access_denied_data)
                     })
             
             # Nếu có quyền hoặc không cần kiểm tra, tiếp tục

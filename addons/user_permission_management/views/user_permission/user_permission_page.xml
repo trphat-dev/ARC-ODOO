@@ -57,13 +57,13 @@
                 <t t-if="not user_permission_data">
                 window.userPermissionData = {};
                 </t>
-                
+                //<![CDATA[
                 window.showError = function(message) {
                     const errorContainer = document.getElementById('error-container');
                     const errorMessage = document.getElementById('error-message');
                     const widgetContainer = document.getElementById('userPermissionWidget');
                     
-                    if (errorContainer &amp;&amp; errorMessage) {
+                    if (errorContainer && errorMessage) {
                         errorMessage.textContent = message || 'Có lỗi xảy ra khi tải dữ liệu';
                         errorContainer.style.display = 'block';
                     }
@@ -72,6 +72,7 @@
                         widgetContainer.style.display = 'none';
                     }
                 };
+                //]]>
             </script>
 
             <t t-call-assets="web.assets_frontend" t-js="true"/>

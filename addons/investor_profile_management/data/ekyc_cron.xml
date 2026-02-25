@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Cron job: Auto refresh VNPT eKYC access token -->
+    <record id="ir_cron_refresh_ekyc_token" model="ir.cron">
+        <field name="name">VNPT eKYC: Auto Refresh Token</field>
+        <field name="model_id" ref="model_ekyc_api_config"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_refresh_token()</field>
+        <field name="interval_number">7</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

@@ -36,10 +36,10 @@ export class IDDocumentWidget extends Component {
             reader.onload = (e) => {
                 if (type === 'front') {
                     this.state.frontImage = e.target.result;
-                    this.state.frontPreview = URL.createObjectURL(file);
+                    this.state.frontPreview = e.target.result;
                 } else {
                     this.state.backImage = e.target.result;
-                    this.state.backPreview = URL.createObjectURL(file);
+                    this.state.backPreview = e.target.result;
                 }
                 this.state.error = null;
             };

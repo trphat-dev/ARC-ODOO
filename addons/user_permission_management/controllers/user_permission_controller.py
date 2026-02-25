@@ -4,6 +4,7 @@ from odoo import http
 from odoo.http import request
 import json
 import logging
+from markupsafe import Markup
 
 _logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class UserPermissionController(http.Controller):
                 'breadcrumb_title': 'Danh sách tài khoản Quản trị viên hệ thống',
             }
             return request.render('user_permission_management.user_permission_page', {
-                'user_permission_data': json.dumps(page_data)
+                'user_permission_data': Markup(json.dumps(page_data))
             })
         except Exception as e:
             _logger.error(f"Error rendering system admin page: {str(e)}", exc_info=True)
@@ -57,7 +58,7 @@ class UserPermissionController(http.Controller):
                 'breadcrumb_title': 'Danh sách Nhà đầu tư',
             }
             return request.render('user_permission_management.user_permission_page', {
-                'user_permission_data': json.dumps(page_data)
+                'user_permission_data': Markup(json.dumps(page_data))
             })
         except Exception as e:
             _logger.error(f"Error rendering investor user page: {str(e)}", exc_info=True)
@@ -85,7 +86,7 @@ class UserPermissionController(http.Controller):
                 'breadcrumb_title': 'Danh sách nhân viên Quản lý quỹ',
             }
             return request.render('user_permission_management.user_permission_page', {
-                'user_permission_data': json.dumps(page_data)
+                'user_permission_data': Markup(json.dumps(page_data))
             })
         except Exception as e:
             _logger.error(f"Error rendering fund operator page: {str(e)}", exc_info=True)

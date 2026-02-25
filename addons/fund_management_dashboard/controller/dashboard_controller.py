@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from odoo import fields
+from markupsafe import Markup
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
 
 _logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class FundManagementDashboardController(http.Controller):
                 _logger.warning(f"Không thể lưu dữ liệu dashboard: {str(save_error)}")
             
             return request.render('fund_management_dashboard.dashboard_page', {
-                'dashboard_data': json.dumps(dashboard_data)
+                'dashboard_data': Markup(json.dumps(dashboard_data))
             })
         except Exception as e:
             return request.render('web.http_error', {

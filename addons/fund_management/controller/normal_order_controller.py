@@ -44,6 +44,33 @@ class NormalOrderController(http.Controller):
             dict: {success: bool, order_id: int, message: str}
         """
         try:
+            # === ELIGIBILITY CHECK: eKYC + Trading Account ===
+            current_user = request.env.user
+            partner = current_user.partner_id
+
+            # Check eKYC verified
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', partner.id)
+            ], limit=1)
+            if not status_info or status_info.account_status != 'approved':
+                return {
+                    'success': False,
+                    'message': 'Tài khoản của bạn cần được cập nhật thông tin cá nhân trước khi đặt lệnh.',
+                    'error_code': 'account_not_approved'
+                }
+
+            # Check trading account linked
+            trading_config = request.env['trading.config'].sudo().search([
+                ('user_id', '=', current_user.id),
+                ('active', '=', True)
+            ], limit=1)
+            if not trading_config:
+                return {
+                    'success': False,
+                    'message': 'Bạn cần liên kết tài khoản chứng khoán trước khi đặt lệnh.',
+                    'error_code': 'trading_account_required'
+                }
+
             # Get parameters
             fund_id = kwargs.get('fund_id')
             transaction_type = kwargs.get('transaction_type')
@@ -738,7 +765,21 @@ class NormalOrderController(http.Controller):
         """
         try:
             current_user = request.env.user
+            partner = current_user.partner_id
             for_sell = kwargs.get('for_sell', False)
+
+            # Eligibility check
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', partner.id)
+            ], limit=1)
+            account_approved = bool(status_info and status_info.account_status == 'approved')
+
+            trading_config = request.env['trading.config'].sudo().search([
+                ('user_id', '=', current_user.id),
+                ('active', '=', True)
+            ], limit=1)
+            has_trading_account = bool(trading_config)
+            eligible = account_approved and has_trading_account
             
             # 1. Get Funds
             funds = request.env['portfolio.fund'].sudo().search([])
@@ -836,7 +877,10 @@ class NormalOrderController(http.Controller):
             return {
                 'success': True,
                 'funds': fund_list,
-                'purchasing_power': purchasing_power
+                'purchasing_power': purchasing_power,
+                'account_approved': account_approved,
+                'has_trading_account': has_trading_account,
+                'eligible': eligible,
             }
             
         except Exception as e:

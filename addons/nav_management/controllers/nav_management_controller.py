@@ -5,6 +5,7 @@ import csv
 import io
 import logging
 from datetime import datetime
+from markupsafe import Markup
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
 
 _logger = logging.getLogger(__name__)
@@ -49,9 +50,9 @@ class NavManagementController(http.Controller):
         
         values = {
             'funds': funds,
-            'funds_json': json.dumps(funds.read(['id', 'name', 'ticker'])),
+            'funds_json': Markup(json.dumps(funds.read(['id', 'name', 'ticker']))),
             'selected_fund_id': selected_fund_id,
-            'selected_fund_id_json': json.dumps(selected_fund_id),
+            'selected_fund_id_json': Markup(json.dumps(selected_fund_id)),
             'nav_transactions': nav_transactions,
         }
         

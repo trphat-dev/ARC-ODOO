@@ -1,7 +1,7 @@
 // Personal Profile Widget Component
 // console.log('Loading PersonalProfileWidget component...');
 
-const { Component, xml, useState, onMounted } = owl;
+const { Component, xml, useState, onMounted, markup } = owl;
 
 class PersonalProfileWidget extends Component {
     // Configuration constants
@@ -1084,8 +1084,7 @@ class PersonalProfileWidget extends Component {
 
             // Kiểm tra URL hợp lệ
             const isWebImage = imageUrl && imageUrl.startsWith('/web/image');
-            const isDiskImage = imageUrl && imageUrl.startsWith('/id_images/');
-            if (!imageUrl || imageUrl === '' || (!isWebImage && !isDiskImage)) {
+            if (!imageUrl || imageUrl === '' || !isWebImage) {
                 console.log(`⚠️ Invalid URL for ${side} CCCD image:`, imageUrl);
                 return;
             }
@@ -1177,7 +1176,7 @@ class PersonalProfileWidget extends Component {
             } else if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('data:')) {
                 profileData.frontPreviewBase64 = this.state.ekycFiles.frontPreview;
                 console.log("✅ Front CCCD base64 data ready for saving");
-            } else if (this.state.ekycFiles.frontPreview && (this.state.ekycFiles.frontPreview.startsWith('/web/image') || this.state.ekycFiles.frontPreview.startsWith('/id_images/'))) {
+            } else if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('/web/image')) {
                 // Image từ database - convert URL sang base64
                 profileData.frontPreviewBase64 = await this.urlToBase64(this.state.ekycFiles.frontPreview);
                 console.log("✅ Front CCCD URL converted to base64 for saving");
@@ -1191,7 +1190,7 @@ class PersonalProfileWidget extends Component {
             } else if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('data:')) {
                 profileData.backPreviewBase64 = this.state.ekycFiles.backPreview;
                 console.log("✅ Back CCCD base64 data ready for saving");
-            } else if (this.state.ekycFiles.backPreview && (this.state.ekycFiles.backPreview.startsWith('/web/image') || this.state.ekycFiles.backPreview.startsWith('/id_images/'))) {
+            } else if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('/web/image')) {
                 // Image từ database - convert URL sang base64
                 profileData.backPreviewBase64 = await this.urlToBase64(this.state.ekycFiles.backPreview);
                 console.log("✅ Back CCCD URL converted to base64 for saving");
@@ -1313,10 +1312,7 @@ class PersonalProfileWidget extends Component {
         const file = ev.target.files[0];
         if (file) {
             this.state.ekycFiles.front = file;
-            if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('blob:')) {
-                URL.revokeObjectURL(this.state.ekycFiles.frontPreview);
-            }
-            this.state.ekycFiles.frontPreview = URL.createObjectURL(file);
+            this.state.ekycFiles.frontPreview = await this.fileToBase64(file);
 
             // Auto-detect OCR from front CCCD
             await this.detectOCRFromImage(file, 'front');
@@ -1327,10 +1323,7 @@ class PersonalProfileWidget extends Component {
         const file = ev.target.files[0];
         if (file) {
             this.state.ekycFiles.back = file;
-            if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('blob:')) {
-                URL.revokeObjectURL(this.state.ekycFiles.backPreview);
-            }
-            this.state.ekycFiles.backPreview = URL.createObjectURL(file);
+            this.state.ekycFiles.backPreview = await this.fileToBase64(file);
 
             // Auto-detect OCR from back CCCD
             await this.detectOCRFromImage(file, 'back');
@@ -2259,7 +2252,7 @@ class PersonalProfileWidget extends Component {
 
                 successMessage += '</div>';
 
-                this.showModal('Thành công', successMessage);
+                this.showModal('Thành công', markup(successMessage));
 
                 // Close eKYC modal after 5 seconds to give user time to see the data
                 setTimeout(() => {
@@ -3131,66 +3124,79 @@ class PersonalProfileWidget extends Component {
             const detection = detections[0];
             const landmarks = detection.landmarks;
 
-            // Check face position and orientation with more lenient criteria
+            // Check face position and orientation
             const isCentered = this.checkFaceCentered(landmarks, canvas);
             const isFrontFacing = this.checkFaceFrontFacing(landmarks);
             const isGoodSize = this.checkFaceSize(detection, canvas);
+            const yawAngle = this.estimateYawAngle(landmarks);
+            const currentPhase = this.state.currentCapturePhase;
 
-            console.log('📊 Face checks:', { isCentered, isFrontFacing, isGoodSize });
+            console.log('📊 Face checks:', { isCentered, isFrontFacing, isGoodSize, yawAngle, currentPhase });
 
-            // More lenient conditions - only require good size and basic positioning
-            if (isGoodSize && (isCentered || isFrontFacing)) {
-                const currentPhase = this.state.currentCapturePhase;
+            // Validate face angle matches required phase
+            const isCorrectAngle = this.isAngleMatchingPhase(yawAngle, currentPhase);
+
+            if (isGoodSize && isCentered && isCorrectAngle) {
                 const currentCount = this.getCapturedCount(currentPhase);
                 const requiredCount = this.state.captureRequirements[currentPhase];
 
                 // Track when face becomes perfect
                 if (this.state.perfectFaceStartTime === 0) {
                     this.state.perfectFaceStartTime = Date.now();
-                    console.log(`🎯 Face position perfect for ${currentPhase}, starting auto-capture timer...`);
+                    console.log(`🎯 Face angle correct for ${currentPhase} (yaw=${yawAngle.toFixed(1)}°), starting timer...`);
                 }
 
+                const holdTime = 2000; // Must hold position for 2 seconds
                 const timeInPerfectPosition = Date.now() - this.state.perfectFaceStartTime;
-                const remainingTime = Math.max(0, 2000 - timeInPerfectPosition);
+                const remainingTime = Math.max(0, holdTime - timeInPerfectPosition);
 
                 if (remainingTime > 0) {
                     this.updateFaceStatus('perfect', 'fas fa-check-circle',
-                        `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)} ${Math.ceil(remainingTime / 500)}s (${currentCount}/${requiredCount})`);
+                        `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)} ${Math.ceil(remainingTime / 1000)}s (${currentCount}/${requiredCount})`);
                 } else {
                     this.updateFaceStatus('perfect', 'fas fa-check-circle',
                         `Đang chụp ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`);
                 }
 
-                // Auto-capture logic for eKYC API
+                // Auto-capture: must hold perfect position for 2s, min 1.5s between captures
                 if (this.state.autoCaptureEnabled &&
                     currentCount < requiredCount &&
-                    timeInPerfectPosition >= 500 &&
-                    (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 500)) {
+                    timeInPerfectPosition >= holdTime &&
+                    (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 1500)) {
 
+                    console.log(`📸 Auto-capturing ${currentPhase} (yaw=${yawAngle.toFixed(1)}°)`);
                     this.captureImage(true);
-                    this.state.perfectFaceStartTime = 0; // Reset timer for next capture
+                    this.state.perfectFaceStartTime = 0;
                 }
             } else {
-                // Face not in perfect position, reset timer
+                // Face not in correct position/angle, reset timer
                 if (this.state.perfectFaceStartTime > 0) {
                     this.state.perfectFaceStartTime = 0;
-                    console.log('🔄 Face moved out of perfect position (eKYC API), resetting timer');
+                    console.log(`🔄 Face angle wrong for ${currentPhase} (yaw=${yawAngle.toFixed(1)}°), resetting`);
                 }
 
                 let message = 'Điều chỉnh khuôn mặt: ';
                 let detailedMessage = '';
 
+                if (!isGoodSize) {
+                    message += 'Tiến gần hơn, ';
+                    detailedMessage += '• Di chuyển gần hơn\n';
+                }
                 if (!isCentered) {
                     message += 'Căn giữa, ';
                     detailedMessage += '• Di chuyển khuôn mặt vào giữa khung\n';
                 }
-                if (!isFrontFacing) {
-                    message += 'Nhìn thẳng, ';
-                    detailedMessage += '• Nhìn thẳng\n';
-                }
-                if (!isGoodSize) {
-                    message += 'Tiến gần hơn';
-                    detailedMessage += '• Di chuyển gần hơn';
+                if (!isCorrectAngle) {
+                    if (currentPhase === 'front') {
+                        message += 'Nhìn thẳng';
+                        detailedMessage += '• Nhìn thẳng vào camera';
+                    } else if (currentPhase === 'left') {
+                        message += 'Quay trái hơn';
+                        detailedMessage += '• Quay mặt sang trái ~45°';
+                    } else if (currentPhase === 'right') {
+                        message += 'Quay phải hơn';
+                        detailedMessage += '• Quay mặt sang phải ~45°';
+                    }
                 }
 
                 this.updateFaceStatus('adjusting', 'fas fa-arrows-alt', message, detailedMessage);
@@ -3199,6 +3205,62 @@ class PersonalProfileWidget extends Component {
         } catch (error) {
             console.error('❌ Face API detection error:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Estimate horizontal yaw angle from face landmarks.
+     * Negative = face turned left, Positive = face turned right, ~0 = front.
+     */
+    estimateYawAngle(landmarks) {
+        const nose = landmarks.getNose();
+        const leftEye = landmarks.getLeftEye();
+        const rightEye = landmarks.getRightEye();
+
+        // Center of each eye
+        const leftEyeCenter = {
+            x: leftEye.reduce((s, p) => s + p.x, 0) / leftEye.length,
+            y: leftEye.reduce((s, p) => s + p.y, 0) / leftEye.length,
+        };
+        const rightEyeCenter = {
+            x: rightEye.reduce((s, p) => s + p.x, 0) / rightEye.length,
+            y: rightEye.reduce((s, p) => s + p.y, 0) / rightEye.length,
+        };
+
+        // Midpoint between eyes
+        const eyeMidX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
+
+        // Nose tip (index 3 = bottom center of nose)
+        const noseTip = nose[3] || nose[Math.floor(nose.length / 2)];
+
+        // Distance between eyes (for normalization)
+        const eyeDistance = Math.abs(rightEyeCenter.x - leftEyeCenter.x);
+        if (eyeDistance < 1) return 0;
+
+        // Offset of nose from eye midpoint, normalized by eye distance
+        // Positive = nose is to the right of center = face turned left (camera perspective is mirrored)
+        const noseOffset = (noseTip.x - eyeMidX) / eyeDistance;
+
+        // Convert to approximate degrees (~45° at max offset of 0.5)
+        return noseOffset * 90;
+    }
+
+    /**
+     * Check if the estimated yaw angle matches the required capture phase.
+     */
+    isAngleMatchingPhase(yawAngle, phase) {
+        switch (phase) {
+            case 'front':
+                // Front: yaw should be near 0 (±15°)
+                return Math.abs(yawAngle) <= 15;
+            case 'left':
+                // Left turn: yaw > 20° (nose moves right relative to eyes in mirrored view)
+                return yawAngle > 20;
+            case 'right':
+                // Right turn: yaw < -20°
+                return yawAngle < -20;
+            default:
+                return false;
         }
     }
 
@@ -3395,41 +3457,18 @@ class PersonalProfileWidget extends Component {
             message = 'Khuôn mặt quá gần';
             instructions = 'Vui lòng lùi ra xa hơn';
         } else {
+            // Canvas detection found a face-like region but CANNOT determine angle.
+            // Do NOT auto-capture — prompt user to wait for proper detection.
             const currentPhase = this.state.currentCapturePhase;
             const currentCount = this.getCapturedCount(currentPhase);
             const requiredCount = this.state.captureRequirements[currentPhase];
 
-            // Track when face becomes perfect
-            if (this.state.perfectFaceStartTime === 0) {
-                this.state.perfectFaceStartTime = Date.now();
-                console.log(`🎯 Face position perfect for ${currentPhase} (Canvas), starting auto-capture timer...`);
-            }
+            status = 'detecting';
+            icon = 'fas fa-search';
+            message = `Phát hiện khuôn mặt — đang xác nhận góc ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`;
+            instructions = `Vui lòng giữ nguyên vị trí ${this.getPhaseName(currentPhase)} và chờ xác nhận.`;
 
-            const timeInPerfectPosition = Date.now() - this.state.perfectFaceStartTime;
-            const remainingTime = Math.max(0, 2000 - timeInPerfectPosition);
-
-            if (remainingTime > 0) {
-                status = 'perfect';
-                icon = 'fas fa-check-circle';
-                message = `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)}! Bắt đầu chụp sau ${Math.ceil(remainingTime / 1000)}s (${currentCount}/${requiredCount})`;
-                instructions = `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)}!`;
-            } else {
-                status = 'perfect';
-                icon = 'fas fa-check-circle';
-                message = `Đang chụp ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`;
-                instructions = `Đang chụp ${this.getPhaseName(currentPhase)}...`;
-            }
-
-            // Auto-capture logic for canvas detection
-            if (this.state.autoCaptureEnabled &&
-                currentCount < requiredCount &&
-                timeInPerfectPosition >= 2000 &&
-                (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 2000)) {
-
-                console.log(`📸 Auto-capturing ${currentPhase} image due to perfect face position (Canvas)`);
-                this.captureImage(true);
-                this.state.perfectFaceStartTime = 0; // Reset timer for next capture
-            }
+            // Canvas fallback does NOT auto-capture because it cannot validate face angle
         }
 
         // Only update if status changed

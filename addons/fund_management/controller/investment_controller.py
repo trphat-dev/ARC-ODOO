@@ -34,6 +34,31 @@ class NegotiatedOrderController(http.Controller):
     def create_investment(self, **kwargs):
         """Create investment transaction (Negotiated Buy Order)"""
         try:
+            # === ELIGIBILITY CHECK: eKYC + Trading Account ===
+            current_user = request.env.user
+            partner = current_user.partner_id
+
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', partner.id)
+            ], limit=1)
+            if not status_info or status_info.account_status != 'approved':
+                return self._json_response({
+                    'success': False,
+                    'message': 'Tài khoản của bạn cần được cập nhật thông tin cá nhân trước khi đặt lệnh.',
+                    'error_code': 'account_not_approved'
+                })
+
+            trading_config = request.env['trading.config'].sudo().search([
+                ('user_id', '=', current_user.id),
+                ('active', '=', True)
+            ], limit=1)
+            if not trading_config:
+                return self._json_response({
+                    'success': False,
+                    'message': 'Bạn cần liên kết tài khoản chứng khoán trước khi đặt lệnh.',
+                    'error_code': 'trading_account_required'
+                })
+
             # Get form data
             fund_id = kwargs.get('fund_id')
             units = kwargs.get('units')
@@ -179,6 +204,31 @@ class NegotiatedOrderController(http.Controller):
     def submit_fund_sell(self, **kwargs):
         """Submit Fund Sell Order"""
         try:
+            # === ELIGIBILITY CHECK: eKYC + Trading Account ===
+            current_user = request.env.user
+            partner = current_user.partner_id
+
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', partner.id)
+            ], limit=1)
+            if not status_info or status_info.account_status != 'approved':
+                return self._json_response({
+                    'success': False,
+                    'message': 'Tài khoản của bạn cần được cập nhật thông tin cá nhân trước khi đặt lệnh bán.',
+                    'error_code': 'account_not_approved'
+                })
+
+            trading_config = request.env['trading.config'].sudo().search([
+                ('user_id', '=', current_user.id),
+                ('active', '=', True)
+            ], limit=1)
+            if not trading_config:
+                return self._json_response({
+                    'success': False,
+                    'message': 'Bạn cần liên kết tài khoản chứng khoán trước khi đặt lệnh bán.',
+                    'error_code': 'trading_account_required'
+                })
+
             investment_id = int(kwargs.get('investment_id'))
             quantity = float(kwargs.get('quantity'))
             debug_mode = kwargs.get('debug', 'false').lower() in ('true', '1', 'yes')

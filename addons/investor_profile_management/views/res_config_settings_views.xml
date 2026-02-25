@@ -14,10 +14,6 @@
                                 <field name="ekyc_base_url" placeholder="https://api.vnpt.com.vn/ekyc" class="col-lg-9"/>
                             </div>
                             <div class="row mt16">
-                                <label string="Token Endpoint" for="ekyc_token_endpoint" class="col-lg-3 o_light_label"/>
-                                <field name="ekyc_token_endpoint" placeholder="https://.../oauth/token" class="col-lg-9"/>
-                            </div>
-                            <div class="row mt16">
                                 <label string="Token ID" for="ekyc_token_id" class="col-lg-3 o_light_label"/>
                                 <field name="ekyc_token_id" class="col-lg-9"/>
                             </div>
@@ -32,23 +28,19 @@
                             </div>
                             <div class="row mt16">
                                 <label string="Access Token" for="ekyc_access_token" class="col-lg-3 o_light_label"/>
-                                <field name="ekyc_access_token" readonly="1" class="col-lg-9" widget="text"/>
+                                <field name="ekyc_access_token" class="col-lg-9" widget="text"/>
                             </div>
                             <div class="row mt16">
                                 <label string="Token Expiration" for="ekyc_token_expiration" class="col-lg-3 o_light_label"/>
-                                <field name="ekyc_token_expiration" readonly="1" class="col-lg-9"/>
+                                <field name="ekyc_token_expiration" class="col-lg-9"/>
                             </div>
                             <div class="row mt16">
                                 <div class="col-lg-9 offset-lg-3">
                                     <button type="object"
-                                            name="action_update_ekyc_tokens"
-                                            string="Cập nhật Tokens tự động"
-                                            class="btn btn-secondary"
-                                            help="Tự động cập nhật Token ID, Token Key, Access Token và Public Key CA từ cấu hình mặc định"/>
-                                    <button type="object"
                                             name="action_generate_ekyc_token"
                                             string="Lấy Access Token"
-                                            class="btn btn-primary"/>
+                                            class="btn btn-primary"
+                                            help="Lấy access token mới từ VNPT. Token sẽ tự động làm mới mỗi 7 giờ qua cron job."/>
                                 </div>
                             </div>
                             <div class="row mt16">

@@ -3,12 +3,10 @@
     <!-- Default VNPT eKYC API Configuration -->
     <record id="ekyc_api_config_default" model="ekyc.api.config">
         <field name="name">Default Configuration</field>
-        <field name="token_id">48b4f669-70d7-2698-e063-63199f0ad73f</field>
-        <field name="token_key">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAO9GJq7hFtgViBY4IQBC6y5rCxhCDbXfUSL3h/SYe8DmRiVCfidg/AcGhAzkIKm3Y3FR12tO9bz0lAxilWyCsBkCAwEAAQ==</field>
-        <field name="access_token">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0cmFuc2FjdGlvbl9pZCI6IjEyZTFjMGRlLWI5ZTYtNGU1OC05Mzc2LTAyZWYwMWNmMDRhNiIsInN1YiI6IjQ4YjRmM2VhLWQ0YTMtMzZjYS1lMDYzLTYyMTk5ZjBhMDBiNyIsImF1ZCI6WyJyZXN0c2VydmljZSJdLCJ1c2VyX25hbWUiOiJ0cnVvbmdwaGF0dDMwM0BnbWFpbC5jb20iLCJzY29wZSI6WyJyZWFkIl0sImlzcyI6Imh0dHBzOi8vbG9jYWxob3N0IiwibmFtZSI6InRydW9uZ3BoYXR0MzAzQGdtYWlsLmNvbSIsImV4cCI6MTc2OTAwNDc1NywidXVpZF9hY2NvdW50IjoiNDhiNGYzZWEtZDRhMy0zNmNhLWUwNjMtNjIxOTlmMGEwMGI3IiwiYXV0aG9yaXRpZXMiOlsiVVNFUiJdLCJqdGkiOiJhODU5Mzg0YS00YzVkLTRlZjUtOWNiMy1mYTY5MGZmNzIwOTEiLCJjbGllbnRfaWQiOiI4X2hvdXIifQ.bLELANNzabfuigw2yp-QK041gnFzQ_BbmxusuqWJZxAqAKomtTm3lBkxM5CZRJDq5aHvBhOUPHIGWxgqROHtdObCxNfRJdhr7zllk5xpr4TxF63UCb3aWL6SGM3m1izX52Xxxe4PU36PzauVgR8-NpZshXVlFhLxGuLBHu1Im3AthqdhqdOI2Eo26txPC2Vcb0IBARIQF3CSNL1VGJF8BX1Z2wE4OkSa6RjKYr6AW24D2_WF5e_BPXLIaIo1GPujITpby9Rdj53jXRuSZR-wpIKBw2znpgGlf8GZzFzACbQcSaUnrswpYaAW1DscHYHnAE_Fo-4Ov8SVnUOvNIoVCQ</field>
-        <field name="public_key_ca">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAINaBEtCxSyjqsI552KYo+NIVjChVf7p3e5/tSt0XgwWPKRTPvebEPBUQcuXnn7Dka4IfS5HX/JgTKGlAM5byfECAwEAAQ==</field>
+        <field name="token_id">4b9d7fa8-d350-4b6a-e063-62199f0ab99a</field>
+        <field name="token_key">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKJa4g2QDJuYXZE/LG7JVH7RcIOL0LYRGbWTMOdQrAfzPEQm3Amt9hMhViD+3GbYezEfyC4aL0jOf5Tpf+vqPckCAwEAAQ==</field>
+        <field name="public_key_ca">MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAJUGSH1d8fGoZ90b3naCqRxzJIH/Ceztg0yf/+M27pKbATH/DrzciHm79kp0slsgCeKs0YNnM7kD8k6LTnhkerECAwEAAQ==</field>
         <field name="base_url">https://api.idg.vnpt.vn</field>
         <field name="is_active" eval="True"/>
     </record>
 </odoo>
-
