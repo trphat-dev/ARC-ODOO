@@ -24,12 +24,13 @@ numpy>=1.24.0                   # Numerical computing (ai_trading_assistant)
 pandas>=2.0.0                   # Data manipulation (ai_trading_assistant, reports)
 
 # -----------------------------------------------------------------------------
-# AI TRADING (ai_trading_assistant) — optional, heavy deps
+# AI TRADING (ai_trading_assistant)
 # -----------------------------------------------------------------------------
-# Uncomment khi cần chạy AI trading module:
-# --extra-index-url https://download.pytorch.org/whl/cpu
-# finrl>=0.3.0                  # FinRL framework (includes torch, gymnasium)
-# stable-baselines3>=2.0.0      # DRL algorithms
+--extra-index-url https://download.pytorch.org/whl/cpu
+finrl @ git+https://github.com/AI4Finance-Foundation/FinRL.git
+stable-baselines3>=2.0.0        # DRL algorithms
+gymnasium>=0.29.0               # RL environments
+scikit-learn>=1.3.0             # ML utilities
 
 # -----------------------------------------------------------------------------
 # PDF & REPORTING (fund_management, report_list)
