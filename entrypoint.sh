@@ -21,9 +21,9 @@ source "$VENV_PATH/bin/activate"
 
 # Nâng cấp pip và cài đặt requirements
 pip install --upgrade pip
-pip install --no-cache-dir -r /etc/odoo/requirements.txt
+pip install --ignore-installed --no-cache-dir -r /etc/odoo/requirements.txt
 
-# Export PYTHONPATH để Odoo ưu tiên thư viện trong venv
+# Đảm bảo Odoo nhận diện được thư viện trong venv khi chạy
 export PYTHONPATH="$VENV_PATH/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages:$PYTHONPATH"
 # sed -i 's|raise werkzeug.exceptions.BadRequest(msg)|self.jsonrequest = {}|g' /usr/lib/python3/dist-packages/odoo/http.py
 
