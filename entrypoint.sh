@@ -9,8 +9,8 @@ set -e
 : ${USER:=${DB_ENV_POSTGRES_USER:=${POSTGRES_USER:='odoo'}}}
 : ${PASSWORD:=${DB_ENV_POSTGRES_PASSWORD:=${POSTGRES_PASSWORD:='odoo18@2024'}}}
 
-# install python packages
-# pip3 install pip --upgrade                # may cause errors
+# install system dependencies and python packages
+apt-get update && apt-get install -y git swig gcc g++
 pip3 install -r /etc/odoo/requirements.txt
 # sed -i 's|raise werkzeug.exceptions.BadRequest(msg)|self.jsonrequest = {}|g' /usr/lib/python3/dist-packages/odoo/http.py
 
