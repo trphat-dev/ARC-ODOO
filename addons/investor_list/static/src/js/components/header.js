@@ -4,7 +4,6 @@ import { Component, xml, useState, onMounted, onPatched, onWillUnmount } from "@
 export class Header extends Component {
   static template = xml`
     <div>
-    <t t-if="!state.isHeaderHidden">
     <header class="bo-header" t-att-class="state.scrolled ? 'scrolled' : ''">
       <!-- Top Bar -->
       <div class="bo-topbar">
@@ -25,7 +24,6 @@ export class Header extends Component {
                 </div>
                 <div class="bo-user-menu__info">
                   <span class="bo-user-menu__name"><t t-esc="state.userName"/></span>
-                  <span class="bo-user-menu__role">Nhân viên</span>
                 </div>
                 <i class="fas fa-chevron-down bo-user-menu__chevron"></i>
               </button>
@@ -34,7 +32,6 @@ export class Header extends Component {
               <div class="bo-user-dropdown">
                 <div class="bo-user-dropdown__header">
                   <div class="name"><t t-esc="state.userName"/></div>
-                  <div class="email">Nhân viên Quản lý Quỹ</div>
                 </div>
                 <div class="bo-user-dropdown__body">
 
@@ -203,7 +200,6 @@ export class Header extends Component {
       </div>
     </header>
     <div class="bo-header-spacer"></div>
-    </t>
     </div>
     `;
 
@@ -220,8 +216,6 @@ export class Header extends Component {
       isUserDropdownOpen: false,
       isMobileMenuOpen: false,
       scrolled: false,
-      userType: '',
-      isHeaderHidden: false,
     });
 
     // Scroll Animation Logic
@@ -249,7 +243,6 @@ export class Header extends Component {
     // Cập nhật currentPage khi URL thay đổi
     this.updateCurrentPage = () => {
       this.state.currentPage = this.getCurrentPage();
-      this.checkHeaderVisibility();
     };
 
     // Lắng nghe sự kiện popstate (back/forward button)
@@ -352,34 +345,15 @@ export class Header extends Component {
         const soTk = await this.fetchStatusInfo();
         this.state.accountNo = soTk || '';
         this.state.isLoggedIn = true;
-
-        try {
-          const typeRes = await fetch('/api/user-permission/check-user-type', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
-          });
-          const typeData = await typeRes.json();
-          if (typeData && (typeData.result || typeData).success) {
-            this.state.userType = (typeData.result || typeData).user_type;
-          }
-        } catch (err) {
-          console.error('Lỗi khi lấy user_type', err);
-        }
-        this.checkHeaderVisibility();
       } else {
         this.state.userName = '';
         this.state.accountNo = '';
-        this.state.userType = '';
         this.state.isLoggedIn = false;
-        this.checkHeaderVisibility();
       }
     } catch (e) {
       this.state.userName = '';
       this.state.accountNo = '';
-      this.state.userType = '';
       this.state.isLoggedIn = false;
-      this.checkHeaderVisibility();
     }
   }
 
@@ -431,31 +405,6 @@ export class Header extends Component {
 
     // Mặc định về trang investor nếu không khớp với bất kỳ trang nào
     return 'investor';
-  }
-
-  checkHeaderVisibility() {
-    // Hàm này xử lý ẩn header tự động chỉ đối với quyền system admin
-    // trong 3 module lớn: dashboard, fund_management_control, user_permission_management
-    const path = window.location.pathname;
-    const isDashboard = path.startsWith('/fund-management-dashboard');
-    const isUserMgmt = path.startsWith('/user-management') || path.startsWith('/user_permission');
-    const isFundCtl = ['/fund_certificate', '/holiday_list', '/bank_list', '/bank_branch', '/term_rate']
-      .some(p => path.startsWith(p));
-
-    const isTargetModule = isDashboard || isUserMgmt || isFundCtl;
-    const isSysAdmin = this.state.userType === 'system_admin';
-
-    this.state.isHeaderHidden = isSysAdmin && isTargetModule;
-
-    // Xử lý ẩn/hiện navbar chuẩn của Odoo (thanh đen ngang trên cùng) cho system_admin
-    const odooNavbar = document.querySelector('.o_main_navbar, .o_navbar');
-    if (this.state.isHeaderHidden) {
-      if (odooNavbar) odooNavbar.style.setProperty('display', 'none', 'important');
-      document.body.classList.add('hide-header-for-sysadmin');
-    } else {
-      if (odooNavbar) odooNavbar.style.display = '';
-      document.body.classList.remove('hide-header-for-sysadmin');
-    }
   }
 }
 
