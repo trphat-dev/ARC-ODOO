@@ -69,6 +69,24 @@ class TradingOrder(models.Model):
                 record.write_token_expires_in = ''
 
     # --- ORDER DETAILS ---
+    broker_type = fields.Selection([
+        ('ssi', 'SSI'),
+        ('bvsc', 'BVSC'),
+    ], string='Broker', default='ssi', tracking=True)
+
+    # Compatibility aliases for views
+    account_no = fields.Char(related='account', string='Account No', readonly=True)
+    symbol = fields.Char(related='instrument_code', string='Symbol', readonly=True)
+    side = fields.Selection(related='buy_sell', string='Side', readonly=True)
+    status = fields.Selection(related='state', string='Status', readonly=True)
+    order_date = fields.Date(compute='_compute_order_date', string='Order Date', store=True)
+
+    @api.depends('create_date', 'submitted_at')
+    def _compute_order_date(self):
+        for record in self:
+            dt = record.submitted_at or record.create_date
+            record.order_date = dt.date() if dt else False
+
     order_type = fields.Selection([('stock', 'Stock Order'), ('derivative', 'Derivative Order')], string='Order Type', required=True, default='stock')
     market = fields.Selection([('VN', 'VN - Thị trường cơ sở'), ('VNFE', 'VNFE - Thị trường phái sinh')], string='Market', required=True, default='VN')
     

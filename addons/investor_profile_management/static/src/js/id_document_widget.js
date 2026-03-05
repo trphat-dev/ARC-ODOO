@@ -21,12 +21,8 @@ export class IDDocumentWidget extends Component {
         const frontInput = document.getElementById('front_image_input');
         const backInput = document.getElementById('back_image_input');
 
-        if (frontInput) {
-            frontInput.addEventListener('change', (e) => this.handleImageSelect(e, 'front'));
-        }
-        if (backInput) {
-            backInput.addEventListener('change', (e) => this.handleImageSelect(e, 'back'));
-        }
+        frontInput.addEventListener('change', (e) => this.handleImageSelect(e, 'front'));
+        backInput.addEventListener('change', (e) => this.handleImageSelect(e, 'back'));
     }
 
     handleImageSelect(event, type) {
@@ -153,7 +149,4 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Register the component globally
-const container = document.getElementById('id_document_widget_container');
-if (container) {
-    owl.mount(IDDocumentWidget, container);
-}
+owl.mount(IDDocumentWidget, document.getElementById('id_document_widget_container'));

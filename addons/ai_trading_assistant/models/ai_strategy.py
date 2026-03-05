@@ -70,61 +70,74 @@ class AIStrategy(models.Model):
         return {}
         
     def _sync_history_data(self, history_data):
-        """Đồng bộ dữ liệu nến (OHLCV) từ file Backtest ZIP vào Database."""
+        """Đồng bộ dữ liệu nến (OHLCV) từ file Backtest ZIP vào Database một cách tối ưu."""
         if not history_data or not isinstance(history_data, list):
             return
             
         from datetime import datetime
         
-        # Nhóm dữ liệu theo mã chứng khoán để xử lý Bulk Insert
-        tickers_data = {}
+        # 1. Thu thập tất cả symbol có trong data
+        all_symbols = list(set(row.get('tic') for row in history_data if row.get('tic')))
+        if not all_symbols:
+            return
+            
+        # 2. Bulk fetch các ticker đã tồn tại
+        existing_tickers = self.env['stock.ticker'].search([('name', 'in', all_symbols)])
+        ticker_map = {t.name: t.id for t in existing_tickers}
+        
+        # 3. Tạo các ticker còn thiếu
+        missing_symbols = set(all_symbols) - set(ticker_map.keys())
+        if missing_symbols:
+            new_tickers_vals = [{
+                'name': sym,
+                'market': 'HOSE',
+                'company_name': f'Auto-created from AI Model ({sym})'
+            } for sym in missing_symbols]
+            new_tickers = self.env['stock.ticker'].create(new_tickers_vals)
+            for nt in new_tickers:
+                ticker_map[nt.name] = nt.id
+                
+        # 4. Chuẩn bị dữ liệu nến cho Bulk Upsert
+        all_candle_vals = []
         for row in history_data:
             tic = row.get('tic')
-            if tic:
-                if tic not in tickers_data:
-                    tickers_data[tic] = []
-                tickers_data[tic].append(row)
+            row_date_str = row.get('date')
+            ticker_id = ticker_map.get(tic)
+            
+            if not tic or not row_date_str or not ticker_id:
+                continue
                 
-        for tic_symbol, lines in tickers_data.items():
-            ticker_record = self.env['stock.ticker'].search([('name', '=', tic_symbol)], limit=1)
-            # Tự động tạo mã nếu chưa có
-            if not ticker_record:
-                ticker_record = self.env['stock.ticker'].create({
-                    'name': tic_symbol,
-                    'market': 'HOSE',
-                    'company_name': f'Auto-created from AI Model ({tic_symbol})'
-                })
-                
-            # Chuẩn bị Upsert
-            all_vals = []
-            for row in lines:
-                row_date_str = row.get('date')
-                if not row_date_str: continue
-                
+            try:
                 trading_date = datetime.strptime(row_date_str, '%Y-%m-%d').date()
-                all_vals.append({
-                    'ticker_id': ticker_record.id,
-                    'date': trading_date,
-                    'open': row.get('open', 0.0),
-                    'high': row.get('high', 0.0),
-                    'low': row.get('low', 0.0),
-                    'close': row.get('close', 0.0),
-                    'volume': row.get('volume', 0.0),
-                })
+                all_candle_vals.append((
+                    ticker_id, 
+                    trading_date, 
+                    row.get('open', 0.0), 
+                    row.get('high', 0.0), 
+                    row.get('low', 0.0), 
+                    row.get('close', 0.0), 
+                    row.get('volume', 0.0)
+                ))
+            except Exception:
+                continue
                 
-            if all_vals:
-                query = """
-                    INSERT INTO stock_candle (ticker_id, date, "open", high, low, "close", volume)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (ticker_id, date) DO UPDATE SET
-                        "open" = EXCLUDED.open,
-                        high = EXCLUDED.high,
-                        low = EXCLUDED.low,
-                        "close" = EXCLUDED.close,
-                        volume = EXCLUDED.volume;
-                """
-                params = [(v['ticker_id'], v['date'], v['open'], v['high'], v['low'], v['close'], v['volume']) for v in all_vals]
-                self.env.cr.executemany(query, params)
+        # 5. Thực hiện Bulk Insert/Update if Conflict
+        if all_candle_vals:
+            query = """
+                INSERT INTO stock_candle (ticker_id, date, "open", high, low, "close", volume)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (ticker_id, date) DO UPDATE SET
+                    "open" = EXCLUDED.open,
+                    high = EXCLUDED.high,
+                    low = EXCLUDED.low,
+                    "close" = EXCLUDED.close,
+                    volume = EXCLUDED.volume;
+            """
+            # Chia nhỏ lô (chunk) nếu dữ liệu quá lớn để tránh lỗi bộ nhớ hoặc giới hạn packet
+            chunk_size = 5000
+            for i in range(0, len(all_candle_vals), chunk_size):
+                batch = all_candle_vals[i:i + chunk_size]
+                self.env.cr.executemany(query, batch)
 
     def action_activate(self):
         # Tắt các chiến lược active khác có CÙNG mã chứng khoán
@@ -150,43 +163,9 @@ class AIStrategy(models.Model):
     def create(self, vals_list):
         for vals in vals_list:
             if vals.get('model_file'):
-                metadata = self._parse_model_metadata(vals['model_file'])
-                if metadata:
-                    # Tự động điền các field từ metadata nếu có
-                    update_vals = {
-                        'algorithm': metadata.get('algorithm', vals.get('algorithm', 'ppo')),
-                        'evaluated_algorithms': metadata.get('evaluated_algorithms', ''),
-                        'epochs': metadata.get('epochs', 0),
-                        'learning_rate': metadata.get('learning_rate', 0.00025),
-                        'batch_size': metadata.get('batch_size', 64),
-                        'ent_coef': metadata.get('ent_coef', 0.01),
-                        'sharpe_ratio': metadata.get('sharpe_ratio', 0.0),
-                        'expected_return': metadata.get('expected_return', 0.0),
-                        'max_drawdown': metadata.get('max_drawdown', 0.0),
-                        'training_time': metadata.get('training_time', ''),
-                        'framework_version': metadata.get('framework_version', ''),
-                        'status': 'trained'
-                    }
-                    
-                    # Xử lý Ticker Mapping
-                    meta_tickers = metadata.get('ticker_ids', [])
-                    if meta_tickers and isinstance(meta_tickers, list):
-                        if "ALL" in [t.upper() for t in meta_tickers]:
-                            update_vals['ticker_ids'] = [(5, 0, 0)] # Xóa hết để áp dụng Toàn thị trường
-                        else:
-                            # Tìm ID của các mã tương ứng trong CSDL
-                            found_tickers = self.env['stock.ticker'].search([('name', 'in', meta_tickers)])
-                            if found_tickers:
-                                update_vals['ticker_ids'] = [(6, 0, found_tickers.ids)]
-                                
-                    vals.update(update_vals)
-                    
-                    # Đồng bộ History Data
-                    if 'history_data' in metadata:
-                        self._sync_history_data(metadata['history_data'])
-                        
-                elif vals.get('status', 'draft') == 'draft':
-                    vals['status'] = 'trained'
+                self._sync_metadata(vals)
+            elif vals.get('status', 'draft') == 'draft':
+                vals['status'] = 'trained'
                     
         records = super().create(vals_list)
         
@@ -198,48 +177,62 @@ class AIStrategy(models.Model):
 
     def write(self, vals):
         if vals.get('model_file'):
-            metadata = self._parse_model_metadata(vals['model_file'])
-            if metadata:
-                 update_vals = {
-                    'algorithm': metadata.get('algorithm', self.algorithm),
-                    'evaluated_algorithms': metadata.get('evaluated_algorithms', self.evaluated_algorithms),
-                    'epochs': metadata.get('epochs', self.epochs),
-                    'learning_rate': metadata.get('learning_rate', self.learning_rate),
-                    'batch_size': metadata.get('batch_size', self.batch_size),
-                    'ent_coef': metadata.get('ent_coef', self.ent_coef),
-                    'sharpe_ratio': metadata.get('sharpe_ratio', self.sharpe_ratio),
-                    'expected_return': metadata.get('expected_return', self.expected_return),
-                    'max_drawdown': metadata.get('max_drawdown', self.max_drawdown),
-                    'training_time': metadata.get('training_time', self.training_time),
-                    'framework_version': metadata.get('framework_version', self.framework_version),
-                    'status': 'trained'
-                }
-                 
-                 # Xử lý Ticker Mapping
-                 meta_tickers = metadata.get('ticker_ids', [])
-                 if meta_tickers and isinstance(meta_tickers, list):
-                     if "ALL" in [t.upper() for t in meta_tickers]:
-                         update_vals['ticker_ids'] = [(5, 0, 0)]
-                     else:
-                         found_tickers = self.env['stock.ticker'].search([('name', 'in', meta_tickers)])
-                         if found_tickers:
-                             update_vals['ticker_ids'] = [(6, 0, found_tickers.ids)]
-                             
-                 vals.update(update_vals)
-                 
-                 # Đồng bộ History Data
-                 if 'history_data' in metadata:
-                     self._sync_history_data(metadata['history_data'])
-                     
-            else:
-                vals['status'] = 'trained'
-            
+            self._sync_metadata(vals)
         res = super(AIStrategy, self).write(vals)
         
         if vals.get('model_file'):
             for record in self:
                 self._create_history_log(record)
         return res
+
+    def _sync_metadata(self, vals):
+        """Hàm nội bộ để bốc tách Metadata và đồng bộ vào Fields/Database."""
+        metadata = self._parse_model_metadata(vals.get('model_file'))
+        if not metadata:
+            return
+            
+        update_vals = {
+            'algorithm': metadata.get('algorithm', vals.get('algorithm', 'ppo')),
+            'evaluated_algorithms': metadata.get('evaluated_algorithms', ''),
+            'epochs': metadata.get('epochs', 0),
+            'learning_rate': metadata.get('learning_rate', 0.00025),
+            'batch_size': metadata.get('batch_size', 64),
+            'ent_coef': metadata.get('ent_coef', 0.01),
+            'sharpe_ratio': metadata.get('sharpe_ratio', 0.0),
+            'expected_return': metadata.get('expected_return', 0.0),
+            'max_drawdown': metadata.get('max_drawdown', 0.0),
+            'training_time': metadata.get('training_time', ''),
+            'framework_version': metadata.get('framework_version', ''),
+            'status': 'trained'
+        }
+        
+        # Xử lý Ticker Mapping (Tối ưu)
+        meta_tickers = metadata.get('ticker_ids', [])
+        if meta_tickers and isinstance(meta_tickers, list):
+            if "ALL" in [t.upper() for t in meta_tickers]:
+                update_vals['ticker_ids'] = [(5, 0, 0)]
+            else:
+                existing_tickers = self.env['stock.ticker'].search([('name', 'in', meta_tickers)])
+                found_names = existing_tickers.mapped('name')
+                missing_names = set(meta_tickers) - set(found_names)
+                
+                all_ids = list(existing_tickers.ids)
+                if missing_names:
+                    new_tickers_vals = [{
+                        'name': name, 'market': 'HOSE', 
+                        'company_name': f'Auto-created from AI Model ({name})'
+                    } for name in missing_names]
+                    new_tickers = self.env['stock.ticker'].create(new_tickers_vals)
+                    all_ids.extend(new_tickers.ids)
+                
+                if all_ids:
+                    update_vals['ticker_ids'] = [(6, 0, all_ids)]
+                    
+        vals.update(update_vals)
+        
+        # Đồng bộ History Data (Đã được tối ưu ở bước trước)
+        if 'history_data' in metadata:
+            self._sync_history_data(metadata['history_data'])
 
     def _create_history_log(self, record):
         """Helper để tạo log lịch sử huấn luyện."""

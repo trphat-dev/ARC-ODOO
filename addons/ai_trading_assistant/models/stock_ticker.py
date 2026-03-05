@@ -44,28 +44,63 @@ class StockTicker(models.Model):
     @api.model
     def ai_chat(self, message):
         """
-        Logic xử lý tin nhắn ĐA NĂNG: Hỗ trợ phân tích nhiều mã cùng lúc và nhận định vĩ mô real-time.
+        Logic xử lý tin nhắn ĐA NĂNG: Phân loại ý định, tư vấn cổ phiếu, vĩ mô, và trò chuyện chung.
         """
-        # 1. Trích xuất CÁC mã chứng khoán bằng LLM (OpenRouter)
-        system_prompt_extract = """Bạn là một chuyên gia nhận diện thực thể tài chính.
-Nhiệm vụ của bạn là đọc câu hỏi của người dùng và trích xuất DANH SÁCH CÁC MÃ CHỨNG KHOÁN (ticker symbol) mà họ đang muốn phân tích.
-- Nếu người dùng nhắc đến 1 hoặc nhiều mã (Ví dụ: FPT, ACB, HPG...), hãy trả về các mã đó cách nhau bởi dấu phẩy (Ví dụ: FPT, ACB, HPG).
-- Nếu người dùng CHỈ hỏi chung chung, hãy trả về chữ: NONE.
-KHÔNG giải thích, KHÔNG nói gì thêm. Chỉ trả về danh sách mã cách nhau bởi dấu phẩy hoặc NONE."""
-        
+        # 1. Phân loại ý định (Intent Classification) & Trích xuất mã bằng LLM
+        system_prompt_extract = """Bạn là trợ lý ảo phân loại câu hỏi chứng khoán. Đọc câu hỏi và trả về ĐÚNG 2 dòng như sau (Tuyệt đối không giải thích thêm):
+INTENT: [TICKER hoặc MACRO hoặc CHAT]
+SYMBOLS: [Danh sách mã cách nhau bởi dấu phẩy, hoặc NONE]
+
+Quy tắc phân loại:
+- TICKER: Khi người dùng hỏi cần phân tích, đánh giá, mua bán các mã cụ thể (VD: "Phân tích SSI", "Nên mua HPG không?").
+- MACRO: Khi người dùng hỏi tổng quan thị trường, điểm số VN-Index, xu hướng chung (VD: "Thị trường nay sao", "VN-Index có sập không?").
+- CHAT: Khi người dùng chào hỏi, hỏi kiến thức, giải thích thuật ngữ, công thức biểu đồ, hoặc trò chuyện chung (VD: "RSI là gì?", "Chào bạn").
+- SYMBOLS: Điền các mã (VD: SSI, HPG) nếu nhắc tới. Ghi NONE nếu không.
+"""
         extract_response = self.env['ai.chatbot.service'].call_openrouter(message, system_prompt_extract).strip().upper()
         
+        intent = "CHAT"
+        if "INTENT: TICKER" in extract_response: intent = "TICKER"
+        elif "INTENT: MACRO" in extract_response: intent = "MACRO"
+        
         symbols = []
-        if "NONE" not in extract_response:
-            # Tìm tất các mã 3 chữ cái trong response
-            symbols = re.findall(r'\b[A-Z0-9]{3,}\b', extract_response)
-            # Loại bỏ các từ khóa không phải mã như SSI, T+1... nếu cần (ở đây SSI là mã nên cứ để)
-            symbols = list(set(symbols)) # Duy nhất
+        if intent == "TICKER" or "SYMBOLS:" in extract_response:
+            lines = extract_response.split('\n')
+            for line in lines:
+                if line.startswith("SYMBOLS:"):
+                    ticker_part = line.split("SYMBOLS:")[-1]
+                    if "NONE" not in ticker_part:
+                        symbols = re.findall(r'\b[A-Z0-9]{3,}\b', ticker_part)
+                        symbols = list(set(symbols))
+                        break
 
-        if not symbols:
+        if not symbols and intent == "TICKER":
+            intent = "MACRO" # Fallback nếu hỏi chung chung mà AI lỡ xếp vào TICKER
+
+        if intent == "CHAT":
+            import pytz
+            from datetime import datetime
+            vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+            current_date_str = datetime.now(vn_tz).strftime('%d/%m/%Y')
+            
+            system_prompt = f"""Bạn là ARC Intelligence - Cố vấn tài chính am hiểu chứng khoán Việt Nam. Hôm nay là {current_date_str}.
+Nhiệm vụ của bạn: Trả lời câu hỏi giao tiếp, giải thích kiến thức, thuật ngữ, chia sẻ kinh nghiệm đầu tư một cách chuyên nghiệp, khách quan và dễ hiểu. 
+Tuyệt đối KHÔNG ĐƯỢC BỊA ĐẶT SỐ LIỆU GIÁ CỔ PHIẾU DO AI KHÔNG CÓ DỮ LIỆU SÁNG NAY. 
+Nếu người dùng hỏi các chủ đề không liên quan đến tài chính, chứng khoán hoặc kinh tế, hãy từ chối lịch sự và hướng họ trở lại chủ đề đầu tư."""
+            
+            response = self.env['ai.chatbot.service'].call_openrouter(message, system_prompt)
+            return {
+                'status': 'success', 
+                'type': 'general',
+                'data': {
+                    'text_content': response.replace('\n', '<br/>')
+                }
+            }
+
+        if intent == "MACRO":
             # --- XỬ LÝ NHẬN ĐỊNH VĨ MÔ TOÀN CẢNH ---
             market_context = "Hiện chưa lấy được dữ liệu thị trường mới nhất."
-            latest_vni_price = 1100.0
+            latest_vni_price = None
             
             ssi_id = self.env['ir.config_parameter'].sudo().get_param('ai_trading.ssi_consumer_id', '')
             ssi_secret = self.env['ir.config_parameter'].sudo().get_param('ai_trading.ssi_consumer_secret', '')
@@ -93,15 +128,22 @@ KHÔNG giải thích, KHÔNG nói gì thêm. Chỉ trả về danh sách mã cá
                         candles = data.get('data', [])
                         if candles:
                             latest = candles[0]
-                            latest_vni_price = float(latest.get('Close', 1100))
-                            market_context = f"VN-Index phiên mới nhất ({latest.get('TradingDate')}): Đóng cửa tại {latest.get('Close')} điểm. Khối lượng: {latest.get('Volume', 0):,} cp."
+                            latest_vni_price = float(latest.get('Close', 0))
+                            if latest_vni_price > 0:
+                                market_context = f"VN-Index phiên mới nhất ({latest.get('TradingDate')}): Đóng cửa tại {latest.get('Close')} điểm. Khối lượng: {latest.get('Volume', 0):,} cp."
                 except Exception as e:
                     market_context = f"Lỗi dữ liệu vĩ mô: {e}"
 
-            system_prompt = f"""Bạn là ARC Intelligence - Giám đốc Phân tích.
-Người dùng đang hỏi về vĩ mô/toàn cảnh thị trường.
+            vni_prompt_part = f"Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni_price} này." if latest_vni_price else "Hãy cung cấp nhận định chuyên sâu dựa trên tình trạng hiện tại."
+            
+            import pytz
+            vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
+            current_date_str = datetime.now(vn_tz).strftime('%d/%m/%Y')
+            
+            system_prompt = f"""Bạn là ARC Intelligence - Giám đốc Phân tích vĩ mô. Hôm nay là ngày thực tế: {current_date_str}.
+Người dùng đang hỏi về vĩ mô/toàn cảnh thị trường chứng khoán Việt Nam.
 [DỮ LIỆU VN-INDEX MỚI NHẤT]: {market_context}
-Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni_price} này. Đề xuất các nhóm ngành hot và 3 mã tiềm năng."""
+{vni_prompt_part} Đề xuất các nhóm ngành hot và 3 mã tiềm năng."""
             
             response = self.env['ai.chatbot.service'].call_openrouter(message, system_prompt)
             return {
@@ -253,7 +295,6 @@ Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni
         if resist_v <= l_price: resist_v = l_price + (atr_v * 2.0)
         
         # Tổng hợp tín hiệu AI + Technicals
-        # Tổng hợp tín hiệu AI + Technicals
         ai_conf = 0.0
         tech_signal = "TRUNG LẬP / ĐỨNG NGOÀI"
         
@@ -265,25 +306,32 @@ Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni
         else:
             ai_conf = min(abs(pred_action * 100), 100)
             
-            if pred_action > 0.1:
-                # AI báo xu hướng Lên -> Chỉ tư vấn Chiều Mua
+            # Nới lỏng Threshold của AI xuống 0.05, hoặc nếu AI gần 0 nhưng Chart quá rõ rệt 
+            # thì Fallback 100% sang phân tích kỹ thuật.
+            if pred_action >= 0.05 or (abs(pred_action) < 0.05 and is_bullish_trend):
+                # AI báo xu hướng Lên -> Hỗ trợ Mua
                 if is_bullish_trend and rsi_v < 70:
-                    tech_signal = "GIẢI NGÂN TỶ TRỌNG CAO" if pred_action > 0.5 else "GIẢI NGÂN MỚI"
+                    tech_signal = "MUA"
                 elif rsi_v >= 70:
-                    tech_signal = "TRUNG LẬP" # Đang vùng rủi ro
+                    tech_signal = "TRUNG LẬP / ĐỨNG NGOÀI" # Đang vùng rủi ro RSI Căng
                 else:
-                    tech_signal = "GIẢI NGÂN THĂM DÒ"
-            elif pred_action < -0.1:
-                # AI báo xu hướng Xuống -> Chỉ tư vấn Chiều Bán
+                    tech_signal = "MUA" # Thăm dò
+            elif pred_action <= -0.05 or (abs(pred_action) < 0.05 and is_bearish_trend):
+                # AI báo xu hướng Xuống -> Hỗ trợ Bán
                 if is_bearish_trend and rsi_v > 30:
-                    tech_signal = "HẠ TỶ TRỌNG / CẮT LỖ" if pred_action < -0.5 else "HẠ TỶ TRỌNG"
+                    tech_signal = "BÁN"
                 elif rsi_v <= 30:
-                    tech_signal = "TRUNG LẬP" # Quá bán, rủi ro mất hàng
+                    tech_signal = "TRUNG LẬP / ĐỨNG NGOÀI" # Quá bán, rủi ro mất hàng nếu rũ
                 else:
-                    tech_signal = "HẠ TỶ TRỌNG DẦN"
+                    tech_signal = "BÁN"
             else:
-                # Xu hướng hẹp (-0.1 đến 0.1)
-                tech_signal = "TRUNG LẬP"
+                # Trạng thái Sideway rập rình / Xu hướng hẹp
+                if rsi_v < 40:
+                    tech_signal = "MUA"
+                elif rsi_v > 60:
+                    tech_signal = "BÁN"
+                else:
+                    tech_signal = "TRUNG LẬP / ĐỨNG NGOÀI"
 
         # Tính toán các star metrics (1-5)
         price_s = min(max(int(rsi_v / 20) + 1, 1), 5)
@@ -320,16 +368,22 @@ Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni
             active_strategy.algorithm or 'ppo', active_strategy.sharpe_ratio or 0.0, swing_ret_pct, risk_buf_pct, pred_action
         )
         
-        action_c = "#00d084" if "GIẢI NGÂN" in tech_signal else ("#e74c3c" if "HẠ TỶ TRỌNG" in tech_signal else "#f39c12")
+        action_c = "#00d084" if "MUA" in tech_signal else ("#e74c3c" if "BÁN" in tech_signal else "#f39c12")
         score = min(max(int(rsi_v * 0.6 + (15 if macd_v > sig_v else 0) + (15 if l_price > sma_v else 0) + (10 if pred_action > 0 else 0)), 10), 95)
         khq_c = "#10b981" if score > 65 else ("#f59e0b" if score > 45 else "#ef4444")
         khq_l = "Khả quan" if score > 65 else ("Trung lập" if score > 45 else "Kém khả quan")
 
-        is_neg = ("HẠ TỶ TRỌNG" in tech_signal)
-        if is_neg:
+        is_neg = ("BÁN" in tech_signal)
+        is_neutral = ("TRUNG LẬP" in tech_signal)
+        
+        if is_neutral:
+            z_label, z_val = "", ""
+            t_label, t_val, t_color = "", "", ""
+            p_label, p_val = "", ""
+        elif is_neg:
             z_label, z_val = "Vùng canh bán", f"{fmt(l_price)} - {fmt(t1)}"
-            t_label, t_val, t_color = "Ngưỡng Cắt lỗ", f"{fmt(stop_loss)}", "#e74c3c"
-            p_label, p_val = "Rủi ro sụt giảm", f"-{risk_buf_pct:.2f}%"
+            t_label, t_val, t_color = "", "", "" # Bỏ cắt lỗ/ngưỡng giá
+            p_label, p_val = "", "" # Bỏ rủi ro sụt giảm
         else:
             z_label, z_val = "Vùng canh mua", f"{fmt(b_low)} - {fmt(b_high)}"
             t_label, t_val, t_color = "Mục tiêu chốt lời", f"{fmt(t1)} - {fmt(t2)}", "#10b981"

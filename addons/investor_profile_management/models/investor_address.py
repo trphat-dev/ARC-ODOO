@@ -48,6 +48,12 @@ class InvestorAddress(models.Model):
         for record in records:
             if record.partner_id:
                 self.env['status.info']._check_and_update_profile_status(record.partner_id.id)
+                if record.address_type == 'permanent':
+                    investor_records = self.env['investor.list'].sudo().search([
+                        ('partner_id', '=', record.partner_id.id)
+                    ])
+                    if investor_records:
+                        investor_records.modified(['province_city'])
         
         return records
 
@@ -61,6 +67,12 @@ class InvestorAddress(models.Model):
         res = super().write(vals)
         if self.partner_id:
             self.env['status.info']._check_and_update_profile_status(self.partner_id.id)
+            if self.address_type == 'permanent':
+                investor_records = self.env['investor.list'].sudo().search([
+                    ('partner_id', '=', self.partner_id.id)
+                ])
+                if investor_records:
+                    investor_records.modified(['province_city'])
         return res
 
     @api.constrains('street', 'district', 'ward', 'state_id', 'country_id')
@@ -82,8 +94,8 @@ class InvestorAddress(models.Model):
     def _check_zip(self):
         for record in self:
             if record.zip:
-                if not record.zip.isdigit() or len(record.zip) > 5:
-                    raise ValidationError(_('Mã bưu điện tối đa 5 chữ số.'))
+                if not record.zip.isdigit() or len(record.zip) != 6:
+                    raise ValidationError(_('Mã bưu điện phải gồm 6 chữ số.'))
 
     @api.constrains('address_type')
     def _check_address_type(self):

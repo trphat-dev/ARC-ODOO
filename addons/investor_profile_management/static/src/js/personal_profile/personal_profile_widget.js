@@ -1,7 +1,7 @@
 // Personal Profile Widget Component
-// console.log('Loading PersonalProfileWidget component...');
 
-const { Component, xml, useState, onMounted, markup } = owl;
+
+const { Component, xml, useState, onMounted } = owl;
 
 class PersonalProfileWidget extends Component {
     // Configuration constants
@@ -231,424 +231,364 @@ class PersonalProfileWidget extends Component {
         </div>
 
         <!-- eKYC Camera Modal -->
-        <div t-if="state.showEkycModal" class="modal fade show d-block" tabindex="-1" style="background:linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(20,20,30,0.95) 100%); backdrop-filter: blur(10px); z-index: 9999;">
+        <div t-if="state.showEkycModal" class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); z-index: 9999;">
           <style>
             .ekyc-modal-content {
-              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-              border-radius: 20px;
-              box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(249,115,22,0.2);
+              background: #f8fafc;
+              border-radius: 24px;
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+              border: 1px solid rgba(255, 255, 255, 0.1);
               overflow: hidden;
+              max-width: 800px;
+              margin: auto;
             }
             
             .ekyc-modal-header {
-              background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+              background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
               border: none;
-              padding: 20px 30px;
+              padding: 24px 32px;
               color: white;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
             }
             
             .ekyc-modal-title {
-              font-size: 1.5rem;
-              font-weight: 700;
+              font-size: 1.25rem;
+              font-weight: 800;
+              letter-spacing: -0.025em;
+              text-transform: uppercase;
               display: flex;
               align-items: center;
               gap: 12px;
-              margin: 0;
+              color: #ffffff !important;
+              text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             }
             
             .ekyc-modal-title i {
-              font-size: 1.8rem;
-              animation: cameraPulse 2s infinite;
-            }
-            
-            @keyframes cameraPulse {
-              0%, 100% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.1); opacity: 0.9; }
+              color: #f97316;
+              filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.4));
             }
             
             .ekyc-modal-body {
-              padding: 30px;
-              background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+              padding: 40px;
+              position: relative;
             }
             
             .camera-container {
               position: relative;
-              display: inline-block;
               border-radius: 20px;
               overflow: hidden;
-              box-shadow: 0 10px 40px rgba(0,0,0,0.2), 0 0 0 4px rgba(249,115,22,0.1);
               background: #000;
-              padding: 8px;
+              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+              aspect-ratio: 4/3;
+              max-width: 640px;
+              margin: 0 auto;
+              border: 2px solid #e2e8f0;
             }
             
             #ekycVideoPreview {
               width: 100%;
-              max-width: 600px;
-              height: auto;
-              border-radius: 15px;
-              display: block;
-              background: #000;
-              box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-            }
-            
-            .face-frame-main {
-              animation: faceFramePulse 2s infinite ease-in-out;
-            }
-            
-            @keyframes faceFramePulse {
-              0%, 100% { 
-                transform: scale(1);
-                opacity: 0.9;
-              }
-              50% { 
-                transform: scale(1.03);
-                opacity: 1;
-              }
-            }
-            
-            .face-frame-overlay {
-              filter: drop-shadow(0 0 20px rgba(249,115,22,0.4));
-            }
-            
-            .progress-ring {
-              position: absolute;
-              top: 0;
-              left: 0;
-              width: 100%;
               height: 100%;
+              object-fit: cover;
+              transform: scaleX(-1); /* Mirror effect */
             }
             
-            .progress-ring-svg {
-              transform: rotate(-90deg);
-              filter: drop-shadow(0 0 8px rgba(249,115,22,0.6));
+            .face-overlay-guide {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 280px;
+              height: 360px;
+              border: 3px solid rgba(249, 115, 22, 0.6);
+              border-radius: 150px 150px 120px 120px;
+              pointer-events: none;
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+              box-shadow: 0 0 0 2000px rgba(15, 23, 42, 0.4);
             }
             
-            .progress-ring-bg {
-              stroke: rgba(255, 255, 255, 0.2);
-              stroke-width: 5;
-              fill: none;
+            .face-overlay-guide.active {
+              border-color: #10b981;
+              box-shadow: 0 0 0 2000px rgba(6, 78, 59, 0.2);
+              transform: translate(-50%, -50%) scale(1.05);
             }
-            
-            .progress-ring-fill {
-              stroke: #f97316;
-              stroke-linecap: round;
-              stroke-width: 5;
-              fill: none;
-              filter: drop-shadow(0 0 6px rgba(249,115,22,0.8));
-              transition: stroke-dashoffset 0.3s ease;
+
+            .capture-steps {
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                margin-top: 32px;
             }
-            
-            .camera-status {
-              background: linear-gradient(135deg, rgba(249,115,22,0.95) 0%, rgba(234,88,12,0.95) 100%);
-              backdrop-filter: blur(10px);
-              padding: 12px 24px;
-              border-radius: 25px;
-              font-size: 14px;
-              font-weight: 600;
-              box-shadow: 0 4px 15px rgba(249,115,22,0.4);
-              border: 2px solid rgba(255,255,255,0.3);
-              animation: statusSlideIn 0.5s ease-out;
+
+            .step-indicator {
+                padding: 10px 20px;
+                border-radius: 12px;
+                background: #f1f5f9;
+                color: #64748b;
+                font-size: 0.875rem;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                border: 1px solid #e2e8f0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
             }
-            
-            @keyframes statusSlideIn {
-              from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-              }
-              to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-              }
+
+            .step-indicator.active {
+                background: #fff;
+                color: #f97316;
+                border-color: #f97316;
+                box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+                transform: translateY(-2px);
             }
-            
-            .camera-instructions {
-              background: linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(20,20,30,0.9) 100%);
-              backdrop-filter: blur(10px);
-              padding: 14px 28px;
-              border-radius: 25px;
-              font-size: 15px;
-              font-weight: 600;
-              box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-              border: 2px solid rgba(249,115,22,0.3);
-              animation: instructionsSlideUp 0.5s ease-out;
+
+            .step-indicator.completed {
+                background: #f0fdf4;
+                color: #16a34a;
+                border-color: #bcfecb;
             }
-            
-            @keyframes instructionsSlideUp {
-              from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-              }
-              to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-              }
+
+            .instruction-card {
+                position: absolute;
+                bottom: 24px;
+                left: 24px;
+                right: 24px;
+                background: rgba(15, 23, 42, 0.8);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                padding: 16px 20px;
+                border-radius: 20px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                z-index: 30;
+                box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                animation: fadeInUp 0.5s ease-out;
             }
-            
-            .camera-instructions i {
-              color: #f97316;
-              animation: iconBounce 2s infinite;
+
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
             }
-            
-            @keyframes iconBounce {
-              0%, 100% { transform: scale(1); }
-              50% { transform: scale(1.1); }
+
+            .instruction-icon {
+                width: 48px;
+                height: 48px;
+                background: rgba(249, 115, 22, 0.25);
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #f97316;
+                font-size: 1.5rem;
+                flex-shrink: 0;
             }
-            
-            .camera-error-alert {
-              background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-              border: 2px solid #ef4444;
-              border-radius: 15px;
-              padding: 20px;
-              box-shadow: 0 4px 15px rgba(239,68,68,0.2);
+
+            .instruction-text h4 {
+                margin: 0 0 2px 0;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: rgba(255, 255, 255, 0.5);
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
             }
-            
-            .processing-spinner {
-              width: 60px;
-              height: 60px;
-              border-width: 5px;
-              border-color: #f97316;
-              border-right-color: transparent;
-              animation: spin 1s linear infinite;
+
+            .instruction-text p {
+                margin: 0;
+                color: #ffffff;
+                font-size: 1.1rem;
+                font-weight: 600;
+                line-height: 1.3;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             }
-            
-            @keyframes spin {
-              to { transform: rotate(360deg); }
+
+            .processing-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(255, 255, 255, 0.95);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                backdrop-filter: blur(4px);
             }
-            
-            .ekyc-result-success {
-              background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-              border: 2px solid #10b981;
-              border-radius: 15px;
-              padding: 20px;
-              box-shadow: 0 4px 15px rgba(16,185,129,0.2);
+
+            /* Animations */
+            @keyframes pulse-ring {
+                0% { transform: scale(0.95); opacity: 0.5; }
+                50% { transform: scale(1); opacity: 0.3; }
+                100% { transform: scale(0.95); opacity: 0.5; }
             }
-            
-            .ekyc-result-error {
-              background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-              border: 2px solid #ef4444;
-              border-radius: 15px;
-              padding: 20px;
-              box-shadow: 0 4px 15px rgba(239,68,68,0.2);
+
+            .pulse-effect {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                border-radius: inherit;
+                border: 4px solid #f97316;
+                animation: pulse-ring 2s infinite;
             }
-            
-            .btn-ekyc-primary {
-              background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-              border: none;
-              color: white;
-              font-weight: 600;
-              padding: 12px 28px;
-              border-radius: 12px;
-              box-shadow: 0 4px 15px rgba(249,115,22,0.4);
-              transition: all 0.3s ease;
+
+            /* Result Overlay */
+            .result-overlay {
+                position: absolute;
+                inset: 0;
+                background: rgba(15, 23, 42, 0.4);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+                padding: 24px;
+                animation: fadeIn 0.3s ease;
             }
-            
-            .btn-ekyc-primary:hover {
-              transform: translateY(-2px);
-              box-shadow: 0 6px 20px rgba(249,115,22,0.5);
+
+            .result-content {
+                background: white;
+                padding: 32px 24px;
+                border-radius: 28px;
+                text-align: center;
+                width: 100%;
+                max-width: 320px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255,255,255,0.2);
             }
-            
-            .btn-ekyc-primary:active {
-              transform: translateY(0);
+
+            .result-content.success {
+                border-top: 6px solid #10b981;
+            }
+
+            .result-content.error {
+                border-top: 6px solid #ef4444;
+            }
+
+            .result-icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+            }
+
+            .result-icon.success { color: #10b981; }
+            .result-icon.error { color: #ef4444; }
+
+            .result-content h3 {
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: #1e293b;
+                margin-bottom: 8px;
+            }
+
+            .result-content p {
+                color: #64748b;
+                font-size: 0.95rem;
+                line-height: 1.5;
+                margin-bottom: 24px;
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
             }
           </style>
+          
           <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content ekyc-modal-content">
               <div class="modal-header ekyc-modal-header">
-                <h5 class="modal-title ekyc-modal-title">
-                  <i class="fas fa-camera"></i> Xác thực eKYC
+                <h5 class="ekyc-modal-title">
+                  <i class="fas fa-shield-check"></i> 
+                  <span>Xác thực danh tính số</span>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" t-on-click="closeEkycModal" style="opacity: 0.9;"></button>
+                <button type="button" class="btn-close btn-close-white" t-on-click="closeEkycModal"></button>
               </div>
-              <div class="modal-body ekyc-modal-body text-center">
-                <!-- Camera Preview -->
-                <div class="camera-container mb-4">
+              
+              <div class="modal-body ekyc-modal-body">
+                <!-- Processing Overlay -->
+                <div t-if="state.isProcessing" class="processing-overlay">
+                    <div class="spinner-grow text-warning" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <h4 class="mt-4 fw-bold text-slate-900">Đang xử lý dữ liệu</h4>
+                    <p class="text-slate-500">Hệ thống AI đang so khớp khuôn mặt và trích xuất OCR...</p>
+                </div>
+
+                <!-- Camera Work Area -->
+                <div class="camera-container">
                   <video id="ekycVideoPreview" autoplay="autoplay" muted="muted" 
                          t-att-class="state.cameraActive ? 'd-block' : 'd-none'">
                   </video>
                   
-                  <!-- Circular Face Frame Overlay -->
-                  <div t-if="state.cameraActive" 
-                       class="face-frame-overlay position-absolute"
-                       style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; pointer-events: none; z-index: 10;">
-                    
-                    <!-- Main Circular Face Frame -->
-                    <div class="face-frame-main" t-att-style="getFaceFrameStyle()">
-                      <!-- Progress Ring -->
-                      <div class="progress-ring" t-att-style="getProgressRingStyle()">
-                        <svg class="progress-ring-svg" width="300" height="300">
-                          <circle class="progress-ring-bg" cx="150" cy="150" r="140" stroke-width="4" fill="none"/>
-                          <circle class="progress-ring-fill" cx="150" cy="150" r="140" stroke-width="4" fill="none" 
-                                  t-att-style="getProgressRingFillStyle()"/>
-                        </svg>
+                  <!-- Face Guide -->
+                  <div t-if="state.cameraActive" class="face-overlay-guide" t-att-class="{'active': state.faceStatus and state.faceStatus.status === 'perfect'}">
+                      <div t-if="state.faceStatus and state.faceStatus.status === 'perfect'" class="pulse-effect"></div>
+                  </div>
+
+                  <!-- Quick Status Tag -->
+                  <div t-if="state.cameraActive" class="position-absolute" style="top: 20px; left: 20px; z-index: 10;">
+                      <span class="badge rounded-pill px-3 py-2" t-att-class="state.faceStatus and state.faceStatus.status === 'perfect' ? 'bg-success' : 'bg-dark opacity-75'">
+                          <i t-att-class="state.faceStatus and state.faceStatus.status === 'perfect' ? 'fas fa-check-circle' : 'fas fa-face-viewfinder'" class="me-2"></i>
+                          <t t-esc="state.cameraStatus" />
+                      </span>
+                  </div>
+
+                  <!-- Guidance Overlay (Moved here for better visibility) -->
+                  <div class="instruction-card" t-if="state.cameraActive">
+                      <div class="instruction-icon">
+                          <i t-att-class="state.currentCapturePhase === 'front' ? 'fas fa-user-check' : (state.currentCapturePhase === 'left' ? 'fas fa-reply' : 'fas fa-share')"></i>
                       </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Camera Status -->
-                  <div t-if="state.cameraActive" 
-                       class="camera-status position-absolute text-center text-white fw-bold"
-                       style="top: 25px; left: 50%; transform: translateX(-50%); z-index: 15;">
-                    <i class="fas fa-camera me-2"></i>
-                    <t t-esc="state.cameraStatus" />
-                  </div>
-                  
-                  <!-- Camera Instructions -->
-                  <div t-if="state.cameraActive" 
-                       class="camera-instructions position-absolute text-center text-white fw-bold"
-                       style="bottom: 25px; left: 50%; transform: translateX(-50%); z-index: 15;">
-                    <i class="fas fa-user-circle me-2"></i>
-                    <t t-esc="state.cameraInstructions" />
-                  </div>
-                  
-                  <!-- Camera Error -->
-                  <div t-if="state.cameraError" class="camera-error-alert mt-3">
-                    <div class="d-flex align-items-start">
-                      <i class="fas fa-exclamation-triangle me-3 mt-1" style="color: #ef4444; font-size: 1.5rem;"></i>
-                      <div class="flex-grow-1 text-start">
-                        <strong style="color: #dc2626; font-size: 1.1rem;">Lỗi truy cập camera:</strong>
-                        <div style="white-space: pre-line; margin-top: 10px; color: #991b1b; line-height: 1.6;"><t t-esc="state.cameraError" /></div>
+                      <div class="instruction-text">
+                          <h4>Bước tiếp theo: <t t-esc="getPhaseName(state.currentCapturePhase)" /></h4>
+                          <p><t t-esc="state.cameraInstructions" /></p>
                       </div>
-                    </div>
-                    <div class="mt-4 d-flex gap-3 justify-content-center">
-                      <button type="button" class="btn btn-ekyc-primary" t-on-click="initCamera">
-                        <i class="fas fa-redo me-2"></i> Thử lại
-                      </button>
-                      <button type="button" class="btn btn-secondary" style="padding: 12px 28px; border-radius: 12px; font-weight: 600;" t-on-click="closeEkycModal">
-                        <i class="fas fa-times me-2"></i> Đóng
-                      </button>
+                  </div>
+
+                  <!-- Result Overlay (New centered design) -->
+                  <div t-if="state.ekycResult" class="result-overlay">
+                    <div class="result-content animate__animated animate__zoomIn" t-att-class="state.ekycResult.success ? 'success' : 'error'">
+                        <div class="result-icon" t-att-class="state.ekycResult.success ? 'success' : 'error'">
+                            <i t-att-class="state.ekycResult.success ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+                        </div>
+                        <h3 t-esc="state.ekycResult.success ? 'Xác thực thành công!' : 'Xác thực thất bại'" />
+                        <p t-if="!state.ekycResult.success" t-esc="state.ekycResult.error" />
+                        <p t-if="state.ekycResult.success">Thông tin cá nhân đã được tự động cập nhật.</p>
+                        
+                        <div class="d-grid gap-2">
+                            <button t-if="!state.ekycResult.success" type="button" class="btn btn-danger rounded-pill py-2 fw-bold" t-on-click="resetEkycVerification">
+                                <i class="fas fa-redo me-2"></i> Thử lại
+                            </button>
+                            <button type="button" class="btn btn-light border rounded-pill py-2 fw-bold" t-on-click="closeEkycModal">
+                                <i class="fas fa-times me-2"></i> Đóng
+                            </button>
+                        </div>
                     </div>
                   </div>
                 </div>
-                
-                <!-- Progress Display - Hidden -->
-                <!-- <div class="progress-container mt-3">
-                  <div class="progress-text">
-                    <strong>Tiến độ chụp ảnh:</strong>
-                  </div>
-                  <div class="row text-center mt-2">
-                    <div class="col-4">
-                      <div class="progress-step" t-att-class="getProgressStepClass('front')">
-                        <div class="step-dot"></div>
-                        <div class="progress-text small mt-1">Chỉnh diện</div>
-                        <div class="progress-percentage">
-                          <t t-esc="getCapturedCount('front')" />/<t t-esc="state.captureRequirements.front" />
-                        </div>
-                      </div>
+
+                <!-- Step Indicators -->
+                <div class="capture-steps">
+                    <div class="step-indicator" t-att-class="getProgressStepClass('front')">
+                        <i class="fas fa-user"></i> Nhìn thẳng
                     </div>
-                    <div class="col-4">
-                      <div class="progress-step" t-att-class="getProgressStepClass('left')">
-                        <div class="step-dot"></div>
-                        <div class="progress-text small mt-1">Góc trái</div>
-                        <div class="progress-percentage">
-                          <t t-esc="getCapturedCount('left')" />/<t t-esc="state.captureRequirements.left" />
-                        </div>
-                      </div>
+                    <div class="step-indicator" t-att-class="getProgressStepClass('left')">
+                        <i class="fas fa-arrow-left"></i> Nghiêng trái
                     </div>
-                    <div class="col-4">
-                      <div class="progress-step" t-att-class="getProgressStepClass('right')">
-                        <div class="step-dot"></div>
-                        <div class="progress-text small mt-1">Góc phải</div>
-                        <div class="progress-percentage">
-                          <t t-esc="getCapturedCount('right')" />/<t t-esc="state.captureRequirements.right" />
-                        </div>
-                      </div>
+                    <div class="step-indicator" t-att-class="getProgressStepClass('right')">
+                        <i class="fas fa-arrow-right"></i> Nghiêng phải
                     </div>
-                  </div>
-                </div> -->
-                
-                <!-- Captured Images Summary - Hidden -->
-                <!-- <div class="mt-3">
-                  <div class="row text-center">
-                    <div class="col-4">
-                      <div class="small text-white">
-                        <i class="fas fa-user-circle"></i> Chỉnh diện: <t t-esc="getCapturedCount('front')" />/<t t-esc="state.captureRequirements.front" />
-                      </div>
-                    </div>
-                    <div class="col-4">
-                      <div class="small text-white">
-                        <i class="fas fa-arrow-left"></i> Góc trái: <t t-esc="getCapturedCount('left')" />/<t t-esc="state.captureRequirements.left" />
-                      </div>
-                    </div>
-                    <div class="col-4">
-                      <div class="small text-white">
-                        <i class="fas fa-arrow-right"></i> Góc phải: <t t-esc="getCapturedCount('right')" />/<t t-esc="state.captureRequirements.right" />
-                      </div>
-                    </div>
-                  </div>
-                </div> -->
-                
-                <!-- Camera Controls - Hidden -->
-                <!-- <div class="camera-controls d-flex justify-content-center mt-4">
-                  <div class="d-flex gap-4">
-                    <button t-if="!state.cameraActive and !state.cameraError" 
-                            type="button" 
-                            class="btn btn-primary px-4 py-2" 
-                            t-on-click="initCamera">
-                      <i class="fas fa-camera me-2"></i> Kích hoạt Camera
+                </div>
+
+
+
+                <!-- Error Fallback -->
+                <div t-if="state.cameraError" class="alert alert-warning mt-4 p-4" style="border-radius: 16px;">
+                    <h5 class="fw-bold"><i class="fas fa-video-slash me-2"></i> Lỗi Camera</h5>
+                    <p class="mb-3"><t t-esc="state.cameraError" /></p>
+                    <button type="button" class="btn btn-warning px-4 py-2" style="border-radius: 10px;" t-on-click="initCamera">
+                        <i class="fas fa-sync me-2"></i> Thử lại
                     </button>
-                    <button type="button" class="btn px-4 py-2" style="background-color:#f97316;border-color:#f97316;color:white" 
-                            t-on-click="processEkycVerification" 
-                            t-att-disabled="!isAllImagesCaptured() or state.isProcessing">
-                      <i class="fas fa-check me-2"></i> Xác thực eKYC
-                    </button>
-                  </div>
-                </div> -->
-                
-                <!-- Current Phase Indicator - Hidden -->
-                <!-- <div class="mt-3">
-                  <div class="alert alert-info text-center">
-                    <i class="fas fa-camera"></i>
-                    <strong>Đang chụp: </strong>
-                    <span t-if="state.currentCapturePhase === 'front'">
-                      <i class="fas fa-user-circle"></i> Chỉnh diện
-                    </span>
-                    <span t-elif="state.currentCapturePhase === 'left'">
-                      <i class="fas fa-arrow-left"></i> Góc trái
-                    </span>
-                    <span t-elif="state.currentCapturePhase === 'right'">
-                      <i class="fas fa-arrow-right"></i> Góc phải
-                    </span>
-                  </div>
-                </div> -->
-                
-                <!-- Processing Status -->
-                <div t-if="state.isProcessing" class="mt-4">
-                  <div class="processing-spinner spinner-border mx-auto" role="status">
-                    <span class="visually-hidden">Đang xử lý...</span>
-                  </div>
-                  <p class="mt-3 fw-semibold" style="color: #f97316; font-size: 1.1rem;">
-                    <i class="fas fa-spinner fa-spin me-2"></i>
-                    Đang xác thực thông tin eKYC...
-                  </p>
-                  <p class="text-muted small mt-2">Vui lòng đợi trong giây lát</p>
                 </div>
-                
-                <!-- eKYC Result Display -->
-                <div t-if="state.ekycResult" class="mt-4">
-                  <div t-if="state.ekycResult.success" class="ekyc-result-success">
-                    <div class="mb-3">
-                      <i class="fas fa-check-circle" style="font-size: 3rem; color: #10b981;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3" style="color: #047857;">Xác thực eKYC thành công!</h5>
-                    <p class="mb-2" style="color: #065f46;">Thông tin đã được cập nhật tự động vào form.</p>
-                    <p class="mb-0" style="color: #065f46;">
-                      <i class="fas fa-check-circle me-2"></i> 
-                      <strong>Bạn có thể tiếp tục hoàn thiện thông tin cá nhân.</strong>
-                    </p>
-                  </div>
-                  <div t-if="!state.ekycResult.success" class="ekyc-result-error">
-                    <div class="mb-3">
-                      <i class="fas fa-times-circle" style="font-size: 3rem; color: #ef4444;"></i>
-                    </div>
-                    <h5 class="fw-bold mb-3" style="color: #dc2626;">Xác thực eKYC thất bại!</h5>
-                    <p class="mb-3" style="color: #991b1b; line-height: 1.6;" t-esc="state.ekycResult.error" />
-                    <div class="mt-4">
-                      <button type="button" class="btn btn-ekyc-primary" t-on-click="resetEkycVerification">
-                        <i class="fas fa-redo me-2"></i> Xác thực lại
-                      </button>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>
@@ -668,7 +608,7 @@ class PersonalProfileWidget extends Component {
                     <i class="fa fa-check-circle"></i>
                   </div>
                 </t>
-                <div t-out="state.modalMessage" class="mt-3"></div>
+                <div t-raw="state.modalMessage" class="mt-3"></div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn" style="background-color:#f97316;border-color:#f97316;color:white" t-on-click="closeModal">Đóng</button>
@@ -679,7 +619,7 @@ class PersonalProfileWidget extends Component {
     `;
 
     setup() {
-        // console.log("🎯 PersonalProfileWidget - setup called!");
+
 
         this.state = useState({
             loading: true,
@@ -800,7 +740,7 @@ class PersonalProfileWidget extends Component {
             const isEkycData = parsedData.name && parsedData.id_number && (parsedData.frontPreviewBase64 || parsedData.backPreviewBase64);
 
             if (isEkycData) {
-                // console.log("🔄 Fresh eKYC data detected, applying OCR data to form");
+
 
                 // Apply OCR data to form
                 this.state.formData.name = parsedData.name || '';
@@ -817,13 +757,11 @@ class PersonalProfileWidget extends Component {
                     this.state.ekycFiles.frontPreview = parsedData.frontPreviewBase64;
                     // Convert base64 thành File object để có thể lưu vào database
                     this.state.ekycFiles.front = this.base64ToFile(parsedData.frontPreviewBase64, 'cccd_front.jpg');
-                    console.log("✅ Front CCCD converted to File object for saving");
                 }
                 if (parsedData.backPreviewBase64) {
                     this.state.ekycFiles.backPreview = parsedData.backPreviewBase64;
                     // Convert base64 thành File object để có thể lưu vào database
                     this.state.ekycFiles.back = this.base64ToFile(parsedData.backPreviewBase64, 'cccd_back.jpg');
-                    console.log("✅ Back CCCD converted to File object for saving");
                 }
 
                 // Keep existing email and phone if available, or set defaults
@@ -838,7 +776,7 @@ class PersonalProfileWidget extends Component {
 
                 // Show success message
 
-                // console.log("✅ eKYC OCR data and CCCD images applied to form:", this.state.formData);
+
             } else {
                 // Regular session storage data (with preview images)
                 if (parsedData.nationality && typeof parsedData.nationality === 'number') {
@@ -853,7 +791,7 @@ class PersonalProfileWidget extends Component {
                 if (parsedData.backPreviewBase64) {
                     this.state.ekycFiles.backPreview = parsedData.backPreviewBase64;
                 }
-                // console.log("✅ Form data loaded from sessionStorage:", this.state.formData);
+
             }
         } else if (this.state.profile && Object.keys(this.state.profile).length > 0) {
             this.state.formData.name = this.state.profile.name || '';
@@ -868,31 +806,29 @@ class PersonalProfileWidget extends Component {
             this.state.formData.nationality = this.state.profile.nationality ? Number(this.state.profile.nationality) : '';
 
             // Load CCCD images từ database nếu có
-            // console.log("🔍 Checking for CCCD images in profile:", this.state.profile);
+
 
             if (this.state.profile.id_front && this.state.profile.id_front !== '') {
                 this.state.ekycFiles.frontPreview = this.state.profile.id_front;
-                console.log("✅ Front CCCD loaded from database:", this.state.profile.id_front);
 
                 // Convert URL images thành File objects để có thể save lại
                 this.loadImageAsFile(this.state.profile.id_front, 'front');
             } else {
-                console.log("ℹ️ No front CCCD image found in database");
+                console.log("No front CCCD image found in database");
             }
 
             if (this.state.profile.id_back && this.state.profile.id_back !== '') {
                 this.state.ekycFiles.backPreview = this.state.profile.id_back;
-                console.log("✅ Back CCCD loaded from database:", this.state.profile.id_back);
 
                 // Convert URL images thành File objects để có thể save lại
                 this.loadImageAsFile(this.state.profile.id_back, 'back');
             } else {
-                console.log("ℹ️ No back CCCD image found in database");
+                console.log("No back CCCD image found in database");
             }
 
-            // console.log("✅ Form data initialized with existing profile data:", this.state.formData);
+
         } else {
-            // console.log("ℹ️ No existing profile data found, using default values");
+            console.log("No existing profile data found, using default values");
         }
     }
 
@@ -935,7 +871,7 @@ class PersonalProfileWidget extends Component {
             });
 
         } catch (error) {
-            console.error("❌ Error fetching countries:", error);
+            console.error("Error fetching countries:", error);
 
             // Create fallback countries array
             this.state.countries = [
@@ -1033,16 +969,15 @@ class PersonalProfileWidget extends Component {
         try {
             const response = await fetch('/get_status_info');
             const data = await response.json();
-            console.log("📥 Status info data:", data);
+            // Status info loaded
 
             if (data && data.length > 0) {
                 this.state.statusInfo = data[0];
-                console.log("✅ Status info loaded:", this.state.statusInfo);
             } else {
-                console.log("ℹ️ No status info found");
+                console.log("No status info found");
             }
         } catch (error) {
-            console.error("❌ Error fetching status info:", error);
+            console.error("Error fetching status info:", error);
         }
     }
 
@@ -1080,12 +1015,12 @@ class PersonalProfileWidget extends Component {
     // Thêm hàm load image từ URL thành File object  
     async loadImageAsFile(imageUrl, side) {
         try {
-            console.log(`🔄 Loading ${side} CCCD image from URL:`, imageUrl);
+
 
             // Kiểm tra URL hợp lệ
             const isWebImage = imageUrl && imageUrl.startsWith('/web/image');
             if (!imageUrl || imageUrl === '' || !isWebImage) {
-                console.log(`⚠️ Invalid URL for ${side} CCCD image:`, imageUrl);
+                console.warn(`Invalid URL for ${side} CCCD image:`, imageUrl);
                 return;
             }
 
@@ -1104,13 +1039,11 @@ class PersonalProfileWidget extends Component {
 
             if (side === 'front') {
                 this.state.ekycFiles.front = file;
-                console.log(`✅ Front CCCD image converted to File object:`, file.name, `(${file.size} bytes)`);
             } else if (side === 'back') {
                 this.state.ekycFiles.back = file;
-                console.log(`✅ Back CCCD image converted to File object:`, file.name, `(${file.size} bytes)`);
             }
         } catch (error) {
-            console.error(`❌ Error loading ${side} CCCD image:`, error);
+            console.error(`Error loading ${side} CCCD image:`, error);
             // Không set file nếu có lỗi, để user có thể upload lại
         }
     }
@@ -1172,38 +1105,27 @@ class PersonalProfileWidget extends Component {
             // Convert images sang base64 cho việc lưu
             if (this.state.ekycFiles.front) {
                 profileData.frontPreviewBase64 = await this.fileToBase64(this.state.ekycFiles.front);
-                console.log("✅ Front CCCD File object converted to base64 for saving");
             } else if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('data:')) {
                 profileData.frontPreviewBase64 = this.state.ekycFiles.frontPreview;
-                console.log("✅ Front CCCD base64 data ready for saving");
             } else if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('/web/image')) {
                 // Image từ database - convert URL sang base64
                 profileData.frontPreviewBase64 = await this.urlToBase64(this.state.ekycFiles.frontPreview);
-                console.log("✅ Front CCCD URL converted to base64 for saving");
             } else {
                 profileData.frontPreviewBase64 = '';
             }
 
             if (this.state.ekycFiles.back) {
                 profileData.backPreviewBase64 = await this.fileToBase64(this.state.ekycFiles.back);
-                console.log("✅ Back CCCD File object converted to base64 for saving");
             } else if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('data:')) {
                 profileData.backPreviewBase64 = this.state.ekycFiles.backPreview;
-                console.log("✅ Back CCCD base64 data ready for saving");
             } else if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('/web/image')) {
                 // Image từ database - convert URL sang base64
                 profileData.backPreviewBase64 = await this.urlToBase64(this.state.ekycFiles.backPreview);
-                console.log("✅ Back CCCD URL converted to base64 for saving");
             } else {
                 profileData.backPreviewBase64 = '';
             }
 
-            console.log("📤 Sending profile data with CCCD images:", {
-                hasfront: !!profileData.frontPreviewBase64,
-                hasBack: !!profileData.backPreviewBase64,
-                frontSize: profileData.frontPreviewBase64 ? `${profileData.frontPreviewBase64.length} chars` : '0',
-                backSize: profileData.backPreviewBase64 ? `${profileData.backPreviewBase64.length} chars` : '0'
-            });
+
 
             // Gửi dữ liệu lên Odoo
             const response = await fetch('/save_personal_profile', {
@@ -1216,8 +1138,6 @@ class PersonalProfileWidget extends Component {
                 sessionStorage.setItem('personalProfileData', JSON.stringify(profileData));
                 sessionStorage.setItem('personalProfileUserId', String(window.currentUserId || ''));
 
-                // Reload profile data để đảm bảo ảnh được hiển thị
-                console.log("🔄 Reloading profile data after successful save...");
                 await this.loadProfileData();
                 this.loadInitialFormData();
 
@@ -1240,20 +1160,17 @@ class PersonalProfileWidget extends Component {
 
     async loadProfileData() {
         try {
-            console.log("🔄 Loading profile data from server...");
             const response = await fetch('/data_personal_profile');
             const data = await response.json();
-            console.log("📥 Personal profile data received:", data);
 
             if (data && data.length > 0) {
                 this.state.profile = data[0];
-                console.log("✅ Profile data loaded successfully:", this.state.profile);
             } else {
-                console.log("ℹ️ No existing profile data found on server");
+                console.log("No existing profile data found on server");
                 this.state.profile = {};
             }
         } catch (error) {
-            console.error("❌ Error fetching personal profile data:", error);
+            console.error("Error fetching personal profile data:", error);
             this.state.profile = {};
         }
     }
@@ -1294,16 +1211,16 @@ class PersonalProfileWidget extends Component {
             });
 
             if (response.ok) {
-                console.log(`✅ ${side} ID image uploaded successfully.`);
+                // Successful upload
                 // Optionally, refresh profile data to show the new image
                 await this.loadProfileData();
             } else {
                 const errorData = await response.json();
-                console.error(`❌ Failed to upload ${side} ID image:`, errorData.error);
+                console.error(`Failed to upload ${side} ID image:`, errorData.error);
                 alert(`Failed to upload ${side} ID image: ${errorData.error}`);
             }
         } catch (error) {
-            console.error(`❌ Error uploading ${side} ID image:`, error);
+            console.error(`Error uploading ${side} ID image:`, error);
             alert(`Error uploading ${side} ID image.`);
         }
     }
@@ -1312,10 +1229,10 @@ class PersonalProfileWidget extends Component {
         const file = ev.target.files[0];
         if (file) {
             this.state.ekycFiles.front = file;
+            if (this.state.ekycFiles.frontPreview && this.state.ekycFiles.frontPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(this.state.ekycFiles.frontPreview);
+            }
             this.state.ekycFiles.frontPreview = await this.fileToBase64(file);
-
-            // Auto-detect OCR from front CCCD
-            await this.detectOCRFromImage(file, 'front');
         }
     }
 
@@ -1323,16 +1240,19 @@ class PersonalProfileWidget extends Component {
         const file = ev.target.files[0];
         if (file) {
             this.state.ekycFiles.back = file;
+            if (this.state.ekycFiles.backPreview && this.state.ekycFiles.backPreview.startsWith('blob:')) {
+                URL.revokeObjectURL(this.state.ekycFiles.backPreview);
+            }
             this.state.ekycFiles.backPreview = await this.fileToBase64(file);
 
-            // Auto-detect OCR from back CCCD
-            await this.detectOCRFromImage(file, 'back');
+            // Auto-detect OCR removed - only OCR when eKYC is successful
+            console.log('Back CCCD image selected, OCR will run after face matching.');
         }
     }
 
     async detectOCRFromImage(file, side) {
         try {
-            console.log(`🔍 Detecting OCR from ${side} CCCD...`);
+            console.log(`Detecting OCR from ${side} CCCD...`);
 
             // Set loading state
             this.state.ocrLoading[side] = true;
@@ -1347,7 +1267,6 @@ class PersonalProfileWidget extends Component {
             });
 
             const result = await response.json();
-            console.log(`✅ OCR result for ${side}:`, result);
 
             if (response.ok && result.success) {
                 // Success - update form with OCR data
@@ -1365,7 +1284,7 @@ class PersonalProfileWidget extends Component {
         } catch (error) {
             const errorText = side === 'front' ? 'mặt trước' : 'mặt sau';
             this.showModal('Lỗi', `Có lỗi xảy ra khi trích xuất thông tin từ CCCD ${errorText}. Vui lòng thử lại.`);
-            console.error(`❌ Error detecting OCR from ${side} CCCD:`, error);
+            console.error(`Error detecting OCR from ${side} CCCD:`, error);
         } finally {
             // Clear loading state
             this.state.ocrLoading[side] = false;
@@ -1431,10 +1350,9 @@ class PersonalProfileWidget extends Component {
                     const finalData = { ...merged, ...addressPayload };
                     sessionStorage.setItem('addressInfoData', JSON.stringify(finalData));
                     sessionStorage.setItem('addressInfoFromEkyc', 'true');
-                    console.log('🔗 Saved eKYC address data for AddressInfoWidget:', finalData);
                 }
             } catch (e) {
-                console.warn('⚠️ Failed to store eKYC address data to sessionStorage:', e);
+                console.warn('Failed to store eKYC address data to sessionStorage:', e);
             }
         } else if (side === 'back') {
             // Update back OCR data
@@ -1446,7 +1364,13 @@ class PersonalProfileWidget extends Component {
                 this.state.formData.id_issue_date = this.formatDateForInput(ocrData.issue_date);
                 updatedFields.push('Ngày cấp');
             }
-            if (ocrData.place_of_birth) {
+            // Nơi cấp - VNPT uses issue_place or noi_cap. Avoid using place_of_birth which is Nơi sinh.
+            const issuePlace = ocrData.issue_place || ocrData.noi_cap || ocrData.place_of_issue || ocrData.co_quan_cap || ocrData.issued_by;
+            if (issuePlace && issuePlace !== '-') {
+                this.state.formData.id_issue_place = issuePlace;
+                updatedFields.push('Nơi cấp');
+            } else if (ocrData.place_of_birth) {
+                // Fallback for older IDs if issue_place is somehow returned as place_of_birth
                 this.state.formData.id_issue_place = ocrData.place_of_birth;
                 updatedFields.push('Nơi cấp');
             }
@@ -1462,15 +1386,13 @@ class PersonalProfileWidget extends Component {
                     const finalData = { ...merged, birth_place: ocrData.place_of_birth };
                     sessionStorage.setItem('addressInfoData', JSON.stringify(finalData));
                     sessionStorage.setItem('addressInfoFromEkyc', 'true');
-                    console.log('🔗 Updated eKYC birth place for AddressInfoWidget:', finalData);
                 }
             } catch (e) {
-                console.warn('⚠️ Failed to update eKYC birth place in sessionStorage:', e);
+                console.warn('Failed to update eKYC birth place in sessionStorage:', e);
             }
         }
 
-        // console.log(`✅ Form updated with ${side} OCR data:`, this.state.formData);
-        // console.log(`📝 Updated fields: ${updatedFields.join(', ')}`);
+        this.render();
 
         // Show detailed success message
         if (updatedFields.length > 0) {
@@ -1527,8 +1449,8 @@ class PersonalProfileWidget extends Component {
             sessionStorage.setItem('personalProfileData', JSON.stringify(profileData));
             sessionStorage.setItem('personalProfileUserId', String(window.currentUserId || ''));
 
-            console.log('✅ Form data preserved after closing eKYC modal');
-            console.log('📋 Form data:', JSON.stringify(this.state.formData, null, 2));
+            // Form data preserved after closing eKYC modal
+
         }
 
         // Force render to ensure form is visible with updated data
@@ -1554,14 +1476,13 @@ class PersonalProfileWidget extends Component {
             this.initCamera();
         }, 500);
 
-        console.log('🔄 eKYC verification reset, ready to start again');
+        console.log('eKYC verification reset, ready to start again');
     }
 
     // Helper methods for new capture logic
     getCapturedCount(phase) {
         return this.state.capturedImageTypes.filter(type => type === phase).length;
     }
-
     isAllImagesCaptured() {
         const frontCount = this.getCapturedCount('front');
         const leftCount = this.getCapturedCount('left');
@@ -1602,9 +1523,9 @@ class PersonalProfileWidget extends Component {
 
     getPhaseName(phase) {
         const phaseNames = {
-            'front': 'chỉnh diện',
-            'left': 'góc phải',
-            'right': 'góc trái'
+            'front': 'Nhìn thẳng',
+            'left': 'Quay sang trái',
+            'right': 'Quay sang phải'
         };
         return phaseNames[phase] || phase;
     }
@@ -1612,27 +1533,26 @@ class PersonalProfileWidget extends Component {
     updateCameraInstructionsForPhase(phase) {
         const phaseInstructions = {
             'front': 'Vui lòng nhìn thẳng vào camera và giữ nguyên vị trí',
-            'left': 'Vui lòng quay mặt sang trái để đạt góc phải và giữ nguyên vị trí',
-            'right': 'Vui lòng quay mặt sang phải để đạt góc trái và giữ nguyên vị trí'
+            'left': 'Vui lòng quay mặt sang trái và giữ nguyên vị trí',
+            'right': 'Vui lòng quay mặt sang phải và giữ nguyên vị trí'
         };
 
         this.updateCameraInstructions(phaseInstructions[phase] || 'Vui lòng điều chỉnh khuôn mặt');
-        console.log(`📋 Updated camera instructions for phase: ${phase} - ${this.state.cameraInstructions}`);
     }
 
     updateCameraInstructions(message) {
         if (this.state.cameraInstructions !== message) {
             this.state.cameraInstructions = message;
-            console.log(`📋 Camera instructions: ${message}`);
+
         }
     }
+
 
     updateCapturePhase() {
         const nextPhase = this.getNextCapturePhase();
         if (nextPhase && nextPhase !== this.state.currentCapturePhase) {
             this.state.currentCapturePhase = nextPhase;
             this.state.perfectFaceStartTime = 0; // Reset timer for new phase
-            console.log(`🔄 Switching to capture phase: ${nextPhase}`);
 
             // Update camera instructions for new phase
             this.updateCameraInstructionsForPhase(nextPhase);
@@ -1666,7 +1586,7 @@ class PersonalProfileWidget extends Component {
                 throw new Error('Camera chỉ hoạt động trên HTTPS hoặc localhost. Vui lòng truy cập qua HTTPS.');
             }
 
-            console.log('📹 Initializing camera...');
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     width: { ideal: 640 },
@@ -1687,18 +1607,15 @@ class PersonalProfileWidget extends Component {
                 if (!this.state.cameraInstructions) {
                     this.updateCameraInstructionsForPhase(this.state.currentCapturePhase);
                 }
-                console.log('✅ Camera initialized successfully');
 
                 // Start face detection after camera is ready
                 video.onloadedmetadata = () => {
                     setTimeout(async () => {
                         // Check if Face API is already loaded from template
                         if (window.faceapi && this.areModelsLoaded()) {
-                            console.log('✅ Face API and models already available from template');
                             this.startFaceDetection();
                             this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
                         } else if (window.faceapi && !this.areModelsLoaded()) {
-                            console.log('🔄 Face API loaded but models not ready, loading models...');
                             await this.loadFaceAPIModels();
                             this.startFaceDetection();
                             this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
@@ -1711,7 +1628,7 @@ class PersonalProfileWidget extends Component {
                                 this.startFaceDetection();
                                 this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
                             } else {
-                                console.warn('⚠️ Face API not available, using fallback detection');
+                                console.warn('Face API not available, using fallback detection');
                                 this.startFaceDetection();
                                 this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt (chế độ cơ bản)...');
                             }
@@ -1724,11 +1641,9 @@ class PersonalProfileWidget extends Component {
                     setTimeout(async () => {
                         // Check if Face API is already loaded from template
                         if (window.faceapi && this.areModelsLoaded()) {
-                            console.log('✅ Face API and models already available from template (backup)');
                             this.startFaceDetection();
                             this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
                         } else if (window.faceapi && !this.areModelsLoaded()) {
-                            console.log('🔄 Face API loaded but models not ready (backup), loading models...');
                             await this.loadFaceAPIModels();
                             this.startFaceDetection();
                             this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
@@ -1741,7 +1656,7 @@ class PersonalProfileWidget extends Component {
                                 this.startFaceDetection();
                                 this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt...');
                             } else {
-                                console.warn('⚠️ Face API not available, using fallback detection');
+                                console.warn('Face API not available, using fallback detection');
                                 this.startFaceDetection();
                                 this.updateFaceStatus('detecting', 'fas fa-search', 'Đang phát hiện khuôn mặt (chế độ cơ bản)...');
                             }
@@ -1752,7 +1667,7 @@ class PersonalProfileWidget extends Component {
                 throw new Error('Video element not found');
             }
         } catch (error) {
-            console.error('❌ Error accessing camera:', error);
+            console.error('Error accessing camera:', error);
             this.state.cameraActive = false;
             this.state.cameraStatus = 'Lỗi camera';
 
@@ -1801,16 +1716,15 @@ class PersonalProfileWidget extends Component {
 
     async loadFaceAPI() {
         if (window.faceapi) {
-            console.log('✅ Face API already loaded from CDN');
             return;
         }
 
         try {
-            console.log('🔄 Face API not found, trying to load...');
+            console.log('Face API not found, trying to load...');
 
             // Check if Face API is already loaded from CDN in template
             if (window.faceapi) {
-                console.log('✅ Face API loaded from template CDN');
+                console.log('Face API loaded from template CDN');
                 return;
             }
 
@@ -1822,7 +1736,7 @@ class PersonalProfileWidget extends Component {
 
             for (const cdnUrl of cdnSources) {
                 try {
-                    console.log(`🔄 Trying CDN: ${cdnUrl}`);
+                    console.log(`Trying CDN: ${cdnUrl}`);
                     await Promise.race([
                         this.loadScript(cdnUrl),
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Script load timeout')), this.constructor.CONFIG.FACE_API.TIMEOUTS.SCRIPT_LOAD))
@@ -1833,18 +1747,18 @@ class PersonalProfileWidget extends Component {
 
                     if (window.faceapi) {
                         loadSuccess = true;
-                        console.log(`✅ Face API loaded from: ${cdnUrl}`);
+                        console.log(`Face API loaded from: ${cdnUrl}`);
                         break;
                     }
                 } catch (error) {
-                    console.warn(`⚠️ Failed to load from ${cdnUrl}:`, error);
+                    console.warn(`Failed to load from ${cdnUrl}:`, error);
                     lastError = error;
                     continue;
                 }
             }
 
             if (!loadSuccess || !window.faceapi) {
-                console.warn('⚠️ All CDNs failed, trying local fallback...');
+                console.warn('All CDNs failed, trying local fallback...');
                 await this.loadFaceAPILocal();
 
                 if (!window.faceapi) {
@@ -1860,7 +1774,7 @@ class PersonalProfileWidget extends Component {
 
             for (const modelUrl of modelUrls) {
                 try {
-                    console.log(`🔄 Loading models from: ${modelUrl}`);
+                    console.log(`Loading models from: ${modelUrl}`);
                     await Promise.race([
                         Promise.all([
                             window.faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
@@ -1870,17 +1784,17 @@ class PersonalProfileWidget extends Component {
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Model load timeout')), this.constructor.CONFIG.FACE_API.TIMEOUTS.MODEL_LOAD))
                     ]);
                     modelsLoaded = true;
-                    console.log(`✅ Models loaded from: ${modelUrl}`);
+                    console.log(`Models loaded from: ${modelUrl}`);
                     break;
                 } catch (error) {
-                    console.warn(`⚠️ Failed to load models from ${modelUrl}:`, error);
+                    console.warn(`Failed to load models from ${modelUrl}:`, error);
                     modelError = error;
                     continue;
                 }
             }
 
             if (!modelsLoaded) {
-                console.warn('⚠️ All CDN model sources failed, trying local fallback...');
+                console.warn('All CDN model sources failed, trying local fallback...');
                 await this.loadFaceAPIModelsLocal();
 
                 if (!this.areModelsLoaded()) {
@@ -1896,17 +1810,17 @@ class PersonalProfileWidget extends Component {
                 throw new Error('Models not properly loaded');
             }
 
-            console.log('✅ Face API and models loaded successfully');
+            console.log('Face API and models loaded successfully');
         } catch (error) {
-            console.error('❌ Error loading Face API:', error);
+            console.error('Error loading Face API:', error);
             // Don't throw error, just log it and let fallback methods handle detection
-            console.warn('⚠️ Face API failed to load, will use fallback detection methods');
+            console.warn('Face API failed to load, will use fallback detection methods');
         }
     }
 
     async loadFaceAPIModels() {
         try {
-            console.log('🔄 Loading Face API models...');
+            console.log('Loading Face API models...');
 
             // Load models with better error handling
             const modelUrls = this.constructor.CONFIG.FACE_API.MODEL_SOURCES;
@@ -1916,7 +1830,7 @@ class PersonalProfileWidget extends Component {
 
             for (const modelUrl of modelUrls) {
                 try {
-                    console.log(`🔄 Loading models from: ${modelUrl}`);
+                    console.log(`Loading models from: ${modelUrl}`);
                     await Promise.race([
                         Promise.all([
                             window.faceapi.nets.tinyFaceDetector.loadFromUri(modelUrl),
@@ -1926,17 +1840,17 @@ class PersonalProfileWidget extends Component {
                         new Promise((_, reject) => setTimeout(() => reject(new Error('Model load timeout')), this.constructor.CONFIG.FACE_API.TIMEOUTS.MODEL_LOAD))
                     ]);
                     modelsLoaded = true;
-                    console.log(`✅ Models loaded from: ${modelUrl}`);
+                    console.log(`Models loaded from: ${modelUrl}`);
                     break;
                 } catch (error) {
-                    console.warn(`⚠️ Failed to load models from ${modelUrl}:`, error);
+                    console.warn(`Failed to load models from ${modelUrl}:`, error);
                     modelError = error;
                     continue;
                 }
             }
 
             if (!modelsLoaded) {
-                console.warn('⚠️ All CDN model sources failed, trying local fallback...');
+                console.warn('All CDN model sources failed, trying local fallback...');
                 await this.loadFaceAPIModelsLocal();
 
                 if (!this.areModelsLoaded()) {
@@ -1952,16 +1866,16 @@ class PersonalProfileWidget extends Component {
                 throw new Error('Models not properly loaded');
             }
 
-            console.log('✅ Face API models loaded successfully');
+            console.log('Face API models loaded successfully');
         } catch (error) {
-            console.error('❌ Error loading Face API models:', error);
+            console.error('Error loading Face API models:', error);
             throw error;
         }
     }
 
     async loadFaceAPIModelsLocal() {
         try {
-            console.log('🔄 Trying to load Face API models from local assets...');
+            console.log('Trying to load Face API models from local assets...');
 
             // Try to load models from local assets
             const localModelPaths = [
@@ -1977,23 +1891,23 @@ class PersonalProfileWidget extends Component {
                         window.faceapi.nets.faceLandmark68Net.loadFromUri(localModelPath),
                         window.faceapi.nets.faceExpressionNet.loadFromUri(localModelPath)
                     ]);
-                    console.log(`✅ Models loaded from local: ${localModelPath}`);
+                    console.log(`Models loaded from local: ${localModelPath}`);
                     return;
                 } catch (error) {
-                    console.warn(`⚠️ Failed to load models from local path ${localModelPath}:`, error);
+                    console.warn(`Failed to load models from local path ${localModelPath}:`, error);
                     continue;
                 }
             }
 
-            console.warn('⚠️ Local models not found, will use fallback detection');
+            console.warn('Local models not found, will use fallback detection');
         } catch (error) {
-            console.warn('⚠️ Error loading local models:', error);
+            console.warn('Error loading local models:', error);
         }
     }
 
     async loadFaceAPILocal() {
         try {
-            console.log('🔄 Trying to load Face API from local assets...');
+            console.log('Trying to load Face API from local assets...');
 
             // Try to load from local assets
             const localPaths = this.constructor.CONFIG.FACE_API.LOCAL_PATHS;
@@ -2002,18 +1916,18 @@ class PersonalProfileWidget extends Component {
                 try {
                     await this.loadScript(localPath);
                     if (window.faceapi) {
-                        console.log(`✅ Face API loaded from local: ${localPath}`);
+                        console.log(`Face API loaded from local: ${localPath}`);
                         return;
                     }
                 } catch (error) {
-                    console.warn(`⚠️ Failed to load from local path ${localPath}:`, error);
+                    console.warn(`Failed to load from local path ${localPath}:`, error);
                     continue;
                 }
             }
 
-            console.warn('⚠️ Local Face API not found, will use fallback detection');
+            console.warn('Local Face API not found, will use fallback detection');
         } catch (error) {
-            console.warn('⚠️ Error loading local Face API:', error);
+            console.warn('Error loading local Face API:', error);
         }
     }
 
@@ -2022,7 +1936,7 @@ class PersonalProfileWidget extends Component {
             // Check if script already exists
             const existingScript = document.querySelector(`script[src="${src}"]`);
             if (existingScript) {
-                console.log(`✅ Script already loaded: ${src}`);
+                console.log(`Script already loaded: ${src}`);
                 resolve();
                 return;
             }
@@ -2034,12 +1948,12 @@ class PersonalProfileWidget extends Component {
             script.type = 'text/javascript';
 
             script.onload = () => {
-                console.log(`✅ Script loaded successfully: ${src}`);
+                console.log(`Script loaded successfully: ${src}`);
                 resolve();
             };
 
             script.onerror = (error) => {
-                console.error(`❌ Failed to load script: ${src}`, error);
+                console.error(`Failed to load script: ${src}`, error);
                 // Remove failed script
                 if (script.parentNode) {
                     script.parentNode.removeChild(script);
@@ -2049,7 +1963,7 @@ class PersonalProfileWidget extends Component {
 
             // Add timeout
             const timeoutId = setTimeout(() => {
-                console.error(`❌ Script load timeout: ${src}`);
+                console.error(`Script load timeout: ${src}`);
                 if (script.parentNode) {
                     script.parentNode.removeChild(script);
                 }
@@ -2082,7 +1996,7 @@ class PersonalProfileWidget extends Component {
         if (video) {
             video.srcObject = null;
         }
-        console.log('📹 Camera stopped');
+
     }
 
     captureImage(isAutoCapture = false) {
@@ -2110,14 +2024,14 @@ class PersonalProfileWidget extends Component {
             const requiredCount = this.state.captureRequirements[currentPhase];
 
             // Show capture feedback
-            this.updateCameraInstructions(`✅ Chụp ${this.getPhaseName(currentPhase)} thành công! (${currentCount}/${requiredCount})`);
+            this.updateCameraInstructions(`Chụp ${this.getPhaseName(currentPhase)} thành công! (${currentCount}/${requiredCount})`);
 
             // Check if current phase is completed
             if (currentCount >= requiredCount) {
                 this.updateCapturePhase();
 
                 if (this.isAllImagesCaptured()) {
-                    this.state.cameraInstructions = '🎉 Hoàn thành chụp ảnh! Đang tự động xác thực eKYC...';
+                    this.state.cameraInstructions = 'Hoàn thành chụp ảnh! Đang tự động xác thực eKYC...';
                     this.stopFaceDetection();
                     this.state.cameraStatus = 'Đang tự động xác thực eKYC...';
 
@@ -2128,7 +2042,7 @@ class PersonalProfileWidget extends Component {
                 } else {
                     // Move to next phase
                     const nextPhase = this.state.currentCapturePhase;
-                    this.updateCameraInstructions(`🔄 Chuyển sang chụp ${this.getPhaseName(nextPhase)}. Vui lòng điều chỉnh khuôn mặt.`);
+                    this.updateCameraInstructions(`Chuyển sang chụp ${this.getPhaseName(nextPhase)}. Vui lòng điều chỉnh khuôn mặt.`);
                 }
             }
 
@@ -2136,7 +2050,7 @@ class PersonalProfileWidget extends Component {
             this.state.perfectFaceStartTime = 0;
 
         } catch (error) {
-            console.error('❌ Error capturing image:', error);
+            console.error('Error capturing image:', error);
             this.showModal('Lỗi', 'Xác thực thất bại. Vui lòng thử lại.');
         }
     }
@@ -2152,8 +2066,7 @@ class PersonalProfileWidget extends Component {
         // Update current phase if needed
         this.updateCapturePhase();
 
-        this.updateCameraInstructions(`🗑️ Đã xóa ảnh ${this.getPhaseName(removedType)}. Vui lòng chụp lại.`);
-        console.log(`🗑️ Removed ${removedType} image ${index}, reset timers for re-capture`);
+        this.updateCameraInstructions(`Đã xóa ảnh ${this.getPhaseName(removedType)}. Vui lòng chụp lại.`);
     }
 
     async processEkycVerification() {
@@ -2177,17 +2090,22 @@ class PersonalProfileWidget extends Component {
         try {
             const formData = new FormData();
 
-            // Add CCCD front image only (eKYC service only needs frontID)
+            // Add CCCD front image
             formData.append('frontID', this.state.ekycFiles.front);
+
+            // Add CCCD back image for full OCR (issue_date, issue_place)
+            if (this.state.ekycFiles.back) {
+                formData.append('backID', this.state.ekycFiles.back);
+            }
 
             // Add 7 portrait images
             for (let i = 0; i < this.state.capturedImages.length; i++) {
                 const imageFile = this.dataURLtoFile(this.state.capturedImages[i], `portrait_${i + 1}.jpg`);
-                console.log(`📸 Adding portrait image ${i + 1}:`, imageFile.name, imageFile.type, imageFile.size);
+
                 formData.append('portraitImages', imageFile);
             }
 
-            console.log('🚀 Sending eKYC verification request...');
+
             console.log('📁 FormData contents:');
             for (let [key, value] of formData.entries()) {
                 console.log(`  ${key}:`, value instanceof File ? `${value.name} (${value.type}, ${value.size} bytes)` : value);
@@ -2198,8 +2116,7 @@ class PersonalProfileWidget extends Component {
                 body: formData
             });
 
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
 
             // Check if response is OK before parsing JSON
             if (!response.ok) {
@@ -2217,11 +2134,11 @@ class PersonalProfileWidget extends Component {
             }
 
             const result = await response.json();
-            console.log('🔍 eKYC verification result:', result);
+
 
             if (result.success) {
                 // Success - update form with OCR data FIRST
-                console.log('🔄 Updating form with eKYC result...');
+
                 this.updateFormWithEkycResult(result);
 
                 // Force immediate render to show updated data
@@ -2252,7 +2169,7 @@ class PersonalProfileWidget extends Component {
 
                 successMessage += '</div>';
 
-                this.showModal('Thành công', markup(successMessage));
+                // this.showModal('Thành công', successMessage);
 
                 // Close eKYC modal after 5 seconds to give user time to see the data
                 setTimeout(() => {
@@ -2265,7 +2182,7 @@ class PersonalProfileWidget extends Component {
 
             } else {
                 // Failed
-                const errorMsg = result.error || 'Xác thực eKYC thất bại. Vui lòng thử lại.';
+                const errorMsg = result.message || result.error || 'Xác thực eKYC thất bại. Vui lòng thử lại.';
                 this.state.ekycResult = {
                     success: false,
                     error: errorMsg
@@ -2276,7 +2193,7 @@ class PersonalProfileWidget extends Component {
             }
 
         } catch (error) {
-            console.error('❌ Error during eKYC verification:', error);
+            console.error('Error during eKYC verification:', error);
 
             // Provide detailed error message based on error type
             let errorMessage = 'Lỗi kết nối đến server eKYC. ';
@@ -2309,7 +2226,7 @@ class PersonalProfileWidget extends Component {
     }
 
     updateFormWithEkycResult(result) {
-        console.log('✅ eKYC verification successful, updating form with OCR data:', result);
+
 
         // Extract OCR data from result
         // VNPT eKYC returns: { success: true, data: { ocr: {...}, face_compare: {...}, face_liveness: {...} } }
@@ -2320,35 +2237,44 @@ class PersonalProfileWidget extends Component {
         if (result.data && result.data.ocr) {
             // Most common structure: result.data.ocr
             ocrData = result.data.ocr;
-            console.log('📋 Found OCR data in result.data.ocr');
+
         } else if (result.ocr) {
             // Alternative structure: result.ocr
             ocrData = result.ocr;
-            console.log('📋 Found OCR data in result.ocr');
+
         } else if (result.data && typeof result.data === 'object') {
             // Check if data itself is OCR data
             const excludedKeys = ['success', 'message', 'error', 'face_compare', 'face_liveness'];
             const hasOcrFields = ['id', 'name', 'birth_day', 'gender', 'nationality'].some(key => key in result.data);
             if (hasOcrFields) {
                 ocrData = result.data;
-                console.log('📋 Found OCR data directly in result.data');
+
             }
         }
 
         // Handle nested structure: sometimes OCR data is in result.ocr.object or result.data.ocr.object
         if (ocrData && ocrData.object) {
             ocrData = ocrData.object;
-            console.log('📋 Extracted OCR data from .object');
+        }
+
+        // VNPT OCR Full (combined) usually returns { front: {...}, back: {...} }
+        // Unified handling: merge front/back sub-objects into the main ocrData object
+        if (ocrData && (ocrData.front || ocrData.back)) {
+            console.log('Merging nested front/back OCR objects...');
+            const merged = { ...ocrData };
+            if (ocrData.front) Object.assign(merged, ocrData.front);
+            if (ocrData.back) Object.assign(merged, ocrData.back);
+            ocrData = merged;
         }
 
         // Log all available OCR fields for debugging
         if (ocrData) {
-            console.log('📋 Extracted OCR data:', ocrData);
-            console.log('📋 All OCR keys:', Object.keys(ocrData));
+
+
         } else {
-            console.warn('⚠️ No OCR data found in result. Available keys:', Object.keys(result));
+            console.warn('No OCR data found in result. Available keys:', Object.keys(result));
             if (result.data) {
-                console.warn('⚠️ result.data keys:', Object.keys(result.data));
+                console.warn('result.data keys:', Object.keys(result.data));
             }
             this.showModal('Cảnh báo', 'Không tìm thấy dữ liệu OCR trong kết quả eKYC. Vui lòng kiểm tra lại.');
             return;
@@ -2398,60 +2324,29 @@ class PersonalProfileWidget extends Component {
                     ocrData.co_quan_cap,
                     ocrData.issued_by,
                     ocrData.noiCap,
-                    ocrData.coQuanCap
+                    ocrData.coQuanCap,
+                    ocrData.place_of_birth // Fallback
                 ];
                 for (const field of altFields) {
-                    if (field && field !== '-') {
+                    if (field && field !== '-' && field !== '') {
                         return field;
                     }
                 }
-                // If not found, try to extract from post_code or new_post_code
-                // post_code contains city/district/ward information
-                if (ocrData.post_code && Array.isArray(ocrData.post_code) && ocrData.post_code.length > 0) {
-                    const addressInfo = ocrData.post_code[0];
-                    if (addressInfo && addressInfo.city && Array.isArray(addressInfo.city) && addressInfo.city.length > 1) {
-                        const cityName = addressInfo.city[1];
-                        if (addressInfo.district && Array.isArray(addressInfo.district) && addressInfo.district.length > 1) {
-                            const districtName = addressInfo.district[1];
-                            return `${districtName}, ${cityName}`;
-                        }
-                        return cityName;
-                    }
-                }
-                // Try new_post_code as fallback
-                if (ocrData.new_post_code && Array.isArray(ocrData.new_post_code) && ocrData.new_post_code.length > 0) {
-                    const addressInfo = ocrData.new_post_code[0];
-                    if (addressInfo && addressInfo.city && Array.isArray(addressInfo.city) && addressInfo.city.length > 1) {
-                        const cityName = addressInfo.city[1];
-                        if (addressInfo.district && Array.isArray(addressInfo.district) && addressInfo.district.length > 1) {
-                            const districtName = addressInfo.district[1];
-                            return `${districtName}, ${cityName}`;
-                        }
-                        return cityName;
-                    }
-                }
-                // Last resort: use origin_location or recent_location if available
-                if (ocrData.origin_location) {
-                    return ocrData.origin_location;
-                }
-                if (ocrData.recent_location) {
-                    // Extract city/district from recent_location if it's a full address
-                    const locationParts = ocrData.recent_location.split(',');
-                    if (locationParts.length >= 2) {
-                        return locationParts.slice(-2).join(',').trim();
-                    }
-                    return ocrData.recent_location;
-                }
+
                 return null;
             })(),
         };
 
         // Log which fields were found
-        console.log('📋 Mapped OCR fields:', ocrFields);
+
         const foundFields = Object.keys(ocrFields).filter(key => ocrFields[key]);
         const missingFields = Object.keys(ocrFields).filter(key => !ocrFields[key]);
-        console.log('✅ Found fields:', foundFields);
-        console.log('❌ Missing fields:', missingFields);
+
+
+        // Mark eKYC as verified in status info
+        if (this.state.statusInfo) {
+            this.state.statusInfo.ekyc_verified = true;
+        }
 
         const updatedFields = [];
 
@@ -2508,7 +2403,7 @@ class PersonalProfileWidget extends Component {
                 this.state.formData.id_issue_place = String(placeObj).trim();
             }
             updatedFields.push('Nơi cấp');
-            console.log('✅ Set issue_place:', this.state.formData.id_issue_place);
+
         } else {
             // Try to construct from logic similar to getUpdatedFieldsList
             const extractionLogic = () => {
@@ -2520,33 +2415,6 @@ class PersonalProfileWidget extends Component {
                     if (f && f !== '-') return f;
                 }
 
-                // Check post_code
-                if (Array.isArray(data.post_code) && data.post_code.length > 0) {
-                    const info = data.post_code[0];
-                    const city = info?.city?.[1];
-                    const district = info?.district?.[1];
-
-                    if (city) {
-                        if (district && typeof district === 'string' && district.trim()) {
-                            return `${district.trim()}, ${city}`;
-                        }
-                        return city;
-                    }
-                }
-
-                // Check new_post_code
-                if (Array.isArray(data.new_post_code) && data.new_post_code.length > 0) {
-                    const info = data.new_post_code[0];
-                    const city = info?.city?.[1];
-                    const district = info?.district?.[1];
-
-                    if (city) {
-                        if (district && typeof district === 'string' && district.trim()) {
-                            return `${district.trim()}, ${city}`;
-                        }
-                        return city;
-                    }
-                }
                 return null;
             };
 
@@ -2554,9 +2422,9 @@ class PersonalProfileWidget extends Component {
             if (extractedPlace) {
                 this.state.formData.id_issue_place = extractedPlace;
                 updatedFields.push('Nơi cấp');
-                console.log('✅ Set issue_place (extracted):', extractedPlace);
+
             } else {
-                console.warn('⚠️ issue_place not found even after extraction attempt');
+                console.warn('issue_place not found even after extraction attempt');
             }
         }
 
@@ -2581,10 +2449,10 @@ class PersonalProfileWidget extends Component {
                 const finalData = { ...merged, ...addressPayload };
                 sessionStorage.setItem('addressInfoData', JSON.stringify(finalData));
                 sessionStorage.setItem('addressInfoFromEkyc', 'true');
-                console.log('🔗 Saved eKYC address data for AddressInfoWidget:', finalData);
+
             }
         } catch (e) {
-            console.warn('⚠️ Failed to store eKYC address data to sessionStorage:', e);
+            console.warn('Failed to store eKYC address data to sessionStorage:', e);
         }
 
         // Save current form data to session storage with CCCD images
@@ -2598,18 +2466,6 @@ class PersonalProfileWidget extends Component {
         sessionStorage.setItem('personalProfileData', JSON.stringify(profileData));
         sessionStorage.setItem('personalProfileUserId', String(window.currentUserId || ''));
 
-        console.log('✅ Form updated with eKYC OCR data:', this.state.formData);
-        console.log(`📝 Updated fields: ${updatedFields.join(', ')}`);
-        console.log('📋 Current formData state:', JSON.stringify(this.state.formData, null, 2));
-
-        // Show success message with updated fields and missing fields
-        if (updatedFields.length > 0) {
-            const fieldsText = updatedFields.join(', ');
-            console.log(`✅ Đã tự động điền ${updatedFields.length} trường thông tin: ${fieldsText}`);
-        } else {
-            console.warn('⚠️ Không có trường nào được điền tự động từ OCR');
-            console.warn('📋 Full result structure:', JSON.stringify(result, null, 2));
-        }
 
         // Force re-render multiple times to ensure data is displayed
         this.render();
@@ -2641,6 +2497,14 @@ class PersonalProfileWidget extends Component {
 
         if (ocrData && ocrData.object) {
             ocrData = ocrData.object;
+        }
+
+        // VNPT OCR Full (combined) usually returns { front: {...}, back: {...} }
+        if (ocrData && (ocrData.front || ocrData.back)) {
+            const merged = { ...ocrData };
+            if (ocrData.front) Object.assign(merged, ocrData.front);
+            if (ocrData.back) Object.assign(merged, ocrData.back);
+            ocrData = merged;
         }
 
         if (!ocrData || Object.keys(ocrData).length === 0) {
@@ -2768,7 +2632,7 @@ class PersonalProfileWidget extends Component {
 
         // Ensure correct mimetype for images
         const fileType = mime || 'image/jpeg';
-        console.log(`📸 Creating file: ${filename}, type: ${fileType}, size: ${u8arr.length} bytes`);
+
 
         return new File([u8arr], filename, { type: fileType });
     }
@@ -2777,7 +2641,7 @@ class PersonalProfileWidget extends Component {
         if (!dateStr || dateStr === '-') return '';
 
         const cleanDateStr = dateStr.toString().trim();
-        console.log(`📅 Formatting date: "${cleanDateStr}"`);
+
 
         // Handle simple DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
         // Also handles YYYY-MM-DD (ISO)
@@ -2803,16 +2667,15 @@ class PersonalProfileWidget extends Component {
         if (day && month && year) {
             // Validate ranges
             if (month < 1 || month > 12 || day < 1 || day > 31) {
-                console.warn(`⚠️ Invalid date values: ${day}/${month}/${year}`);
+                console.warn(`Invalid date values: ${day}/${month}/${year}`);
                 return '';
             }
 
             const formattedDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            console.log(`📅 Date formatted: "${cleanDateStr}" -> "${formattedDate}"`);
             return formattedDate;
         }
 
-        console.log(`⚠️ Date format not recognized: "${cleanDateStr}"`);
+        console.log(`Date format not recognized: "${cleanDateStr}"`);
         return '';
     }
 
@@ -2983,7 +2846,7 @@ class PersonalProfileWidget extends Component {
         }
         // Do not start detection if already captured all required images
         if (this.isAllImagesCaptured()) {
-            console.log('🔍 Skipping startFaceDetection: already have all required images');
+
             return;
         }
 
@@ -2992,7 +2855,7 @@ class PersonalProfileWidget extends Component {
 
         // Determine detection method based on available APIs
         const detectionMethod = this.getBestDetectionMethod();
-        console.log(`🔍 Starting face detection with method: ${detectionMethod}`);
+
 
         this.state.faceDetectionInterval = setInterval(() => {
             this.detectFace();
@@ -3017,7 +2880,7 @@ class PersonalProfileWidget extends Component {
                 window.faceapi.nets.faceLandmark68Net.isLoaded &&
                 window.faceapi.nets.faceExpressionNet.isLoaded;
         } catch (error) {
-            console.warn('⚠️ Error checking model status:', error);
+            console.warn('Error checking model status:', error);
             return false;
         }
     }
@@ -3028,7 +2891,7 @@ class PersonalProfileWidget extends Component {
             this.state.faceDetectionInterval = null;
         }
         this.state.faceStatus = null;
-        console.log('🔍 Face detection stopped');
+
     }
 
     async detectFace() {
@@ -3063,11 +2926,11 @@ class PersonalProfileWidget extends Component {
                 try {
                     await this.detectFaceWithFaceAPI(canvas);
                 } catch (faceApiError) {
-                    console.warn('⚠️ Face API detection failed, trying eKYC fallback:', faceApiError);
+                    console.warn('Face API detection failed, trying eKYC fallback:', faceApiError);
                     try {
                         await this.detectFaceWithEkycAPI(canvas);
                     } catch (ekycError) {
-                        console.warn('⚠️ eKYC API failed, using enhanced canvas detection:', ekycError);
+                        console.warn('eKYC API failed, using enhanced canvas detection:', ekycError);
                         this.detectFaceWithCanvas(canvas);
                     }
                 }
@@ -3076,7 +2939,7 @@ class PersonalProfileWidget extends Component {
                 try {
                     await this.detectFaceWithEkycAPI(canvas);
                 } catch (ekycError) {
-                    console.warn('⚠️ eKYC API failed, using enhanced canvas detection:', ekycError);
+                    console.warn('eKYC API failed, using enhanced canvas detection:', ekycError);
                     this.detectFaceWithCanvas(canvas);
                 }
             }
@@ -3094,7 +2957,7 @@ class PersonalProfileWidget extends Component {
         try {
             // Check if models are loaded before using
             if (!this.areModelsLoaded()) {
-                console.warn('⚠️ Face API models not loaded, using fallback detection');
+                console.warn('Face API models not loaded, using fallback detection');
                 this.detectFaceWithCanvas(canvas);
                 return;
             }
@@ -3109,7 +2972,7 @@ class PersonalProfileWidget extends Component {
                 .withFaceLandmarks()
                 .withFaceExpressions();
 
-            console.log('🔍 Face API detections:', detections);
+
 
             if (detections.length === 0) {
                 this.updateFaceStatus('no_face', 'fas fa-user-slash', 'Không tìm thấy khuôn mặt - Hãy di chuyển gần camera hơn và đảm bảo ánh sáng tốt');
@@ -3126,141 +2989,76 @@ class PersonalProfileWidget extends Component {
 
             // Check face position and orientation
             const isCentered = this.checkFaceCentered(landmarks, canvas);
-            const isFrontFacing = this.checkFaceFrontFacing(landmarks);
+            const orientation = this.checkFaceOrientation(landmarks);
             const isGoodSize = this.checkFaceSize(detection, canvas);
-            const yawAngle = this.estimateYawAngle(landmarks);
+
             const currentPhase = this.state.currentCapturePhase;
+            const isCorrectOrientation = (orientation === currentPhase);
 
-            console.log('📊 Face checks:', { isCentered, isFrontFacing, isGoodSize, yawAngle, currentPhase });
 
-            // Validate face angle matches required phase
-            const isCorrectAngle = this.isAngleMatchingPhase(yawAngle, currentPhase);
 
-            if (isGoodSize && isCentered && isCorrectAngle) {
+            // Only capture if orientation matches the required phase
+            if (isGoodSize && isCentered && isCorrectOrientation) {
+                const currentPhase = this.state.currentCapturePhase;
                 const currentCount = this.getCapturedCount(currentPhase);
                 const requiredCount = this.state.captureRequirements[currentPhase];
 
                 // Track when face becomes perfect
                 if (this.state.perfectFaceStartTime === 0) {
                     this.state.perfectFaceStartTime = Date.now();
-                    console.log(`🎯 Face angle correct for ${currentPhase} (yaw=${yawAngle.toFixed(1)}°), starting timer...`);
+                    console.log(`Face position perfect for ${currentPhase}, starting auto-capture timer...`);
                 }
 
-                const holdTime = 2000; // Must hold position for 2 seconds
                 const timeInPerfectPosition = Date.now() - this.state.perfectFaceStartTime;
-                const remainingTime = Math.max(0, holdTime - timeInPerfectPosition);
+                const remainingTime = Math.max(0, 2000 - timeInPerfectPosition);
 
                 if (remainingTime > 0) {
                     this.updateFaceStatus('perfect', 'fas fa-check-circle',
-                        `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)} ${Math.ceil(remainingTime / 1000)}s (${currentCount}/${requiredCount})`);
+                        `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)} ${Math.ceil(remainingTime / 500)}s (${currentCount}/${requiredCount})`);
                 } else {
                     this.updateFaceStatus('perfect', 'fas fa-check-circle',
                         `Đang chụp ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`);
                 }
 
-                // Auto-capture: must hold perfect position for 2s, min 1.5s between captures
+                // Auto-capture logic for eKYC API
                 if (this.state.autoCaptureEnabled &&
                     currentCount < requiredCount &&
-                    timeInPerfectPosition >= holdTime &&
-                    (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 1500)) {
+                    timeInPerfectPosition >= 500 &&
+                    (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 500)) {
 
-                    console.log(`📸 Auto-capturing ${currentPhase} (yaw=${yawAngle.toFixed(1)}°)`);
                     this.captureImage(true);
-                    this.state.perfectFaceStartTime = 0;
+                    this.state.perfectFaceStartTime = 0; // Reset timer for next capture
                 }
             } else {
-                // Face not in correct position/angle, reset timer
+                // Face not in perfect position, reset timer
                 if (this.state.perfectFaceStartTime > 0) {
                     this.state.perfectFaceStartTime = 0;
-                    console.log(`🔄 Face angle wrong for ${currentPhase} (yaw=${yawAngle.toFixed(1)}°), resetting`);
+                    console.log('Face moved out of perfect position (eKYC API), resetting timer');
                 }
 
                 let message = 'Điều chỉnh khuôn mặt: ';
                 let detailedMessage = '';
 
-                if (!isGoodSize) {
-                    message += 'Tiến gần hơn, ';
-                    detailedMessage += '• Di chuyển gần hơn\n';
-                }
                 if (!isCentered) {
                     message += 'Căn giữa, ';
                     detailedMessage += '• Di chuyển khuôn mặt vào giữa khung\n';
                 }
-                if (!isCorrectAngle) {
-                    if (currentPhase === 'front') {
-                        message += 'Nhìn thẳng';
-                        detailedMessage += '• Nhìn thẳng vào camera';
-                    } else if (currentPhase === 'left') {
-                        message += 'Quay trái hơn';
-                        detailedMessage += '• Quay mặt sang trái ~45°';
-                    } else if (currentPhase === 'right') {
-                        message += 'Quay phải hơn';
-                        detailedMessage += '• Quay mặt sang phải ~45°';
-                    }
+                if (!isCorrectOrientation) {
+                    const instruction = this.getPhaseName(currentPhase);
+                    message += instruction + ', ';
+                    detailedMessage += `• Vui lòng ${instruction}\n`;
+                }
+                if (!isGoodSize) {
+                    message += 'Tiến gần hơn';
+                    detailedMessage += '• Di chuyển gần hơn';
                 }
 
                 this.updateFaceStatus('adjusting', 'fas fa-arrows-alt', message, detailedMessage);
             }
 
         } catch (error) {
-            console.error('❌ Face API detection error:', error);
+            console.error('Face API detection error:', error);
             throw error;
-        }
-    }
-
-    /**
-     * Estimate horizontal yaw angle from face landmarks.
-     * Negative = face turned left, Positive = face turned right, ~0 = front.
-     */
-    estimateYawAngle(landmarks) {
-        const nose = landmarks.getNose();
-        const leftEye = landmarks.getLeftEye();
-        const rightEye = landmarks.getRightEye();
-
-        // Center of each eye
-        const leftEyeCenter = {
-            x: leftEye.reduce((s, p) => s + p.x, 0) / leftEye.length,
-            y: leftEye.reduce((s, p) => s + p.y, 0) / leftEye.length,
-        };
-        const rightEyeCenter = {
-            x: rightEye.reduce((s, p) => s + p.x, 0) / rightEye.length,
-            y: rightEye.reduce((s, p) => s + p.y, 0) / rightEye.length,
-        };
-
-        // Midpoint between eyes
-        const eyeMidX = (leftEyeCenter.x + rightEyeCenter.x) / 2;
-
-        // Nose tip (index 3 = bottom center of nose)
-        const noseTip = nose[3] || nose[Math.floor(nose.length / 2)];
-
-        // Distance between eyes (for normalization)
-        const eyeDistance = Math.abs(rightEyeCenter.x - leftEyeCenter.x);
-        if (eyeDistance < 1) return 0;
-
-        // Offset of nose from eye midpoint, normalized by eye distance
-        // Positive = nose is to the right of center = face turned left (camera perspective is mirrored)
-        const noseOffset = (noseTip.x - eyeMidX) / eyeDistance;
-
-        // Convert to approximate degrees (~45° at max offset of 0.5)
-        return noseOffset * 90;
-    }
-
-    /**
-     * Check if the estimated yaw angle matches the required capture phase.
-     */
-    isAngleMatchingPhase(yawAngle, phase) {
-        switch (phase) {
-            case 'front':
-                // Front: yaw should be near 0 (±15°)
-                return Math.abs(yawAngle) <= 15;
-            case 'left':
-                // Left turn: yaw > 20° (nose moves right relative to eyes in mirrored view)
-                return yawAngle > 20;
-            case 'right':
-                // Right turn: yaw < -20°
-                return yawAngle < -20;
-            default:
-                return false;
         }
     }
 
@@ -3278,18 +3076,38 @@ class PersonalProfileWidget extends Component {
         return distanceFromCenter < maxDistance;
     }
 
-    checkFaceFrontFacing(landmarks) {
+    checkFaceOrientation(landmarks) {
+        const nose = landmarks.getNose();
         const leftEye = landmarks.getLeftEye();
         const rightEye = landmarks.getRightEye();
 
-        // Check if eyes are roughly horizontal (front-facing)
-        const leftEyeY = leftEye.reduce((sum, point) => sum + point.y, 0) / leftEye.length;
-        const rightEyeY = rightEye.reduce((sum, point) => sum + point.y, 0) / rightEye.length;
+        // Use nose tip (index 6 or 3)
+        const noseTip = nose[6] || nose[3];
 
-        const eyeHeightDiff = Math.abs(leftEyeY - rightEyeY);
-        const maxHeightDiff = 20; // More lenient tolerance
+        // Use outer eye corners
+        const leftEyeOuter = leftEye[0];
+        const rightEyeOuter = rightEye[3];
 
-        return eyeHeightDiff < maxHeightDiff;
+        if (!noseTip || !leftEyeOuter || !rightEyeOuter) return 'unknown';
+
+        const leftDist = Math.abs(noseTip._x - leftEyeOuter._x);
+        const rightDist = Math.abs(noseTip._x - rightEyeOuter._x);
+
+        if (rightDist === 0) return 'left';
+        const ratio = leftDist / rightDist;
+
+
+
+        // Ratios based on empirical testing with face-api.js
+        if (ratio > 1.6) return 'right'; // Looking right = left side visible/larger distance
+        if (ratio < 0.6) return 'left';  // Looking left = right side visible/larger distance
+
+        // Also check if eyes are horizontal for 'front'
+        const leftEyeY = leftEye.reduce((sum, p) => sum + p._y, 0) / leftEye.length;
+        const rightEyeY = rightEye.reduce((sum, p) => sum + p._y, 0) / rightEye.length;
+        if (Math.abs(leftEyeY - rightEyeY) > 25) return 'tilted';
+
+        return 'front';
     }
 
     checkFaceSize(detection, canvas) {
@@ -3325,7 +3143,7 @@ class PersonalProfileWidget extends Component {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('🔍 eKYC detection result:', result);
+
 
                 // Process detection result
                 const currentPhase = this.state.currentCapturePhase;
@@ -3336,7 +3154,7 @@ class PersonalProfileWidget extends Component {
                     // Track when face becomes perfect
                     if (this.state.perfectFaceStartTime === 0) {
                         this.state.perfectFaceStartTime = Date.now();
-                        console.log(`🎯 Face position perfect for ${currentPhase} (eKYC API), starting auto-capture timer...`);
+                        console.log(`Face position perfect for ${currentPhase} (eKYC API), starting auto-capture timer...`);
                     }
 
                     const timeInPerfectPosition = Date.now() - this.state.perfectFaceStartTime;
@@ -3356,7 +3174,7 @@ class PersonalProfileWidget extends Component {
                         timeInPerfectPosition >= 1000 &&
                         (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 1000)) {
 
-                        console.log(`📸 Auto-capturing ${currentPhase} image due to perfect face position (eKYC API)`);
+                        console.log(`Auto-capturing ${currentPhase} image due to perfect face position (eKYC API)`);
                         this.captureImage(true);
                         this.state.perfectFaceStartTime = 0; // Reset timer for next capture
                     }
@@ -3364,7 +3182,7 @@ class PersonalProfileWidget extends Component {
                     // Face not in perfect position, reset timer
                     if (this.state.perfectFaceStartTime > 0) {
                         this.state.perfectFaceStartTime = 0;
-                        console.log(`🔄 Face moved out of perfect position for ${currentPhase} (eKYC API), resetting timer`);
+                        console.log(`Face moved out of perfect position for ${currentPhase} (eKYC API), resetting timer`);
                     }
 
                     // Set common instruction for all cases
@@ -3430,7 +3248,7 @@ class PersonalProfileWidget extends Component {
             // Reset timer if face not detected
             if (this.state.perfectFaceStartTime > 0) {
                 this.state.perfectFaceStartTime = 0;
-                console.log('🔄 No face detected (Canvas), resetting timer');
+                console.log('No face detected (Canvas), resetting timer');
             }
             status = 'no_face';
             icon = 'fas fa-user-slash';
@@ -3440,7 +3258,7 @@ class PersonalProfileWidget extends Component {
             // Reset timer if face too far
             if (this.state.perfectFaceStartTime > 0) {
                 this.state.perfectFaceStartTime = 0;
-                console.log('🔄 Face too far (Canvas), resetting timer');
+                console.log('Face too far (Canvas), resetting timer');
             }
             status = 'too_far';
             icon = 'fas fa-arrows-alt-v';
@@ -3450,25 +3268,48 @@ class PersonalProfileWidget extends Component {
             // Reset timer if face too close
             if (this.state.perfectFaceStartTime > 0) {
                 this.state.perfectFaceStartTime = 0;
-                console.log('🔄 Face too close (Canvas), resetting timer');
+                console.log('Face too close (Canvas), resetting timer');
             }
             status = 'too_close';
             icon = 'fas fa-arrows-alt-v';
             message = 'Khuôn mặt quá gần';
             instructions = 'Vui lòng lùi ra xa hơn';
         } else {
-            // Canvas detection found a face-like region but CANNOT determine angle.
-            // Do NOT auto-capture — prompt user to wait for proper detection.
             const currentPhase = this.state.currentCapturePhase;
             const currentCount = this.getCapturedCount(currentPhase);
             const requiredCount = this.state.captureRequirements[currentPhase];
 
-            status = 'detecting';
-            icon = 'fas fa-search';
-            message = `Phát hiện khuôn mặt — đang xác nhận góc ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`;
-            instructions = `Vui lòng giữ nguyên vị trí ${this.getPhaseName(currentPhase)} và chờ xác nhận.`;
+            // Track when face becomes perfect
+            if (this.state.perfectFaceStartTime === 0) {
+                this.state.perfectFaceStartTime = Date.now();
+                console.log(`Face position perfect for ${currentPhase} (Canvas), starting auto-capture timer...`);
+            }
 
-            // Canvas fallback does NOT auto-capture because it cannot validate face angle
+            const timeInPerfectPosition = Date.now() - this.state.perfectFaceStartTime;
+            const remainingTime = Math.max(0, 2000 - timeInPerfectPosition);
+
+            if (remainingTime > 0) {
+                status = 'perfect';
+                icon = 'fas fa-check-circle';
+                message = `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)}! Bắt đầu chụp sau ${Math.ceil(remainingTime / 1000)}s (${currentCount}/${requiredCount})`;
+                instructions = `Giữ nguyên vị trí ${this.getPhaseName(currentPhase)}!`;
+            } else {
+                status = 'perfect';
+                icon = 'fas fa-check-circle';
+                message = `Đang chụp ${this.getPhaseName(currentPhase)}... (${currentCount}/${requiredCount})`;
+                instructions = `Đang chụp ${this.getPhaseName(currentPhase)}...`;
+            }
+
+            // Auto-capture logic for canvas detection
+            if (this.state.autoCaptureEnabled &&
+                currentCount < requiredCount &&
+                timeInPerfectPosition >= 2000 &&
+                (!this.state.lastCaptureTime || Date.now() - this.state.lastCaptureTime > 2000)) {
+
+                console.log(`Auto-capturing ${currentPhase} image due to perfect face position (Canvas)`);
+                this.captureImage(true);
+                this.state.perfectFaceStartTime = 0; // Reset timer for next capture
+            }
         }
 
         // Only update if status changed
@@ -3487,7 +3328,7 @@ class PersonalProfileWidget extends Component {
         };
         console.log('👤 Face status updated:', status, message);
         if (detailedMessage) {
-            console.log('📋 Detailed instructions:', detailedMessage);
+
         }
     }
 

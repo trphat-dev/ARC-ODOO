@@ -1,10 +1,11 @@
 // Bank Information Widget Component
+console.log('Loading BankInfoWidget component...');
 
 const { Component, xml, useState, onMounted } = owl;
 
 class BankInfoWidget extends Component {
     static components = { InvestorSidebar: window.InvestorSidebar };
-
+    
     static template = xml`
         <div class="investor-page">
             <div class="investor-layout">
@@ -71,28 +72,20 @@ class BankInfoWidget extends Component {
                                                     type="text" 
                                                     class="form-control" 
                                                     t-model="state.formData.branch" 
-                                                    t-on-input="filterBranches"
-                                                    t-on-focus="onBranchFocus"
+                                                    t-on-focus="() => this.state.showBranchDropdown = true"
                                                     required="required"
-                                                    placeholder="Gõ để tìm chi nhánh..."
+                                                    placeholder="Chọn chi nhánh..."
                                                     autocomplete="off"
                                                />
-                                               <div t-if="state.showBranchDropdown and state.filteredBranches.length > 0" 
+                                               <div t-if="state.showBranchDropdown and state.branches.length > 0" 
                                                     class="autocomplete-dropdown"
                                                     style="position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; margin-top: 4px;">
-                                                    <div t-foreach="state.filteredBranches" t-as="branch" t-key="branch.id"
+                                                    <div t-foreach="state.branches" t-as="branch" t-key="branch.id"
                                                          t-on-click="() => this.selectBranch(branch)"
                                                          class="autocomplete-item"
                                                          style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0;">
-                                                         <div style="font-weight: 600; color: #333;"><t t-esc="branch.name" /></div>
-                                                         <div t-if="branch.address" style="font-size: 0.8rem; color: #999;"><t t-esc="branch.address" /></div>
+                                                         <t t-esc="branch.name" />
                                                     </div>
-                                               </div>
-                                               <div t-if="state.showBranchDropdown and state.filteredBranches.length === 0 and state.branchesLoaded"
-                                                    class="autocomplete-dropdown"
-                                                    style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; margin-top: 4px; padding: 12px 15px; color: #999;">
-                                                    <t t-if="!state.selectedBankId">Vui lòng chọn ngân hàng trước</t>
-                                                    <t t-else="">Không tìm thấy chi nhánh phù hợp</t>
                                                </div>
                                           </div>
                                      </div>
@@ -165,6 +158,8 @@ class BankInfoWidget extends Component {
     `;
 
     setup() {
+        console.log("🎯 BankInfoWidget - setup called!");
+
         this.state = useState({
             loading: true,
             profile: {},
@@ -184,19 +179,17 @@ class BankInfoWidget extends Component {
             showModal: false,
             modalTitle: '',
             modalMessage: '',
-            // Bank autocomplete
+            // Autocomplete states
             allBanks: [],
             filteredBanks: [],
             showBankDropdown: false,
             selectedBankId: null,
-            // Branch autocomplete
-            allBranches: [],
-            filteredBranches: [],
+            branches: [],
             showBranchDropdown: false,
-            branchesLoaded: false,
         });
 
         onMounted(async () => {
+            // Hide loading spinner
             const loadingSpinner = document.getElementById('loadingSpinner');
             const widgetContainer = document.getElementById('bankInfoWidget');
 
@@ -204,19 +197,23 @@ class BankInfoWidget extends Component {
                 loadingSpinner.style.display = 'none';
                 widgetContainer.style.display = 'block';
             }
+            // Reset storage nếu user đổi
             const currentUserId = window.currentUserId || (window.odoo && window.odoo.session_info && window.odoo.session_info.uid);
             const storedUserId = sessionStorage.getItem('bankInfoUserId');
             if (storedUserId && String(storedUserId) !== String(currentUserId)) {
                 sessionStorage.removeItem('bankInfoData');
                 sessionStorage.removeItem('bankInfoUserId');
             }
+            // Load banks list
             await this.loadBanks();
+            // Load profile data and status info
             await this.loadProfileData();
-            this.loadInitialFormData();
+            this.loadInitialFormData(); // Load form data after profile is loaded or from sessionStorage
             await this.loadStatusInfo();
 
             this.state.loading = false;
 
+            // Close dropdowns when clicking outside
             document.addEventListener('click', (e) => {
                 if (!e.target.closest('#bank_name') && !e.target.closest('.autocomplete-dropdown')) {
                     this.state.showBankDropdown = false;
@@ -229,13 +226,16 @@ class BankInfoWidget extends Component {
     }
 
     loadInitialFormData() {
+        // Ưu tiên lấy từ sessionStorage
         const storedData = sessionStorage.getItem('bankInfoData');
         if (storedData) {
             const parsedData = JSON.parse(storedData);
             Object.assign(this.state.formData, parsedData);
+            // Format monthly_income nếu có
             if (this.state.formData.monthly_income) {
                 this.state.formData.monthly_income = this.formatCurrencyValue(this.state.formData.monthly_income);
             }
+            console.log("✅ Form data loaded from sessionStorage:", this.state.formData);
         } else if (this.state.profile && Object.keys(this.state.profile).length > 0) {
             this.state.formData.account_holder = this.state.profile.account_holder || '';
             this.state.formData.account_number = this.state.profile.account_number || '';
@@ -246,17 +246,9 @@ class BankInfoWidget extends Component {
             this.state.formData.monthly_income = this.formatCurrencyValue(this.state.profile.monthly_income) || '';
             this.state.formData.occupation = this.state.profile.occupation || '';
             this.state.formData.position = this.state.profile.position || '';
-        }
-
-        // Auto-load branches if bank is already selected
-        if (this.state.formData.bank_name) {
-            const matchedBank = this.state.allBanks.find(b =>
-                b.short_name === this.state.formData.bank_name || b.name === this.state.formData.bank_name
-            );
-            if (matchedBank) {
-                this.state.selectedBankId = matchedBank.id;
-                this.loadBranches(matchedBank.id);
-            }
+            console.log("✅ Form data initialized with existing profile data:", this.state.formData);
+        } else {
+            console.log("ℹ️ No existing bank data found, using default values");
         }
     }
 
@@ -270,17 +262,18 @@ class BankInfoWidget extends Component {
             } else {
                 this.state.statusInfo = {};
             }
+            // Luôn lấy tên user từ profile
             const profileRes = await fetch('/data_personal_profile');
             if (profileRes.ok) {
-                const profileData = await profileRes.json();
-                if (profileData && profileData.length > 0 && profileData[0].name) {
-                    this.state.profile.name = profileData[0].name;
-                } else {
-                    this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
-                }
+                 const profileData = await profileRes.json();
+                 if (profileData && profileData.length > 0 && profileData[0].name) {
+                     this.state.profile.name = profileData[0].name;
+                 } else {
+                     this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
+                 }
             } else {
-                console.warn('⚠️ /data_personal_profile failed:', profileRes.status);
-                this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
+                 console.warn('⚠️ /data_personal_profile failed:', profileRes.status);
+                 this.state.profile.name = (window.odoo && window.odoo.session_info && window.odoo.session_info.name) || 'Chưa có thông tin';
             }
         } catch (error) {
             this.state.statusInfo = {};
@@ -291,16 +284,19 @@ class BankInfoWidget extends Component {
     async saveProfile() {
         try {
             const bankData = { ...this.state.formData };
+            // Chuyển monthly_income về số nếu có dấu chấm
             if (bankData.monthly_income) {
                 bankData.monthly_income = parseFloat(String(bankData.monthly_income).replace(/\./g, ''));
             }
+            // ... kiểm tra dữ liệu ...
+            // Gửi dữ liệu lên Odoo
             const response = await fetch('/save_bank_info', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(bankData)
             });
             if (!response.ok) {
-                throw new Error(`Server returned ${response.status}`);
+                 throw new Error(`Server returned ${response.status}`);
             }
             const result = await response.json();
             if (response.ok && result.success) {
@@ -328,12 +324,19 @@ class BankInfoWidget extends Component {
 
     async loadProfileData() {
         try {
+            console.log("🔄 Loading bank profile data from server...");
             const response = await fetch('/data_bank_info');
             if (!response.ok) throw new Error(`Status ${response.status}`);
             const data = await response.json();
+            console.log("📥 Bank profile data received:", data);
+
             if (data && data.length > 0) {
+                // For bank info, data might be an array of accounts, we'll take the first one or handle multiple later.
+                // For now, assuming user only fills out one primary bank account for simplicity.
                 this.state.profile = data[0];
+                console.log("✅ Bank profile data loaded successfully:", this.state.profile);
             } else {
+                console.log("ℹ️ No existing bank profile data found on server");
                 this.state.profile = {};
             }
         } catch (error) {
@@ -343,11 +346,18 @@ class BankInfoWidget extends Component {
     }
 
     formatCurrency(ev) {
+        // Lấy giá trị hiện tại
         let value = ev.target.value;
+
+        // Loại bỏ tất cả ký tự không phải số
         value = value.replace(/[^\d]/g, '');
+
+        // Format với dấu phẩy ngăn cách hàng nghìn
         if (value) {
             value = parseInt(value).toLocaleString('vi-VN');
         }
+
+        // Cập nhật giá trị vào state
         this.state.formData.monthly_income = value;
     }
 
@@ -360,12 +370,11 @@ class BankInfoWidget extends Component {
 
     parseCurrencyValue(value) {
         if (value) {
+            // Loại bỏ tất cả ký tự không phải số
             return value.replace(/[^\d]/g, '');
         }
         return '';
     }
-
-    // ========== BANK AUTOCOMPLETE ==========
 
     async loadBanks() {
         try {
@@ -405,71 +414,32 @@ class BankInfoWidget extends Component {
         this.state.selectedBankId = bank.id;
         this.state.showBankDropdown = false;
 
-        // Reset branch when bank changes
-        this.state.formData.branch = '';
-        this.state.allBranches = [];
-        this.state.filteredBranches = [];
-        this.state.branchesLoaded = false;
-
         // Load branches for selected bank
         await this.loadBranches(bank.id);
-        console.log('✅ Selected bank:', bank.short_name, '→ loaded', this.state.allBranches.length, 'branches');
+        console.log('✅ Selected bank:', bank.short_name);
     }
-
-    // ========== BRANCH AUTOCOMPLETE ==========
 
     async loadBranches(bankId) {
         try {
-            this.state.branchesLoaded = false;
-            const response = await fetch(`/get_bank_branch_data?limit=1000&bank_id=${bankId}`);
+            const response = await fetch(`/get_bank_branch_data?limit=1000`);
             if (!response.ok) {
-                throw new Error(`Server returned ${response.status} ${response.statusText}`);
+                 throw new Error(`Server returned ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
             if (data && data.records) {
-                this.state.allBranches = data.records.filter(br => br.active);
-                this.state.filteredBranches = [...this.state.allBranches];
-                console.log('✅ Loaded', this.state.allBranches.length, 'branches for bank_id', bankId);
+                // Filter branches by bank name (since API doesn't support bank_id filter)
+                const selectedBank = this.state.allBanks.find(b => b.id === bankId);
+                if (selectedBank) {
+                    this.state.branches = data.records.filter(br =>
+                        br.bank_id === selectedBank.name && br.active
+                    );
+                    console.log('✅ Loaded', this.state.branches.length, 'branches for', selectedBank.short_name);
+                }
             }
-            this.state.branchesLoaded = true;
         } catch (error) {
             console.error('❌ Error loading branches:', error);
-            this.state.allBranches = [];
-            this.state.filteredBranches = [];
-            this.state.branchesLoaded = true;
+            this.state.branches = [];
         }
-    }
-
-    onBranchFocus() {
-        if (!this.state.selectedBankId) {
-            this.state.filteredBranches = [];
-            this.state.branchesLoaded = true;
-            this.state.showBranchDropdown = true;
-            return;
-        }
-        this.state.filteredBranches = [...this.state.allBranches];
-        this.state.showBranchDropdown = true;
-    }
-
-    filterBranches(ev) {
-        const searchTerm = ev.target.value.toLowerCase();
-
-        if (!this.state.selectedBankId) {
-            this.state.filteredBranches = [];
-            this.state.showBranchDropdown = true;
-            return;
-        }
-
-        if (!searchTerm) {
-            this.state.filteredBranches = [...this.state.allBranches];
-        } else {
-            this.state.filteredBranches = this.state.allBranches.filter(br =>
-                br.name.toLowerCase().includes(searchTerm) ||
-                (br.code && br.code.toLowerCase().includes(searchTerm)) ||
-                (br.address && br.address.toLowerCase().includes(searchTerm))
-            );
-        }
-        this.state.showBranchDropdown = true;
     }
 
     selectBranch(branch) {
@@ -481,11 +451,13 @@ class BankInfoWidget extends Component {
 
 // Make component globally available
 window.BankInfoWidget = BankInfoWidget;
+console.log('BankInfoWidget component loaded and available globally');
 
 // Auto-mount when script is loaded
 if (typeof owl !== 'undefined') {
     const widgetContainer = document.getElementById('bankInfoWidget');
     if (widgetContainer) {
+        console.log('Mounting BankInfoWidget');
         owl.mount(BankInfoWidget, widgetContainer);
     }
-}
+} 

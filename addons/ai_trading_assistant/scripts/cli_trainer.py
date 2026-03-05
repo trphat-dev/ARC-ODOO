@@ -190,25 +190,41 @@ def train_model(ticker_input, algorithm="ppo", epochs=1000, from_date="01/01/202
 
     # [QUAN TRỌNG CHO TRAIN 'ALL'] ĐỒNG BỘ SỐ LƯỢNG NẾN (DIMENSION ALIGNMENT)
     # FinRL StockTradingEnv CHỈ hoạt động khi ma trận có dạng (Timesteps x Num_Stocks). 
-    # Nếu mã A có 500 nến, mã B mới lên sàn có 200 nến -> Model sẽ Crash ngay lập tức.
-    print("[*] Đang đồng bộ hóa độ dài dữ liệu (Dimension Alignment) cho Multi-Stock...")
-    full_df['date'] = full_df['date'].astype(str)
+    print("[*] Đang đồng bộ hóa độ dài dữ liệu (Dimension Alignment) & Xử lý nến thiếu (Forward Fill)...")
     
-    # 1. Tìm ra "Độ dài tiêu chuẩn" (Ví dụ: Đa số các mã đều có 550 ngày giao dịch trong chu kỳ này)
+    # 1. Tìm tất cả các ngày giao dịch duy nhất trong tập dữ liệu
+    all_dates = sorted(full_df['date'].unique())
+    total_market_days = len(all_dates)
+    
+    # 2. Thống kê và lọc bớt các mã quá thiếu dữ liệu (ví dụ < 70% thời gian)
     tic_counts = full_df['tic'].value_counts()
-    max_len = tic_counts.max()
-    
-    # 2. Loại bỏ các mã "Tân binh" (mới IPO) hoặc mã bị hủy niêm yết đứt quãng không đủ nến.
-    # Chỉ giữ lại những Elite Stocks tham gia trọn vẹn chu kỳ
-    valid_tics = tic_counts[tic_counts == max_len].index.tolist()
+    min_required_days = int(total_market_days * 0.7) # Ngưỡng 70%
+    valid_tics = tic_counts[tic_counts >= min_required_days].index.tolist()
     
     dropped_count = len(tic_counts) - len(valid_tics)
     if dropped_count > 0:
-        print(f"[!] Cảnh báo: Loại bỏ {dropped_count} mã cổ phiếu do dữ liệu bị khuyết/mới lên sàn không đủ {max_len} nến.")
-        full_df = full_df[full_df['tic'].isin(valid_tics)]
-        
-    full_df = full_df.sort_values(['date','tic']).reset_index(drop=True)
-    print(f"[*] Dữ liệu hợp lệ sau khi làm sạch: {len(valid_tics)} Mã cổ phiếu x {max_len} Ngày")
+        print(f"[!] Loại bỏ {dropped_count} mã cổ phiếu do dữ liệu quá ít (<70% chu kỳ).")
+    
+    # Lọc lại df chỉ còn các mã hợp lệ
+    full_df = full_df[full_df['tic'].isin(valid_tics)].copy()
+    
+    # 3. Sử dụng Pivot để lấp đầy các ô trống trong ma trận (Date x Ticker)
+    # Mục tiêu: Đảm bảo mọi ngày đều có đủ nến cho mọi mã.
+    # Nếu một mã thiếu 1 nến ở giữa, ffill() sẽ lấy giá đóng cửa ngày trước đó điền vào.
+    print(f"[*] Đang xử lý lấp đầy dữ liệu cho {len(valid_tics)} mã cổ phiếu...")
+    
+    df_pivot = full_df.pivot(index='date', columns='tic', values=['open', 'high', 'low', 'close', 'volume'])
+    
+    # Forward fill (Lấy nến cũ bù nến thiếu tiếp theo) sau đó Backward fill (cho các mã mới lên sàn ở đầu chu kỳ)
+    df_pivot = df_pivot.ffill().bfill()
+    
+    # Melt trở lại format Long để Feature Engineer xử lý được
+    full_df = df_pivot.stack(level='tic', future_stack=True).reset_index()
+    
+    # Sắp xếp lại chuẩn xác
+    full_df = full_df.sort_values(['date', 'tic']).reset_index(drop=True)
+    max_len = len(all_dates)
+    print(f"[*] Dữ liệu hợp lệ: {len(valid_tics)} Mã x {max_len} Ngày. (Đã dùng Forward Fill cho các nến trống)")
 
     # 2. Add Technical Indicators (Moving Averages, RSI, MACD etc.)
     print(f"[*] Tự động tính toán các chỉ báo kỹ thuật (Feature Engineering)... : {indicators}")

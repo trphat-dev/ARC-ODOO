@@ -143,6 +143,12 @@ class InvestorProfile(models.Model):
         res = super().write(vals)
         if self.partner_id:
             self.env['status.info']._check_and_update_profile_status(self.partner_id.id)
+            # Notify investor_list if exists
+            investor_records = self.env['investor.list'].sudo().search([
+                ('partner_id', '=', self.partner_id.id)
+            ])
+            if investor_records:
+                investor_records.modified(['partner_name', 'phone', 'email', 'id_number'])
         return res
 
     @api.model_create_multi
@@ -151,6 +157,11 @@ class InvestorProfile(models.Model):
         for record in records:
             if record.partner_id:
                 self.env['status.info']._check_and_update_profile_status(record.partner_id.id)
+                investor_records = self.env['investor.list'].sudo().search([
+                    ('partner_id', '=', record.partner_id.id)
+                ])
+                if investor_records:
+                    investor_records.modified(['partner_name', 'phone', 'email', 'id_number'])
         return records
 
     @api.onchange('id_front')

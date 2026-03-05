@@ -22,13 +22,13 @@
                     <div class="rc-value"><t t-esc="item.data.latest_price"/> / <t t-esc="item.data.sma_val"/> <span style="font-size: 0.8em; opacity: 0.8;">(RSI: <t t-esc="item.data.rsi_val"/>)</span></div>
                     <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Cập nhật: <t t-esc="item.data.latest_date"/></div>
                 </div>
-                <div style="text-align: right;">
+                <div style="text-align: right;" t-if="item.data.zone_label">
                     <div class="rc-label"><t t-esc="item.data.zone_label"/></div>
                     <div class="rc-value" style="color: #10b981;"><t t-esc="item.data.zone_value"/></div>
                 </div>
             </div>
             
-            <div class="rc-metrics" style="padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.05);">
+            <div t-if="item.data.target_label" class="rc-metrics" style="padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.05);">
                 <div>
                     <div class="rc-label" style="color: #cbd5e1; font-weight: 500;">Chiến lược hành động</div>
                 </div>

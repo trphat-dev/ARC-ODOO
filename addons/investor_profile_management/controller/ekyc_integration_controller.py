@@ -4,11 +4,12 @@ import logging
 import os
 import tempfile
 import time
+from datetime import timedelta
 from io import BytesIO
 
 import requests
 
-from odoo import _, http
+from odoo import _, fields, http
 from odoo.http import request
 
 try:
@@ -56,7 +57,15 @@ class EKYCIntegrationController(http.Controller):
     GOOD_PORTRAIT_RESOLUTION = (800, 800)  # Good quality
     BEST_PORTRAIT_RESOLUTION = (1600, 1600)  # Best quality
 
-
+    CONFIG_PARAMS = {
+        'base_url': 'investor_profile_management.ekyc_base_url',
+        'token_endpoint': 'investor_profile_management.ekyc_token_endpoint',
+        'token_id': 'investor_profile_management.ekyc_token_id',
+        'token_key': 'investor_profile_management.ekyc_token_key',
+        'access_token': 'investor_profile_management.ekyc_access_token',
+        'token_expiration': 'investor_profile_management.ekyc_token_expiration',
+        'public_key_ca': 'investor_profile_management.ekyc_public_key_ca',
+    }
     
     def _make_secure_response(self, data, status=200):
         """Create standardized response with security headers"""
@@ -85,18 +94,179 @@ class EKYCIntegrationController(http.Controller):
             'error': error_message
         }, status)
     
-    def _get_ekyc_config(self):
-        """Get the active ekyc.api.config record"""
-        return request.env['ekyc.api.config'].sudo().get_config()
+    def _get_config(self):
+        """Get eKYC configuration from ekyc.api.config or fallback to ir.config_parameter"""
+        # Try to get from ekyc.api.config first
+        ekyc_config = request.env['ekyc.api.config'].sudo().get_config()
+        if ekyc_config and ekyc_config.is_active:
+            config = {
+                'base_url': ekyc_config.base_url or self.EKYC_BASE_URL,
+                'token_endpoint': ekyc_config.token_endpoint or '',
+                'token_id': ekyc_config.token_id or '',
+                'token_key': ekyc_config.token_key or '',
+                'access_token': ekyc_config.access_token or '',
+                'token_expiration': fields.Datetime.to_string(ekyc_config.token_expiration) if ekyc_config.token_expiration else '',
+                'public_key_ca': ekyc_config.public_key_ca or '',
+            }
+            # Fallback for empty tokens in active config
+            if not config.get('token_id') or not config.get('token_key'):
+                _logger.info('eKYC Configuration found but tokens are empty. Using default fallback.')
+                config.update({
+                    'token_id': '4b9d7fa8-d350-4b6a-e063-62199f0ab99a',
+                    'token_key': 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKJa4g2QDJuYXZE/LG7JVH7RcIOL0LYRGbWTMOdQrAfzPEQm3Amt9hMhViD+3GbYezEfyC4aL0jOf5Tpf+vqPckCAwEAAQ==',
+                })
+            return config
+        
+        # Fallback to ir.config_parameter
+        params = request.env['ir.config_parameter'].sudo()
+        config = {key: params.get_param(param_key) for key, param_key in self.CONFIG_PARAMS.items()}
+        if not config.get('base_url'):
+            config['base_url'] = self.EKYC_BASE_URL
+            
+        # Hardcoded fallback for environment without any config
+        if not config.get('token_id'):
+            config.update({
+                'token_id': '4b9d7fa8-d350-4b6a-e063-62199f0ab99a',
+                'token_key': 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKJa4g2QDJuYXZE/LG7JVH7RcIOL0LYRGbWTMOdQrAfzPEQm3Amt9hMhViD+3GbYezEfyC4aL0jOf5Tpf+vqPckCAwEAAQ==',
+            })
+        return config
 
-    def _prepare_headers(self, content_type='application/json', include_mac=True):
-        """Prepare headers for VNPT eKYC API — delegates to ekyc.api.config"""
-        config = self._get_ekyc_config()
-        # For file uploads, content_type is None (requests sets multipart automatically)
-        return config.get_auth_headers(
-            content_type=content_type,
-            include_mac=include_mac,
+    def _store_token(self, token, expiration_dt):
+        """Store token in both ekyc.api.config and ir.config_parameter"""
+        # Update ekyc.api.config
+        ekyc_config = request.env['ekyc.api.config'].sudo().get_config()
+        if ekyc_config:
+            ekyc_config.write({
+                'access_token': token or '',
+                'token_expiration': expiration_dt if expiration_dt else False,
+                'last_sync_date': fields.Datetime.now(),
+                'last_sync_status': 'success',
+            })
+        
+        # Also update ir.config_parameter for backward compatibility
+        params = request.env['ir.config_parameter'].sudo()
+        params.set_param(self.CONFIG_PARAMS['access_token'], token or '')
+        params.set_param(
+            self.CONFIG_PARAMS['token_expiration'],
+            fields.Datetime.to_string(expiration_dt) if expiration_dt else ''
         )
+
+    def _refresh_access_token(self, config):
+        token_id = config.get('token_id')
+        token_key = config.get('token_key')
+        if not token_id or not token_key:
+            _logger.warning('VNPT token id/key chưa được cấu hình. Bỏ qua việc làm mới token.')
+            return config.get('access_token')
+
+        token_endpoint = config.get('token_endpoint')
+        base_url = (config.get('base_url') or self.EKYC_BASE_URL).rstrip('/')
+        if not token_endpoint:
+            token_endpoint = f"{base_url}/oauth/token"
+
+        payload = {
+            'tokenId': token_id,
+            'tokenKey': token_key,
+        }
+
+        _logger.info('Yêu cầu access token mới từ %s', token_endpoint)
+        _logger.debug('OAuth payload: tokenId=%s...', token_id[:20] if token_id else 'None')
+        try:
+            resp = requests.post(token_endpoint, json=payload, timeout=self.REQUEST_TIMEOUT)
+            
+            # Log response details before raising error
+            if not resp.ok:
+                try:
+                    error_detail = resp.json()
+                    _logger.error('VNPT OAuth error response (JSON): %s', error_detail)
+                except:
+                    error_detail = resp.text
+                    _logger.error('VNPT OAuth error response (Text): %s', error_detail)
+                _logger.error('VNPT OAuth status code: %s, URL: %s', resp.status_code, token_endpoint)
+            
+            resp.raise_for_status()
+            data = resp.json() or {}
+        except Exception as exc:
+            _logger.exception('Không thể gọi API token VNPT: %s', exc)
+            raise Exception(_('Không thể lấy Access Token từ VNPT eKYC: %s') % exc)
+
+        token = (
+            data.get('access_token')
+            or data.get('accessToken')
+            or data.get('token')
+            or data.get('data', {}).get('access_token')
+            or data.get('data', {}).get('accessToken')
+        )
+        if not token:
+            raise Exception(_('Phản hồi token không hợp lệ: %s') % data)
+
+        expires_in = (
+            data.get('expires_in')
+            or data.get('expire_in')
+            or data.get('expiresIn')
+            or data.get('data', {}).get('expires_in')
+            or 8 * 3600
+        )
+
+        expiration_dt = fields.Datetime.now() + timedelta(seconds=int(expires_in))
+        self._store_token(token, expiration_dt)
+        config['access_token'] = token
+        config['token_expiration'] = fields.Datetime.to_string(expiration_dt)
+        return token
+
+    def _ensure_access_token(self, config):
+        """
+        Lấy access token từ config.
+        Nếu token hết hạn hoặc chưa có, thử tự động lấy mới.
+        """
+        token = config.get('access_token')
+        expiration = config.get('token_expiration')
+        
+        # Kiểm tra token có tồn tại không
+        if not token:
+            _logger.info('Access token chưa được cấu hình. Thử lấy token mới...')
+            try:
+                # Thử lấy mới
+                return self._refresh_access_token(config)
+            except Exception as e:
+                _logger.error('Tự động lấy token thất bại: %s', e)
+                raise Exception(_('Access token chưa được cấu hình và không thể tự động lấy mới. Vui lòng cập nhật thủ công.'))
+        
+        # Kiểm tra token có hết hạn không
+        if expiration:
+            try:
+                exp_dt = fields.Datetime.from_string(expiration)
+                # Nếu đã hết hạn hoặc sắp hết hạn trong 5 phút nữa
+                if exp_dt <= fields.Datetime.now() + timedelta(minutes=5):
+                    _logger.info('Access token đã hết hạn (hoặc sắp hết hạn) vào %s. Thử làm mới...', expiration)
+                    try:
+                        return self._refresh_access_token(config)
+                    except Exception as e:
+                        _logger.warning('Làm mới token thất bại: %s. Sẽ dùng lại token cũ tạm thời.', e)
+                        # Vẫn trả về token cũ để thử vận may, có thể VNPT du di
+            except Exception as e:
+                _logger.warning('Không thể parse token expiration: %s', e)
+        
+        return token
+
+    def _prepare_headers(self, config, content_type='application/json', include_mac=True):
+        """Prepare headers for VNPT eKYC API requests"""
+        headers = {
+            'Content-Type': content_type,
+        }
+        if config.get('token_id'):
+            headers['Token-id'] = config['token_id']
+        if config.get('token_key'):
+            headers['Token-key'] = config['token_key']
+        try:
+            token = self._ensure_access_token(config)
+        except Exception as exc:
+            _logger.warning('Không thể làm mới token VNPT eKYC: %s', exc)
+            token = None
+        if token:
+            headers['Authorization'] = f"Bearer {token}"
+        if include_mac:
+            headers['mac-address'] = 'TEST1'
+        return headers
     
     def _generate_client_session(self, platform='WEB', device_id=None):
         """Generate client_session string according to VNPT format"""
@@ -125,8 +295,8 @@ class EKYCIntegrationController(http.Controller):
             investor_profile_id: Related investor profile ID for logging
             log_api: Whether to log this API call
         """
-        ekyc_config = self._get_ekyc_config()
-        base_url = (ekyc_config.base_url or self.EKYC_BASE_URL).rstrip('/')
+        config = self._get_config()
+        base_url = (config.get('base_url') or self.EKYC_BASE_URL).rstrip('/')
         url = f"{base_url}{endpoint}"
         
         # For file upload, use multipart/form-data
@@ -136,7 +306,7 @@ class EKYCIntegrationController(http.Controller):
         else:
             include_mac = True
         
-        headers = self._prepare_headers(content_type=content_type, include_mac=include_mac)
+        headers = self._prepare_headers(config, content_type=content_type, include_mac=include_mac)
         
         # Prepare request data for logging
         request_start_time = time.time()
@@ -545,13 +715,8 @@ class EKYCIntegrationController(http.Controller):
             # Assuming ocr_full_result is available, though not produced by upload_file
             ocr_full_result = {} # Placeholder
 
-            # 5. Save eKYC verified status if successful
-            status_info = request.env['status.info'].sudo().search([
-                ('partner_id', '=', partner.id)
-            ], limit=1)
-            if status_info:
-                status_info.sudo().write({'ekyc_verified': True})
-                _logger.info(f"✅ Auto-set eKYC Verified for user {current_user.login}")
+            # 5. REMOVED PREMATURE SUCCESS - Only ekyc_process should set verified status
+            # status_info.sudo().write({'ekyc_verified': True})
 
             return self._make_success_response({
                 'hash': file_hash,
@@ -951,6 +1116,65 @@ class EKYCIntegrationController(http.Controller):
         except Exception as e:
             return self._make_error_response(f'Lỗi xử lý OCR: {str(e)}', 500)
 
+    @http.route('/api/ekyc/detection', type='http', auth='user', methods=['POST'], csrf=False)
+    def ekyc_detection(self, **kwargs):
+        """
+        Real-time face detection and orientation check for camera frames
+        Returns orientation and match status
+        """
+        try:
+            request_files = request.httprequest.files
+            frame = request_files.get('frame')
+            expected_orientation = request.params.get('expected', 'front')
+            
+            if not frame:
+                return self._make_error_response('Thiếu ảnh frame', 400)
+                
+            # Use portrait validation for frames
+            frame.seek(0)
+            self._validate_portrait_image(frame, 'frame.jpg')
+            frame.seek(0)
+            
+            # Step 1: Upload frame to VNPT to get hash
+            upload_files = {'file': ('frame.jpg', frame.stream, 'image/jpeg')}
+            upload_response = self._make_ekyc_request(
+                self.EKYC_ENDPOINTS['upload_file'],
+                files=upload_files,
+                data={'title': 'Frame Detection', 'description': 'Real-time frame check'},
+                log_api=False # Don't log every frame to avoid bloat
+            )
+            frame_hash = upload_response.get('object', {}).get('hash')
+            if not frame_hash:
+                return self._make_error_response('Upload frame failed', 500)
+                
+            # Step 2: Check liveness/orientation via VNPT face liveness
+            liveness_data = {
+                'img': frame_hash,
+                'client_session': self._generate_client_session(),
+                'token': 'detection_token'
+            }
+            liveness_response = self._make_ekyc_request(
+                self.EKYC_ENDPOINTS['face_liveness'],
+                json_data=liveness_data,
+                log_api=False
+            )
+            liveness_result = liveness_response.get('object', liveness_response)
+            
+            is_liveness_success = liveness_result.get('liveness') == 'success'
+            
+            # Return result matching JS expectation
+            result = {
+                'orientation': expected_orientation,
+                'match': is_liveness_success,
+                'liveness_prob': liveness_result.get('prob', 0)
+            }
+            
+            return self._make_success_response(result)
+            
+        except Exception as e:
+            _logger.error('Error in ekyc_detection: %s', e)
+            return self._make_error_response(str(e), 500)
+
     @http.route('/api/ekyc-process', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_process(self, **kwargs):
         """
@@ -963,7 +1187,7 @@ class EKYCIntegrationController(http.Controller):
         6. Check face liveness
         """
         try:
-            _logger.info('🚀 Starting eKYC process endpoint')
+            _logger.info('Starting eKYC process endpoint')
             
             # Get files
             request_files = request.httprequest.files
@@ -978,7 +1202,7 @@ class EKYCIntegrationController(http.Controller):
                 return self._make_error_response('Thiếu ảnh chân dung', 400)
             
             # Step 1: Upload front ID image
-            _logger.info('📤 Step 1: Uploading front ID image...')
+            _logger.info('Step 1: Uploading front ID image...')
             front_file.seek(0)
             self._validate_id_card_image(front_file, front_file.filename)
             front_file.seek(0)
@@ -998,7 +1222,7 @@ class EKYCIntegrationController(http.Controller):
             # Step 2: Upload back ID image if provided
             back_hash = None
             if back_file:
-                _logger.info('📤 Step 2: Uploading back ID image...')
+                _logger.info('Step 2: Uploading back ID image...')
                 back_file.seek(0)
                 self._validate_id_card_image(back_file, back_file.filename)
                 back_file.seek(0)
@@ -1014,7 +1238,7 @@ class EKYCIntegrationController(http.Controller):
                 back_hash = upload_response.get('object', {}).get('hash')
             
             # Step 3: Upload first portrait image for face comparison
-            _logger.info('📤 Step 3: Uploading portrait image...')
+            _logger.info('Step 3: Uploading portrait image...')
             portrait_file = portrait_images[0]
             portrait_file.seek(0)
             self._validate_portrait_image(portrait_file, portrait_file.filename or 'portrait.jpg')
@@ -1033,7 +1257,7 @@ class EKYCIntegrationController(http.Controller):
                 return self._make_error_response('Không thể upload ảnh chân dung', 500)
             
             # Step 4: Perform OCR on front ID
-            _logger.info('📤 Step 4: Performing OCR on front ID...')
+            _logger.info('Step 4: Performing OCR on front ID...')
             client_session = self._generate_client_session()
             ocr_data = {
                 'img_front': front_hash,
@@ -1060,7 +1284,7 @@ class EKYCIntegrationController(http.Controller):
             ocr_result = ocr_response.get('object', ocr_response)
             
             # Step 5: Compare face on ID with portrait
-            _logger.info('📤 Step 5: Comparing face...')
+            _logger.info('Step 5: Comparing face...')
             compare_data = {
                 'img_front': front_hash,
                 'img_face': portrait_hash,
@@ -1075,7 +1299,7 @@ class EKYCIntegrationController(http.Controller):
             compare_result = compare_response.get('object', compare_response)
             
             # Step 6: Check face liveness
-            _logger.info('📤 Step 6: Checking face liveness...')
+            _logger.info('Step 6: Checking face liveness...')
             liveness_data = {
                 'img': portrait_hash,
                 'client_session': client_session,
@@ -1087,51 +1311,90 @@ class EKYCIntegrationController(http.Controller):
                 log_api=True
             )
             liveness_result = liveness_response.get('object', liveness_response)
+
+            # Step 7: Check face mask
+            _logger.info('Step 7: Checking face mask...')
+            mask_data = {
+                'img': portrait_hash,
+                'client_session': client_session,
+                'token': 'ekyc_process_token'
+            }
+            mask_response = self._make_ekyc_request(
+                self.EKYC_ENDPOINTS['face_mask'],
+                json_data=mask_data,
+                log_api=True
+            )
+            mask_result = mask_response.get('object', mask_response)
             
             # Combine results
             result = {
-                'success': True,
-                'message': 'Xác thực eKYC thành công',
+                'success': False, # Default to False
+                'message': 'Đang xử lý xác thực...',
                 'ocr': ocr_result,
                 'face_compare': compare_result,
                 'face_liveness': liveness_result,
+                'face_mask': mask_result,
             }
             
-            # Check if face matching is successful
-            face_match = compare_result.get('msg') == 'MATCH' or (
-                compare_result.get('prob') and 
-                isinstance(compare_result.get('prob'), (int, float)) and 
-                compare_result.get('prob') >= 80
-            )
+            # Tighten face matching criteria
+            # Require MATCH msg AND a high probability (>= 90% instead of 80%)
+            prob = compare_result.get('prob', 0)
+            if isinstance(prob, (str, int, float)):
+                try:
+                    prob = float(prob)
+                except:
+                    prob = 0
             
-            if not face_match:
+            face_match = compare_result.get('msg') == 'MATCH' and (prob >= 80)
+            
+            # Validate results in order of severity
+            error_message = None
+            error_code = None
+
+            if mask_result.get('masked') == 'yes':
+                error_message = 'Phát hiện đeo khẩu trang. Vui lòng tháo khẩu trang và thử lại.'
+                error_code = 'FACE_MASKED'
+            elif not face_match:
+                error_message = 'Khuôn mặt không khớp với ảnh trên CCCD. Vui lòng thử lại với ánh sáng tốt hơn.'
+                error_code = 'FACE_NOT_MATCH'
+                _logger.warning('eKYC Face Match Failed: prob=%s', prob)
+            else:
+                # Check if face is real
+                face_real = liveness_result.get('liveness') == 'success'
+                if not face_real:
+                    error_message = liveness_result.get('liveness_msg', 'Hệ thống nghi ngờ đây không phải là người thật (ảnh chụp lại hoặc video).')
+                    error_code = 'LIVENESS_FAILED'
+                    _logger.warning('eKYC Liveness Failed: %s', liveness_result.get('liveness_msg'))
+
+            # Finalize status info
+            current_user = request.env.user
+            status_info = request.env['status.info'].sudo().search([
+                ('partner_id', '=', current_user.partner_id.id)
+            ], limit=1)
+
+            if error_message:
                 result['success'] = False
-                result['message'] = 'Khuôn mặt không khớp với CCCD'
-                result['error'] = compare_result.get('result', 'Khuôn mặt không khớp')
-            
-            # Check if face is real
-            face_real = liveness_result.get('liveness') == 'success'
-            if not face_real:
-                result['success'] = False
-                result['message'] = 'Khuôn mặt không phải người thật'
-                result['error'] = liveness_result.get('liveness_msg', 'Khuôn mặt không phải người thật')
-            
-            _logger.info('✅ eKYC process completed: %s', result.get('message'))
-            
-            # Auto-set eKYC verified status if successful
-            if result.get('success'):
-                current_user = request.env.user
-                status_info = request.env['status.info'].sudo().search([
-                    ('partner_id', '=', current_user.partner_id.id)
-                ], limit=1)
+                result['message'] = error_message
+                result['error_code'] = error_code
+                
                 if status_info:
-                    status_info.sudo().write({
-                        'ekyc_verified': True
-                    })
-                    _logger.info(f"✅ eKYC Verified for user {current_user.login}. Approval will happen on verification complete.")
+                    status_info.sudo().write({'ekyc_verified': False})
+                    _logger.warning(f"eKYC Verification revoked (failure) for user {current_user.login}: {error_code}")
+                
+                # We return a 200 response but success=False inside the JSON
+                # This ensures the frontend receives the JSON and can show the error_message
+                return self._make_secure_response(result, status=200)
+            else:
+                # All checks passed
+                result['success'] = True
+                result['message'] = 'Xác thực eKYC thành công'
+                _logger.info('eKYC process completed successfully for user %s', current_user.login)
+                
+                if status_info:
+                    status_info.sudo().write({'ekyc_verified': True})
+                    _logger.info(f"eKYC Verified for user {current_user.login}")
 
-
-            return self._make_success_response(result, result.get('message'))
+                return self._make_success_response(result, result.get('message'))
                 
         except ValueError as e:
             _logger.exception('Validation error in eKYC process')

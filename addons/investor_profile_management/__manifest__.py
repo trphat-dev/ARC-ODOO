@@ -31,7 +31,6 @@ Key Features:
         'security/ir.model.access.csv',
         # Data
         'data/ekyc_api_config_data.xml',
-        'data/ekyc_cron.xml',
         # Backend Views
         'views/menu_views.xml',
         'views/ekyc_api_config_views.xml',

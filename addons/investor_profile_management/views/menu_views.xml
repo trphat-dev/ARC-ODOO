@@ -51,7 +51,7 @@
 
     <!-- Menu Items -->
     <menuitem id="menu_investor_root" 
-              name="Investor Profile Management" 
+              name="Investor Profile" 
               sequence="10"/>
 
     <menuitem id="menu_status_info" 

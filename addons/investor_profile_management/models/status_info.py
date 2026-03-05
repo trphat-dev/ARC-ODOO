@@ -27,29 +27,32 @@ class StatusInfo(models.Model):
     
     # Relationship Manager
     rm_id = fields.Many2one('res.users', string='Relationship Manager')
+    bda_id = fields.Many2one('res.users', string='BDA (Broker)', help='Broker/Account Manager assigned to this investor')
 
-    @api.model
-    def create(self, vals):
-        # Generate random referral code
-        if not vals.get('referral_code'):
-            while True:
-                referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
-                if not self.search([('referral_code', '=', referral_code)]):
-                    vals['referral_code'] = referral_code
-                    break
+    @api.model_create_multi
+    def create(self, vals_list):
+        """Modernized create method for Odoo 18 using model_create_multi"""
+        for vals in vals_list:
+            # Generate random referral code
+            if not vals.get('referral_code'):
+                while True:
+                    referral_code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+                    if not self.search([('referral_code', '=', referral_code)]):
+                        vals['referral_code'] = referral_code
+                        break
 
-        # Auto-generate account number (HDC + 5 secure random digits)
-        if not vals.get('account_number'):
-            while True:
-                # Use secrets for cryptographically strong random numbers
-                random_digits = ''.join(secrets.choice(string.digits) for _ in range(5))
-                account_number = f"ARC{random_digits}"
-                # Check uniqueness
-                if not self.search([('account_number', '=', account_number)]):
-                    vals['account_number'] = account_number
-                    break
+            # Auto-generate account number (HDC + 5 secure random digits)
+            if not vals.get('account_number'):
+                while True:
+                    # Use secrets for cryptographically strong random numbers
+                    random_digits = ''.join(secrets.choice(string.digits) for _ in range(5))
+                    account_number = f"HDC{random_digits}"
+                    # Check uniqueness
+                    if not self.search([('account_number', '=', account_number)]):
+                        vals['account_number'] = account_number
+                        break
 
-        return super().create(vals)
+        return super().create(vals_list)
 
     @api.constrains('partner_id')
     def _check_unique_partner(self):
@@ -61,8 +64,6 @@ class StatusInfo(models.Model):
                 ])
                 if duplicate:
                     raise ValidationError(_('Each partner can only have one status record.'))
-
-
 
     @api.constrains('account_status', 'profile_status')
     def _check_status_consistency(self):
@@ -122,17 +123,3 @@ class StatusInfo(models.Model):
 
     def set_approved(self):
         self.write({'account_status': 'approved', 'profile_status': 'complete'})
-
-
-class ResPartner(models.Model):
-    _inherit = 'res.partner'
-
-    def create(self, vals):
-        partner = super(ResPartner, self).create(vals)
-        # Only create status info for partner that is a user (not company, not child contact)
-        if not partner.parent_id and not partner.is_company:
-            status_model = partner.env['status.info']
-            # Check if already exists, if not create
-            if not status_model.search([('partner_id', '=', partner.id)], limit=1):
-                status_model.create({'partner_id': partner.id})
-        return partner

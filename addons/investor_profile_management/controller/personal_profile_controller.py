@@ -119,8 +119,10 @@ class PersonalProfileController(http.Controller):
                 for profile in personal_profiles:
                     id_front_url = ''
                     id_back_url = ''
+                    
                     if profile.id_front:
                         id_front_url = f"/web/image?model=investor.profile&field=id_front&id={profile.id}"
+
                     if profile.id_back:
                         id_back_url = f"/web/image?model=investor.profile&field=id_back&id={profile.id}"
                     data.append({
@@ -216,7 +218,7 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_front_{uname}_{ts}.jpg"
                         create_dict['id_front_filename'] = filename
-                        print(f"✅ Front CCCD image added to new profile ({len(front_binary)} bytes)")
+                        print(f"✅ Front CCCD image binary loaded for new profile ({len(front_binary)} bytes)")
                     except Exception as e:
                         print(f"❌ Error processing front CCCD image for new profile: {e}")
                 
@@ -234,7 +236,7 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_back_{uname}_{ts}.jpg"
                         create_dict['id_back_filename'] = filename
-                        print(f"✅ Back CCCD image added to new profile ({len(back_binary)} bytes)")
+                        print(f"✅ Back CCCD image binary loaded for new profile ({len(back_binary)} bytes)")
                     except Exception as e:
                         print(f"❌ Error processing back CCCD image for new profile: {e}")
                 
@@ -272,7 +274,7 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_front_{uname}_{ts}.jpg"
                     update_data['id_front_filename'] = filename
-                    print(f"✅ Front CCCD image saved to database ({len(front_binary)} bytes)")
+                    print(f"✅ Front CCCD image binary updated to database ({len(front_binary)} bytes)")
                 except Exception as e:
                     print(f"❌ Error processing front CCCD image: {e}")
             
@@ -293,7 +295,7 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_back_{uname}_{ts}.jpg"
                     update_data['id_back_filename'] = filename
-                    print(f"✅ Back CCCD image saved to database ({len(back_binary)} bytes)")
+                    print(f"✅ Back CCCD image binary updated to database ({len(back_binary)} bytes)")
                 except Exception as e:
                     print(f"❌ Error processing back CCCD image: {e}")
             
@@ -327,15 +329,16 @@ class PersonalProfileController(http.Controller):
                 return Response(json.dumps({'error': 'Thiếu file hoặc side'}), content_type='application/json', status=400)
 
             file_data = file.read()
+            # Build filename using login username
             login = (current_user.login or '').strip().lower()
             uname = re.sub(r'[^a-z0-9_-]+', '', login.replace('@', '_').replace('.', '_').replace(' ', '_')) or 'user'
             ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
             filename = f"cccd_{side}_{uname}_{ts}.jpg"
-
+            # Directly save to fields
             if side == 'front':
-                profile.sudo().write({'id_front': file_data, 'id_front_filename': filename})
+                profile.sudo().write({'id_front': base64.b64encode(file_data), 'id_front_filename': filename})
             else:
-                profile.sudo().write({'id_back': file_data, 'id_back_filename': filename})
+                profile.sudo().write({'id_back': base64.b64encode(file_data), 'id_back_filename': filename})
 
             return Response(json.dumps({'success': True}), content_type='application/json')
         except Exception as e:
@@ -616,14 +619,13 @@ class PersonalProfileController(http.Controller):
             
             update_vals = {'profile_status': 'complete'}
             
-            # Auto-approve if eKYC is verified OR profile is already complete
-            if status_info.ekyc_verified or status_info.profile_status == 'complete':
+            # ONLY auto-approve if eKYC is ALREADY verified through the proper process
+            if status_info.ekyc_verified:
                 update_vals['account_status'] = 'approved'
-                update_vals['ekyc_verified'] = True  # Ensure flag is set
-                message = 'Hồ sơ đã được phê duyệt tự động.'
+                message = 'Hồ sơ đã được phê duyệt tự động nhờ xác thực eKYC.'
             else:
                 update_vals['account_status'] = 'pending'
-                message = 'Hồ sơ đang chờ duyệt.'
+                message = 'Hồ sơ đang chờ duyệt. Vui lòng thực hiện eKYC để được phê duyệt tự động.'
                 
             status_info.sudo().write(update_vals)
             
