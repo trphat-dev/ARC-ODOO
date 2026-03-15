@@ -353,6 +353,18 @@ export class NormalOrdersComponent extends Component {
     // ==========================================================================
     // SEND TO EXCHANGE
     // ==========================================================================
+    /**
+     * Chuyển giá trị bất kỳ thành chuỗi hiển thị an toàn.
+     * Tránh lỗi [object Object] khi error/message là object thay vì string.
+     */
+    _safeStr(val) {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'string') return val;
+        // Odoo JSON-RPC error format: {code, message, data}
+        if (typeof val === 'object' && val.message) return String(val.message);
+        try { return JSON.stringify(val); } catch (_) { return String(val); }
+    }
+
     async sendSelectedToExchange() {
         if (this.state.selectedIds.size === 0) return;
         
@@ -371,10 +383,23 @@ export class NormalOrdersComponent extends Component {
                 })
             });
             
-            const result = await response.json();
+            const json = await response.json();
+
+            // Handle Odoo JSON-RPC error wrapper: {jsonrpc, error: {code, message, data}}
+            if (json.error) {
+                const errMsg = (json.error.data && json.error.data.message)
+                    || json.error.message
+                    || 'Lỗi hệ thống';
+                this.showNotification(String(errMsg), 'error');
+                return;
+            }
             
-            if (result.result) {
-                const { sent_count, failed, message } = result.result;
+            const result = json.result || json;
+            
+            if (result) {
+                const sent_count = result.sent_count || 0;
+                const failed = result.failed || [];
+                const message = this._safeStr(result.message) || 'Không có phản hồi';
                 
                 // Show success notification if any orders were sent
                 if (sent_count > 0) {
@@ -387,7 +412,7 @@ export class NormalOrdersComponent extends Component {
                     
                     // Display each error to the user
                     for (const failedOrder of failed) {
-                        const errorMsg = failedOrder.error || 'Lỗi không xác định';
+                        const errorMsg = this._safeStr(failedOrder.error) || 'Lỗi không xác định';
                         this.showNotification(`Lệnh #${failedOrder.id}: ${errorMsg}`, 'error');
                     }
                 }
@@ -404,7 +429,7 @@ export class NormalOrdersComponent extends Component {
             }
         } catch (error) {
             console.error('[NormalOrders] Send error:', error);
-            this.showNotification('Lỗi gửi lệnh lên sàn', 'error');
+            this.showNotification('Lỗi gửi lệnh lên sàn: ' + this._safeStr(error.message), 'error');
         } finally {
             this.state.sending = false;
         }

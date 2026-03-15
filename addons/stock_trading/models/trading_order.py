@@ -79,7 +79,7 @@ class TradingOrder(models.Model):
     symbol = fields.Char(related='instrument_code', string='Symbol', readonly=True)
     side = fields.Selection(related='buy_sell', string='Side', readonly=True)
     status = fields.Selection(related='state', string='Status', readonly=True)
-    order_date = fields.Date(compute='_compute_order_date', string='Order Date', store=True)
+    order_date = fields.Date(compute='_compute_order_date', string='Order Date', store=False)
 
     @api.depends('create_date', 'submitted_at')
     def _compute_order_date(self):

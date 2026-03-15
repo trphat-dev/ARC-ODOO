@@ -230,8 +230,10 @@ class Investment(models.Model):
                 units = float(getattr(tx, 'matched_units', 0) or tx.units or 0)
                 order_mode = getattr(tx, 'order_mode', 'negotiated') or 'negotiated'
                 t2_date = getattr(tx, 't2_date', None)
+                t2_skipped = getattr(tx, 't2_skipped', False)
                 
-                is_cleared = t2_date and t2_date <= today
+                # T+2 cleared if: date passed OR manually skipped
+                is_cleared = t2_skipped or (t2_date and t2_date <= today)
                 
                 if order_mode == 'negotiated':
                     negotiated_units += units
@@ -294,3 +296,29 @@ class Investment(models.Model):
         return investment_utils.InvestmentHelper.compute_sell_value(
             order_value, interest_rate_percent, term_months, days
         )
+
+    def action_skip_t2(self):
+        """Skip T+2 settlement: mark all pending T+2 transactions as cleared"""
+        Transaction = self.env['portfolio.transaction'].sudo()
+        today = fields.Date.today()
+        
+        for rec in self:
+            if not rec.user_id or not rec.fund_id:
+                continue
+            
+            # Find completed buy transactions that are still pending T+2
+            pending_txs = Transaction.search([
+                ('user_id', '=', rec.user_id.id),
+                ('fund_id', '=', rec.fund_id.id),
+                ('transaction_type', '=', 'buy'),
+                ('status', '=', 'completed'),
+                ('t2_skipped', '=', False),
+                ('t2_date', '>', today),
+            ])
+            
+            if pending_txs:
+                pending_txs.write({'t2_skipped': True})
+                # Force recompute units breakdown
+                rec._compute_units_breakdown()
+        
+        return True

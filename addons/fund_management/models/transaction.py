@@ -161,6 +161,13 @@ class Transaction(models.Model):
         help="Ngày dự kiến hàng/tiền về (T+2)"
     )
 
+    t2_skipped = fields.Boolean(
+        string="Bỏ qua T+2",
+        default=False,
+        tracking=True,
+        help="Nếu bật, CCQ từ giao dịch này được coi là đã về tài khoản (bỏ qua kiểm tra T+2)"
+    )
+
     @api.depends('created_at', 'transaction_type', 'order_mode')
     def _compute_t2_date(self):
         """Calculate T+2 date based on created_at - applies to ALL transactions"""

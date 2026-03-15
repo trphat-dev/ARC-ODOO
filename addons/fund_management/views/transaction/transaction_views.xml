@@ -123,6 +123,7 @@
                                         <field name="exchange_sent_at" string="Thời gian gửi"/>
                                         <field name="exchange_filled_at" string="Thời gian khớp"/>
                                         <field name="t2_date" string="Ngày hàng về (T+2)" readonly="1"/>
+                                        <field name="t2_skipped" string="Bỏ qua T+2"/>
                                     </group>
                                 </group>
                             </page>
@@ -131,11 +132,6 @@
                             </page>
                         </notebook>
                     </sheet>
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids"/>
-                        <field name="activity_ids"/>
-                        <field name="message_ids"/>
-                    </div>
                 </form>
             </field>
         </record>

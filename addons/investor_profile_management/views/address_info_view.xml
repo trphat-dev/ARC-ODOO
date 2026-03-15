@@ -37,7 +37,6 @@
                                 <group>
                                     <field name="country_id" string="Quốc gia"/>
                                     <field name="state_id" string="Tỉnh/Thành"/>
-                                    <field name="zip" string="Mã bưu chính"/>
                                     <field name="is_default" string="Địa chỉ mặc định"/>
                                 </group>
                             </group>

@@ -362,8 +362,8 @@ export class FundWidget extends Component {
             funds: [],
             selectedFund: null,
             activeRange: '1M',
-            compareFunds: [],   // 👈 THÊM DÒNG NÀY
-            compareMode: false,   // 👈 Thêm dòng này
+            compareFunds: [],
+            compareMode: false,
             candleRange: '5\'',
             interval: '5\'',      // Chart interval (1', 5', 15, 30', 45', 1h)
             chartStyle: 'candles', // Chart style (candles, line)
@@ -394,27 +394,27 @@ export class FundWidget extends Component {
 
         onMounted(async () => {
             // Load Lightweight Charts (high-performance OHLC)
-            console.log('📚 Loading LightweightCharts library...');
+            console.log('Loading LightweightCharts library...');
             try {
                 await loadJS("https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.5/dist/lightweight-charts.standalone.production.js");
-                console.log('✅ LightweightCharts library loaded successfully');
+                console.log('LightweightCharts library loaded successfully');
                 // Đảm bảo library được gán vào window
                 if (window.LightweightCharts) {
-                    console.log('✅ window.LightweightCharts is available');
+                    console.log('window.LightweightCharts is available');
                 } else {
-                    console.warn('⚠️ window.LightweightCharts not found after loadJS');
+                    console.warn('window.LightweightCharts not found after loadJS');
                 }
             } catch (e) {
-                console.error('❌ Lightweight Charts load failed', e);
+                console.error('Lightweight Charts load failed', e);
             }
 
             try {
                 const response = await fetch('/data_fund');
                 const data = await response.json();
-                console.log("📥 Fund data:", data);
+                console.log("Fund data:", data);
                 this.state.funds = data;
             } catch (error) {
-                console.error("❌ Error fetching funds:", error);
+                console.error("Error fetching funds:", error);
             } finally {
                 this.state.loading = false;
             }
@@ -436,17 +436,17 @@ export class FundWidget extends Component {
                     });
                 } else {
                     // Fallback: poll every 5s (same as stock_data)
-                    console.log('📡 Using polling fallback for realtime updates (5s)');
+                    console.log('Using polling fallback for realtime updates (5s)');
                     this._pollId = setInterval(() => this.refreshFunds(), 5000);
                 }
             } catch (e) {
-                console.warn('⚠️ Bus init failed, fallback to polling', e);
+                console.warn('Bus init failed, fallback to polling', e);
                 this._pollId = setInterval(() => this.refreshFunds(), 5000);
             }
 
             // Auto-select first fund và load chart sau khi data đã load
             if (this.state.funds && this.state.funds.length > 0) {
-                console.log('✅ Auto-selecting first fund:', this.state.funds[0]);
+                console.log('Auto-selecting first fund:', this.state.funds[0]);
                 // Đợi một chút để đảm bảo DOM đã render
                 setTimeout(() => {
                     this.selectFund(this.state.funds[0]);
@@ -457,7 +457,7 @@ export class FundWidget extends Component {
 
     // Thêm hàm này để khi click fund thì cập nhật state.selectedFund
     selectFund(fund) {
-        console.log("✅ Selected Fund:", fund);
+        console.log("Selected Fund:", fund);
         this.state.selectedFund = fund;
 
         const navHistory = fund.nav_history_json
@@ -475,13 +475,13 @@ export class FundWidget extends Component {
         // Load candlestick for current ticker
         if (fund && fund.ticker) {
             this.state.candleRange = this.state.candleRange || '1H';
-            console.log(`📊 [selectFund] Loading candle data for ticker: ${fund.ticker}, range: ${this.state.candleRange}`);
+            console.log(`Loading candle data for ticker: ${fund.ticker}, range: ${this.state.candleRange}`);
             // Đợi một chút để đảm bảo DOM đã render và LightweightCharts đã load
             setTimeout(async () => {
                 await this.loadCandleData(fund.ticker, this.state.candleRange);
             }, 300);
         } else {
-            console.warn('⚠️ [selectFund] Fund or ticker is missing:', fund);
+            console.warn('Fund or ticker is missing:', fund);
         }
 
 

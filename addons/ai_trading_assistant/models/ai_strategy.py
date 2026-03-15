@@ -1,5 +1,13 @@
 from odoo import models, fields, api
 
+# ─── Vietnam Stock Market Trading Constants ───
+# These reflect HOSE/HNX/UPCOM trading rules and typical broker fees.
+VN_HMAX = 10_000              # Max shares per action (HOSE standard lot)
+VN_INITIAL_CAPITAL = 1_000_000_000  # Starting capital: 1 Billion VND
+VN_BUY_COST_PCT = 0.0015      # Broker commission ~0.15%
+VN_SELL_COST_PCT = 0.0025      # Broker 0.15% + PIT/VAT ~0.10%
+VN_REWARD_SCALING = 1e-4
+
 class AIStrategy(models.Model):
     _name = 'ai.strategy'
     _description = 'AI Trading Strategy (FinRL Model)'
@@ -258,9 +266,11 @@ class AIStrategy(models.Model):
 
     def get_inference_action(self, ticker_to_predict):
         """
-        Inference nhẹ (Lightweight): Chỉ dùng dữ liệu của MÃ CẦN PREDICT duy nhất.
-        Tránh tái tạo toàn bộ môi trường multi-stock (2000+ mã) gây tràn RAM.
-        Thay vào đó, tạo môi trường 1-stock, load model, và lấy tín hiệu hướng.
+        Inference nhẹ (Lightweight): Dùng dữ liệu của MÃ CẦN PREDICT duy nhất.
+        - Dimension safety: Dùng model.predict() (handles any dimension automatically)
+        - Minimum data check: Yêu cầu >= 60 candles
+        - Multi-algorithm support: PPO/A2C (discrete) vs DDPG (continuous)
+        - Robust error handling with detailed logging
         """
         self.ensure_one()
         if not self.model_file:
@@ -293,16 +303,20 @@ class AIStrategy(models.Model):
         except ImportError as e:
             return -999.0, f"Thiếu modules trong thư viện 'finrl': {e}"
 
-        # 2. Chỉ load dữ liệu của MÃ CẦN PREDICT (tiết kiệm RAM x2000 lần)
+        # 2. Load dữ liệu — yêu cầu tối thiểu 60 candles
+        MIN_CANDLES = 60
         metadata = self._parse_model_metadata(self.model_file)
-        INDICATORS = metadata.get('indicators', ["macd", "boll_ub", "boll_lb", "rsi_30", "cci_30", "dx_30", "close_30_sma", "close_60_sma"])
+        INDICATORS = metadata.get('indicators', [
+            "macd", "boll_ub", "boll_lb", "rsi_30", "cci_30", 
+            "dx_30", "close_30_sma", "close_60_sma"
+        ])
         
         candles = self.env['stock.candle'].sudo().search([
             ('ticker_id', '=', ticker_to_predict.id)
         ], order='date desc', limit=150)
         
-        if not candles:
-            return 0.0, None
+        if len(candles) < MIN_CANDLES:
+            return 0.0, f"Mã {ticker_to_predict.name} cần tối thiểu {MIN_CANDLES} phiên giao dịch (hiện có {len(candles)})."
         
         data_list = [{
             'date': c.date.strftime('%Y-%m-%d'),
@@ -323,7 +337,7 @@ class AIStrategy(models.Model):
             with os.fdopen(fd, 'wb') as f:
                 f.write(base64.b64decode(self.model_file))
                 
-            # 4. Feature Engineering cho 1 mã duy nhất
+            # 4. Feature Engineering
             fe = FeatureEngineer(
                 use_technical_indicator=True,
                 tech_indicator_list=INDICATORS,
@@ -335,53 +349,99 @@ class AIStrategy(models.Model):
             processed_df = processed_df.sort_values(['date', 'tic'], ignore_index=True)
             processed_df.index = processed_df.date.factorize()[0]
             
+            if processed_df.empty or len(processed_df) < 5:
+                return 0.0, f"Feature engineering thất bại — dữ liệu không đủ cho {ticker_to_predict.name}."
+            
             # 5. Tạo Environment SINGLE-STOCK (stock_dim = 1)
             stock_dimension = 1
             state_space = int(1 + 2 * stock_dimension + len(INDICATORS) * stock_dimension)
             
             env_kwargs = {
-                "hmax": 10000,
-                "initial_amount": 1000000000,
+                "hmax": VN_HMAX,
+                "initial_amount": VN_INITIAL_CAPITAL,
                 "num_stock_shares": [0],
-                "buy_cost_pct": [0.0015],
-                "sell_cost_pct": [0.0025],
+                "buy_cost_pct": [VN_BUY_COST_PCT],
+                "sell_cost_pct": [VN_SELL_COST_PCT],
                 "state_space": state_space,
                 "stock_dim": stock_dimension,
                 "tech_indicator_list": INDICATORS,
                 "action_space": stock_dimension,
-                "reward_scaling": 1e-4
+                "reward_scaling": VN_REWARD_SCALING
             }
             
             env = StockTradingEnv(df=processed_df, **env_kwargs)
             obs = env.reset()
-            if isinstance(obs, tuple): obs = obs[0]
+            if isinstance(obs, tuple):
+                obs = obs[0]
             
-            # 6. Load Model và lấy tín hiệu hướng bằng Policy Network
+            # 6. Load Model
             algo = self.algorithm or 'ppo'
             model_class = PPO if algo == 'ppo' else (A2C if algo == 'a2c' else DDPG)
             loaded_model = model_class.load(tmp_model_path)
             
-            # Lấy observation đã chuẩn hóa rồi đưa qua Policy Network
-            # Dù model train multi-stock, policy network vẫn là MLP nên ta có thể
-            # truyền observation khác dimension rồi lấy giá trị mean action
-            import torch
-            obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+            # 7. Inference — thử model.predict() trước (dimension-safe)
+            pred_action = 0.0
+            try:
+                obs_array = np.array(obs).flatten()
+                expected_dim = loaded_model.observation_space.shape[0]
+                
+                if obs_array.shape[0] == expected_dim:
+                    # Dimension khớp — dùng model.predict() chuẩn
+                    action, _ = loaded_model.predict(obs_array, deterministic=True)
+                    pred_action = float(np.mean(action))
+                    _logger.info("FinRL predict() OK for %s: action=%.4f (dim match: %d)",
+                                 ticker_to_predict.name, pred_action, expected_dim)
+                else:
+                    # Dimension mismatch (model multi-stock, env single-stock)
+                    # Fallback: Pad hoặc truncate observation, rồi dùng policy network trực tiếp
+                    _logger.warning(
+                        "Dimension mismatch for %s: obs=%d, model expects=%d. Using padded inference.",
+                        ticker_to_predict.name, obs_array.shape[0], expected_dim
+                    )
+                    import torch
+                    padded_obs = np.zeros(expected_dim, dtype=np.float32)
+                    copy_len = min(obs_array.shape[0], expected_dim)
+                    padded_obs[:copy_len] = obs_array[:copy_len]
+                    
+                    obs_tensor = torch.tensor(padded_obs, dtype=torch.float32).unsqueeze(0)
+                    
+                    with torch.no_grad():
+                        policy = loaded_model.policy
+                        features = policy.extract_features(obs_tensor, policy.features_extractor)
+                        latent_pi = policy.mlp_extractor.forward_actor(features)
+                        mean_actions = policy.action_net(latent_pi)
+                        pred_action = float(mean_actions.mean().item())
+                    
+                    _logger.info("FinRL padded inference for %s: action=%.4f", 
+                                 ticker_to_predict.name, pred_action)
+                    
+            except Exception as e_predict:
+                _logger.warning("model.predict() failed for %s: %s. Trying direct policy.", 
+                                ticker_to_predict.name, e_predict)
+                # Ultimate fallback: direct policy extraction
+                try:
+                    import torch
+                    obs_tensor = torch.tensor(obs, dtype=torch.float32).unsqueeze(0)
+                    with torch.no_grad():
+                        policy = loaded_model.policy
+                        features = policy.extract_features(obs_tensor, policy.features_extractor)
+                        latent_pi = policy.mlp_extractor.forward_actor(features)
+                        mean_actions = policy.action_net(latent_pi)
+                        pred_action = float(mean_actions.mean().item())
+                except Exception as e_direct:
+                    _logger.error("All inference methods failed for %s: %s", 
+                                  ticker_to_predict.name, e_direct)
+                    return 0.0, f"Lỗi inference: model không tương thích với mã {ticker_to_predict.name}"
             
-            with torch.no_grad():
-                # Trích xuất giá trị trung bình từ policy distribution
-                policy = loaded_model.policy
-                features = policy.extract_features(obs_tensor, policy.features_extractor)
-                latent_pi = policy.mlp_extractor.forward_actor(features)
-                mean_actions = policy.action_net(latent_pi)
-                pred_action = float(mean_actions.mean().item())
-            
-            # Normalize action về khoảng [-1, 1] để giữ logic signal phía sau
+            # Normalize action về khoảng [-1, 1]
             pred_action = max(min(pred_action, 1.0), -1.0)
             return pred_action, None
 
         except Exception as e:
-            _logger.error(f"Lỗi Inference Model: {e}")
+            _logger.error("Lỗi Inference Model cho %s: %s", ticker_to_predict.name, e, exc_info=True)
             return 0.0, f"Lỗi khi Predict: {e}"
         finally:
             if tmp_model_path and os.path.exists(tmp_model_path):
                 os.remove(tmp_model_path)
+
+

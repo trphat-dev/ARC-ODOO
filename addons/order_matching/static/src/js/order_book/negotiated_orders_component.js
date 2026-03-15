@@ -913,6 +913,18 @@ export class NegotiatedOrdersComponent extends Component {
     /**
      * Gửi các lệnh khớp đã chọn lên sàn giao dịch
      */
+    /**
+     * Chuyển giá trị bất kỳ thành chuỗi hiển thị an toàn.
+     * Tránh lỗi [object Object] khi error/message là object thay vì string.
+     */
+    _safeStr(val) {
+        if (val === null || val === undefined) return '';
+        if (typeof val === 'string') return val;
+        // Odoo JSON-RPC error format: {code, message, data}
+        if (typeof val === 'object' && val.message) return String(val.message);
+        try { return JSON.stringify(val); } catch (_) { return String(val); }
+    }
+
     async sendToExchange() {
         if (this.state.selectedIds.size === 0) return;
 
@@ -935,44 +947,44 @@ export class NegotiatedOrdersComponent extends Component {
 
                 if (resBulk.ok) {
                     const json = await resBulk.json();
-                    const result = json.result || json; // Handle Odoo wrapper
+
+                    // Handle Odoo JSON-RPC error wrapper: {jsonrpc, error: {code, message, data}}
+                    if (json.error) {
+                        const errMsg = (json.error && json.error.data && json.error.data.message)
+                            || (json.error && json.error.message)
+                            || 'Lỗi hệ thống';
+                        throw new Error(errMsg);
+                    }
+
+                    const result = json.result || json;
 
                     if (result && result.results && Array.isArray(result.results)) {
-                        // Backend new format: list of results per order
                         result.results.forEach(r => {
                             if (r.success) {
                                 successIds.push(String(r.matched_id || r.id));
                             } else {
                                 if (r.errors && r.errors.length > 0) {
-                                    errors.push(...r.errors);
+                                    r.errors.forEach(e => errors.push(this._safeStr(e)));
                                 } else {
-                                    errors.push(r.message || `Lỗi không xác định (ID: ${r.matched_id || r.id})`);
+                                    errors.push(this._safeStr(r.message) || `Lỗi không xác định (ID: ${r.matched_id || r.id})`);
                                 }
                             }
                         });
                     } else if (result && result.success) {
-                        // Fallback support logic cũ (nếu có update all success)
                         successIds = [...ids];
                     } else {
-                        // Global logic failure
-                        throw new Error(result.message || result.error || "Gửi thất bại");
+                        throw new Error(this._safeStr(result.message || result.error) || 'Gửi thất bại');
                     }
                 } else {
                     throw new Error(`HTTP ${resBulk.status}`);
                 }
             } catch (bulkErr) {
-                // Nếu Bulk API lỗi network hoặc logic global fail, fallback hoặc report
                 console.warn('[Bulk Send Fail]', bulkErr);
-                if (errors.length === 0) errors.push(bulkErr.message);
+                if (errors.length === 0) errors.push(this._safeStr(bulkErr.message));
             }
 
-            // --- 2. Fallback (nếu API cũ không support bulk hoặc logic khác) ---
-            // Ở đây vì user yêu cầu fix lỗi "không báo khi chưa có tk", ta ưu tiên hiển thị lỗi từ Bulk trả về.
-            // Nếu successIds rỗng và errors rỗng sau bước trên, nghĩa là có gì đó k ổn, ta coi là lỗi chung.
-
-            // --- 3. Xử lý kết quả ---
+            // --- 2. Xử lý kết quả ---
             if (successIds.length > 0) {
-                // Update Local State -> Dim ngay lập tức
                 const sentSet = new Set(JSON.parse(localStorage.getItem('sentMatchedIds') || '[]'));
 
                 this.state.matchedOrders = this.state.matchedOrders.map(order => {
@@ -985,11 +997,9 @@ export class NegotiatedOrdersComponent extends Component {
 
                 localStorage.setItem('sentMatchedIds', JSON.stringify(Array.from(sentSet)));
 
-                // Clear selection cho các item đã gửi thành công
                 successIds.forEach(id => this.state.selectedIds.delete(parseInt(id)));
-                this.state.selectedIds = new Set(this.state.selectedIds); // Trigger reactivity
+                this.state.selectedIds = new Set(this.state.selectedIds);
 
-                // Thông báo thành công
                 const msg = `Đã gửi thành công ${successIds.length} lệnh lên sàn.`;
                 if (window.Swal) {
                     window.Swal.fire({
@@ -1040,18 +1050,17 @@ export class NegotiatedOrdersComponent extends Component {
                         confirmButtonText: 'Đóng'
                     });
                 } else {
-                    this.showToast("Không thể kết nối tới server hoặc phản hồi không hợp lệ.", 'danger');
+                    this.showToast('Không thể kết nối tới server hoặc phản hồi không hợp lệ.', 'danger');
                 }
             }
 
-            // Reload data ngầm để sync status chính xác nhất
             if (successIds.length > 0) {
                 setTimeout(() => this._loadMatchedOrders(), 1000);
             }
 
         } catch (error) {
             console.error('[SEND TO EXCHANGE] Fatal Error:', error);
-            this.showToast('Lỗi hệ thống: ' + error.message, 'danger');
+            this.showToast('Lỗi hệ thống: ' + this._safeStr(error.message), 'danger');
         }
     }
 

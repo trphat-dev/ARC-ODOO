@@ -31,7 +31,7 @@ class SSIDataFetcher(models.TransientModel):
                 count = self.fetch_daily_ohlcv(ticker.name, from_str, to_str)
                 total_count += count
             except Exception as e:
-                _logger.error(f'Error fetching OHLCV for {ticker.name}: {e}')
+                _logger.error('Error fetching OHLCV for %s: %s', ticker.name, e)
                 continue
             
         msg = f'Đã cập nhật {total_count} cây nến giá cho mã {self.ticker_id.name}.' if self.ticker_id else f'Đã cập nhật tổng cộng {total_count} cây nến trải đều cho {len(tickers)} mã chứng khoán toàn thị trường.'
@@ -101,7 +101,7 @@ class SSIDataFetcher(models.TransientModel):
             else:
                 raise exceptions.UserError(f"API Error: {data.get('message')}")
         except json.JSONDecodeError:
-            _logger.error(f'SSI API returned raw text instead of JSON: {res}')
+            _logger.error('SSI API returned raw text instead of JSON: %s', res)
             raise exceptions.UserError("Không thể parse dữ liệu trả về từ SSI. Vui lòng kiểm tra lại cấu hình kết nối.")
         except Exception as e:
             raise exceptions.UserError(f"Lỗi khi tải danh sách mã: {str(e)}")
@@ -168,11 +168,11 @@ class SSIDataFetcher(models.TransientModel):
                     
                 return len(all_vals)
             else:
-                _logger.error(f"API Error fetching OHLCV for {ticker_symbol}: {data.get('message')}")
+                _logger.error('API Error fetching OHLCV for %s: %s', ticker_symbol, data.get('message'))
                 return 0
         except json.JSONDecodeError:
-            _logger.error(f'SSI API returned raw text instead of JSON: {res}')
+            _logger.error('SSI API returned raw text instead of JSON: %s', res)
             raise exceptions.UserError("Lỗi cấu trúc dữ liệu trả về từ SSI (Không phải JSON).")
         except Exception as e:
-            _logger.error(f'System error storing OHLCV line: {str(e)}')
+            _logger.error('System error storing OHLCV line: %s', str(e))
             return 0

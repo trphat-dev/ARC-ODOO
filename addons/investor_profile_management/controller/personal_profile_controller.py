@@ -487,7 +487,6 @@ class PersonalProfileController(http.Controller):
                         'id': address.id,
                         'street': address.street or '',
                         'state': address.state_id.id if address.state_id else '',
-                        'zip': address.zip or '',
                         'country_id': address.country_id.id if address.country_id else '',
                         'district': address.district or '',
                         'ward': address.ward or '',
@@ -499,7 +498,6 @@ class PersonalProfileController(http.Controller):
                     'id': None,
                     'street': partner.street or '',
                     'state': partner.state_id.id if partner.state_id else '',
-                    'zip': partner.zip or '',
                     'country_id': partner.country_id.id if partner.country_id else '',
                     'district': '',
                     'ward': '',
@@ -515,7 +513,7 @@ class PersonalProfileController(http.Controller):
         try:
             current_user = request.env.user
             data = json.loads(request.httprequest.data.decode('utf-8'))
-            required_fields = ['street', 'district', 'ward', 'zip', 'country_id', 'state']
+            required_fields = ['street', 'district', 'ward', 'country_id', 'state']
             for field in required_fields:
                 if not data.get(field):
                     return Response(json.dumps({'error': f'Thiếu hoặc sai thông tin: {field}. Vui lòng nhập lại.'}), content_type='application/json', status=400)
@@ -552,7 +550,6 @@ class PersonalProfileController(http.Controller):
                 'state_id': state_id,
                 'district': data['district'],
                 'ward': data['ward'],
-                'zip': data['zip'],
                 'country_id': country_id,
             }
             if not address:
@@ -739,7 +736,7 @@ class PersonalProfileController(http.Controller):
             address_data = all_data.get('addressInfoData', {})
             if address_data:
                 # Kiểm tra từng trường required, trả về lỗi rõ ràng từng trường
-                required_fields = ['street', 'district', 'ward', 'zip', 'country_id', 'state']
+                required_fields = ['street', 'district', 'ward', 'country_id', 'state']
                 for field in required_fields:
                     if not address_data.get(field):
                         return Response(json.dumps({'error': f'Thiếu hoặc sai thông tin địa chỉ: {field}. Vui lòng nhập lại.'}), content_type='application/json', status=400)
@@ -762,7 +759,6 @@ class PersonalProfileController(http.Controller):
                     'district': address_data['district'],
                     'ward': address_data['ward'],
                     'state_id': state_id,
-                    'zip': address_data['zip'],
                     'country_id': country_id,
                 }
                 if profile.address_ids:

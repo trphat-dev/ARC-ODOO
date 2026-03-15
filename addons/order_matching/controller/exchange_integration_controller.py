@@ -332,12 +332,12 @@ class ExchangeIntegrationController(http.Controller):
                 if buy_status == 'success':
                     buy_submit_success = True
                 else:
-                    submit_errors.append(_('Lệnh mua: %s') % buy_err)
+                    submit_errors.append(str(_('Lệnh mua: %s') % buy_err))
                 
                 if sell_status == 'success':
                     sell_submit_success = True
                 else:
-                    submit_errors.append(_('Lệnh bán: %s') % sell_err)
+                    submit_errors.append(str(_('Lệnh bán: %s') % sell_err))
                     
                 # Lưu ý: Vì gửi song song, sàn sẽ tự động khớp 2 lệnh này với nhau
                 # nếu chúng có cùng instrument, quantity và được gửi gần như cùng lúc
@@ -410,14 +410,14 @@ class ExchangeIntegrationController(http.Controller):
                             buy_order.action_submit_order()
                             buy_submit_ok = True
                         except Exception as submit_err:
-                            submit_errors.append(_('Lệnh mua: %s') % str(submit_err))
+                            submit_errors.append(str(_('Lệnh mua: %s') % str(submit_err)))
                         
                         # Submit sell order
                         try:
                             sell_order.action_submit_order()
                             sell_submit_ok = True
                         except Exception as submit_err:
-                            submit_errors.append(_('Lệnh bán: %s') % str(submit_err))
+                            submit_errors.append(str(_('Lệnh bán: %s') % str(submit_err)))
                         
                         if buy_submit_ok and sell_submit_ok:
                             submitted_pairs += 1
@@ -436,7 +436,7 @@ class ExchangeIntegrationController(http.Controller):
                         'success': True if (not auto_submit or (buy_submit_ok and sell_submit_ok)) else False,
                         'buy_submit_success': buy_submit_ok if auto_submit else None,
                         'sell_submit_success': sell_submit_ok if auto_submit else None,
-                        'errors': submit_errors if submit_errors else None
+                        'errors': [str(e) for e in submit_errors] if submit_errors else None
                     })
                 except Exception as per_err:
                     results.append({'matched_id': rec.id, 'success': False, 'message': str(per_err)})

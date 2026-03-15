@@ -25,6 +25,13 @@
             <field name="type">form</field>
             <field name="arch" type="xml">
                 <form string="Investment">
+                    <header>
+                        <button name="action_skip_t2" type="object"
+                                string="⏩ Skip T+2"
+                                class="btn-warning"
+                                confirm="Bạn có chắc chắn muốn bỏ qua T+2? CCQ đang chờ sẽ trở thành khả dụng ngay lập tức."
+                                invisible="pending_t2_units == 0"/>
+                    </header>
                     <sheet>
                         <div class="oe_title">
                             <h1>
@@ -88,26 +95,29 @@
                         <notebook>
                             <page string="Lệnh thường" name="normal_orders">
                                 <field name="normal_transaction_ids">
-                                    <list decoration-warning="t2_date &gt; current_date">
+                                    <list decoration-warning="t2_date &gt; current_date and not t2_skipped">
                                         <field name="created_at" string="Ngày đặt"/>
                                         <field name="order_mode" string="Loại đầu tư"/>
                                         <field name="units" sum="Tổng"/>
                                         <field name="price" widget="monetary"/>
                                         <field name="order_type_detail"/>
                                         <field name="t2_date" string="Ngày hàng về"/>
+                                        <field name="t2_skipped" string="Skip T+2" widget="boolean"/>
                                         <field name="exchange_status" widget="badge"/>
                                     </list>
                                 </field>
                             </page>
                             <page string="Lệnh thỏa thuận" name="negotiated_orders">
                                 <field name="negotiated_transaction_ids">
-                                    <list>
+                                    <list decoration-warning="t2_date &gt; current_date and not t2_skipped">
                                         <field name="created_at" string="Ngày đặt"/>
                                         <field name="order_mode" string="Loại đầu tư"/>
                                         <field name="units" sum="Tổng"/>
                                         <field name="price" widget="monetary"/>
                                         <field name="term_months" string="Kỳ hạn"/>
                                         <field name="interest_rate" string="Lãi suất"/>
+                                        <field name="t2_date" string="Ngày hàng về"/>
+                                        <field name="t2_skipped" string="Skip T+2" widget="boolean"/>
                                         <field name="status" widget="badge"/>
                                     </list>
                                 </field>
@@ -123,11 +133,6 @@
                             <field name="profit_loss_percentage"/>
                         </group>
                     </sheet>
-                    <div class="oe_chatter">
-                        <field name="message_follower_ids"/>
-                        <field name="activity_ids"/>
-                        <field name="message_ids"/>
-                    </div>
                 </form>
             </field>
         </record>

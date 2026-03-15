@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <!-- Template dùng chung cho 1 thẻ phân tích (Analysis Card) -->
+    <!-- Template: Analysis Card (for TICKER intent) -->
     <t t-name="ai_trading_assistant.AnalysisCard" owl="1">
         <div class="ai-chat-recommendation">
             <div class="rc-header">
@@ -19,28 +19,28 @@
             <div class="rc-metrics" style="margin-bottom: 5px;">
                 <div>
                     <div class="rc-label">Giá hiện tại / SMA20</div>
-                    <div class="rc-value"><t t-esc="item.data.latest_price"/> / <t t-esc="item.data.sma_val"/> <span style="font-size: 0.8em; opacity: 0.8;">(RSI: <t t-esc="item.data.rsi_val"/>)</span></div>
-                    <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Cập nhật: <t t-esc="item.data.latest_date"/></div>
+                    <div class="rc-value"><t t-esc="item.data.latest_price"/> / <t t-esc="item.data.sma_val"/> <span class="rc-rsi-inline">(RSI: <t t-esc="item.data.rsi_val"/>)</span></div>
+                    <div class="rc-timestamp">Cập nhật: <t t-esc="item.data.latest_date"/></div>
                 </div>
-                <div style="text-align: right;" t-if="item.data.zone_label">
+                <div class="rc-metrics-right" t-if="item.data.zone_label">
                     <div class="rc-label"><t t-esc="item.data.zone_label"/></div>
                     <div class="rc-value" style="color: #10b981;"><t t-esc="item.data.zone_value"/></div>
                 </div>
             </div>
             
-            <div t-if="item.data.target_label" class="rc-metrics" style="padding-top: 10px; border-top: 1px dashed rgba(255,255,255,0.05);">
+            <div t-if="item.data.target_label" class="rc-metrics rc-strategy-section">
                 <div>
-                    <div class="rc-label" style="color: #cbd5e1; font-weight: 500;">Chiến lược hành động</div>
+                    <div class="rc-label rc-strategy-label">Chiến lược hành động</div>
                 </div>
-                <div style="text-align: right;">
+                <div class="rc-metrics-right">
                     <div class="rc-label"><t t-esc="item.data.target_label"/></div>
                     <div class="rc-value" t-attf-style="color: {{item.data.target_color}}; font-weight: bold;"><t t-esc="item.data.target_value"/></div>
                 </div>
             </div>
             
-            <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.2) linear-gradient(180deg, rgba(30,41,59,0) 0%, rgba(15,23,42,0.4) 100%); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
-                <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px; color: white;">Phân tích chi tiết</div>
-                <div style="text-align:center;">
+            <div class="rc-detail-panel">
+                <div class="rc-detail-title">Phân tích chi tiết</div>
+                <div class="rc-gauge-container">
                     <svg width="180" height="95" viewBox="0 0 200 110">
                         <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
                         <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradient)" stroke-width="12" stroke-linecap="round" stroke-dasharray="251.2" t-attf-stroke-dashoffset="{{251.2 * (1 - item.data.overall_score/100)}}"/>
@@ -57,41 +57,41 @@
                             <circle cx="0" cy="0" r="3" fill="#1e293b" />
                         </g>
                     </svg>
-                    <div t-attf-style="font-size: 14px; font-weight: bold; color: {{item.data.khq_color}}; margin-top: -5px; margin-bottom: 12px;"><t t-esc="item.data.khq_label"/> (<t t-esc="item.data.overall_score"/>/100)</div>
+                    <div class="rc-gauge-label" t-attf-style="color: {{item.data.khq_color}};"><t t-esc="item.data.khq_label"/> (<t t-esc="item.data.overall_score"/>/100)</div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                <div class="rc-star-row">
                     <span>Sức mạnh giá</span>
                     <span t-out="item.data.price_stars_html"/>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                <div class="rc-star-row">
                     <span>Sức mạnh xu hướng</span>
                     <span t-out="item.data.trend_stars_html"/>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                <div class="rc-star-row">
                     <span>Vị thế ngắn hạn</span>
                     <span t-out="item.data.pos_stars_html"/>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                <div class="rc-star-row">
                     <span>Dòng tiền</span>
                     <span t-out="item.data.flow_stars_html"/>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                <div class="rc-star-row">
                     <span>Độ biến động</span>
                     <span t-out="item.data.volat_stars_html"/>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: #cbd5e1;">
+                <div class="rc-star-row">
                     <span>Biên nền giá</span>
                     <span t-out="item.data.base_stars_html"/>
                 </div>
             </div>
             
-            <h3 style="margin-top: 20px; font-size: 13px; color: white; border-left: 2px solid #3b82f6; padding-left: 6px;">Nhận xét từ ARC</h3>
+            <h3 class="rc-expert-heading">Nhận xét từ ARC</h3>
             <div class="rc-expert-comment" t-out="item.data.expert_comment"></div>
         </div>
     </t>
 
-    <!-- Template dùng chung cho thẻ cảnh báo thiếu model AI -->
+    <!-- Template: No Model Warning Card -->
     <t t-name="ai_trading_assistant.NoModelCard" owl="1">
         <div class="ai-chat-recommendation">
             <div class="rc-header">
@@ -100,52 +100,72 @@
             <div class="rc-metrics" style="margin-top: 10px;">
                 <div>
                     <div class="rc-label">Giá hiện tại / SMA20</div>
-                    <div class="rc-value"><t t-esc="item.data.latest_price"/> / <t t-esc="item.data.sma_val"/> <span style="font-size: 0.8em; opacity: 0.8;">(RSI: <t t-esc="item.data.rsi_val"/>)</span></div>
-                    <div style="font-size: 11px; color: #94a3b8; margin-top: 3px;">Cập nhật: <t t-esc="item.data.latest_date"/></div>
+                    <div class="rc-value"><t t-esc="item.data.latest_price"/> / <t t-esc="item.data.sma_val"/> <span class="rc-rsi-inline">(RSI: <t t-esc="item.data.rsi_val"/>)</span></div>
+                    <div class="rc-timestamp">Cập nhật: <t t-esc="item.data.latest_date"/></div>
                 </div>
             </div>
-            <div style="margin-top: 15px; padding: 10px; background-color: rgba(243, 156, 18, 0.1); border-left: 3px solid #f39c12; color: #cbd5e1; font-size: 13px; line-height: 1.5;">
-                <i class="fa fa-exclamation-triangle" style="color: #f39c12; margin-right: 5px;"></i>
+            <div class="rc-no-model-warning">
+                <i class="fa fa-exclamation-triangle"></i>
                 Hệ thống ARC chưa có mô hình Thuật toán AI (Backtest) nào được huấn luyện riêng cho mã <b><t t-esc="item.data.symbol"/></b>. Để đảm bảo an toàn đầu tư, chuyên gia ARC từ chối đưa ra tín hiệu Mua/Bán hoặc dự phóng Lãi/Lỗ. Bạn vui lòng liên hệ Admin để Train Model cho mã này.
             </div>
         </div>
     </t>
 
-    <!-- Template Giao diện Widget Chính -->
+    <!-- Main Widget Template -->
     <t t-name="ai_trading_assistant.AIChatbot" owl="1">
         <div class="ai-chatbot-widget">
+            <!-- Floating Bubble -->
             <div t-if="!state.isOpen" class="ai-chatbot-toggler" t-on-click="toggleChat">
                 <img src="/ai_trading_assistant/static/src/img/technical-support.png" alt="ARC Intelligence" class="ai-chatbot-logo"/>
             </div>
             
+            <!-- Chat Window -->
             <div class="ai-chatbot-window" t-att-class="{'hidden': !state.isOpen}">
+                <!-- Header -->
                 <div class="ai-chat-header">
                     <div class="ai-chat-header-title">
-                        <i class="fa fa-robot"></i> ARC BOT - Trợ lý AI
+                        <i class="fa fa-robot"></i> ARC Intelligence
                     </div>
                     <div class="ai-chat-close" t-on-click="toggleChat">
                         <i class="fa fa-times"></i>
                     </div>
                 </div>
                 
+                <!-- Body -->
                 <div class="ai-chat-body" t-ref="chatBody">
                     <t t-foreach="state.messages" t-as="msg" t-key="msg.id">
                         <div class="ai-message" t-att-class="msg.sender == 'user' ? 'user' : 'bot'">
                             
+                            <!-- Text message -->
                             <t t-if="msg.type === 'text'">
                                 <t t-esc="msg.text"/>
                             </t>
                             
-                            <t t-elif="msg.type === 'general'">
-                                <div class="ai-general-chat">
-                                    <div style="background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0) 100%); border-left: 3px solid #3b82f6; padding: 12px 15px; border-radius: 4px; margin-bottom: 15px;">
-                                        <i class="fa fa-line-chart" style="color: #60a5fa; margin-right: 8px;"></i>
-                                        <b style="color: #60a5fa; font-size: 15px; text-transform: uppercase;">Nhận định Toàn cảnh từ ARC</b>
+                            <!-- Error message with retry -->
+                            <t t-elif="msg.type === 'error'">
+                                <div class="ai-error-message">
+                                    <div class="ai-error-icon">
+                                        <i class="fa fa-exclamation-circle"></i>
                                     </div>
-                                    <div style="color: #f8fafc; line-height: 1.7; font-size: 14.5px; padding: 0 5px; white-space: pre-wrap; word-wrap: break-word;"><t t-out="msg.data.text_html"/></div>
+                                    <div class="ai-error-text"><t t-esc="msg.text"/></div>
+                                    <button class="ai-retry-btn" t-on-click="retryLastMessage">
+                                        <i class="fa fa-refresh"></i> Thử lại
+                                    </button>
                                 </div>
                             </t>
                             
+                            <!-- General text (CHAT / MACRO response) -->
+                            <t t-elif="msg.type === 'general'">
+                                <div class="ai-general-chat">
+                                    <div class="ai-general-header">
+                                        <i class="fa fa-line-chart"></i>
+                                        <b>Nhận định từ ARC Intelligence</b>
+                                    </div>
+                                    <div class="ai-general-content" t-out="msg.data.text_html"/>
+                                </div>
+                            </t>
+                            
+                            <!-- Multi analysis cards (TICKER response) -->
                             <t t-elif="msg.type === 'multi'">
                                 <div class="ai-multi-analysis">
                                     <t t-foreach="msg.data" t-as="item" t-key="item_index">
@@ -168,16 +188,34 @@
                         </div>
                     </t>
                     
+                    <!-- Quick Action Buttons -->
+                    <t t-if="state.showQuickActions">
+                        <div class="ai-quick-actions">
+                            <div class="ai-quick-actions-label">Bạn có thể hỏi tôi:</div>
+                            <t t-foreach="quickActions" t-as="action" t-key="action_index">
+                                <button class="ai-quick-btn" t-on-click="() => this.onQuickAction(action)">
+                                    <i t-attf-class="fa {{action.icon}}"></i>
+                                    <t t-esc="action.label"/>
+                                </button>
+                            </t>
+                        </div>
+                    </t>
+                    
+                    <!-- Typing Indicator -->
                     <t t-if="state.isTyping">
                         <div class="ai-typing-indicator">
-                            <i class="fa fa-circle-o-notch fa-spin"></i> Hệ thống đang phân tích dữ liệu...
+                            <div class="ai-typing-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            ARC đang phân tích...
                         </div>
                     </t>
                 </div>
                 
+                <!-- Input Area -->
                 <div class="ai-chat-input-area">
                     <input type="text" class="ai-chat-input" 
-                           placeholder="Hỏi về mã cổ phiếu (VD: FPT)..." 
+                           placeholder="Hỏi về cổ phiếu, thị trường, kiến thức..." 
                            t-model="state.inputValue" 
                            t-on-keyup="onKeyUp"/>
                     <button class="ai-chat-send" t-on-click="sendMessage" t-att-disabled="state.isTyping">

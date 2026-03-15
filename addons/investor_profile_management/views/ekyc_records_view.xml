@@ -97,7 +97,6 @@
                                     <field name="district"/>
                                     <field name="state_id"/>
                                     <field name="country_id"/>
-                                    <field name="zip"/>
                                     <field name="is_default" widget="boolean_toggle"/>
                                 </list>
                             </field>

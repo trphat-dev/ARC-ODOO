@@ -72,15 +72,16 @@ class BankInfoWidget extends Component {
                                                     type="text" 
                                                     class="form-control" 
                                                     t-model="state.formData.branch" 
+                                                    t-on-input="filterBranches"
                                                     t-on-focus="() => this.state.showBranchDropdown = true"
                                                     required="required"
-                                                    placeholder="Chọn chi nhánh..."
+                                                    placeholder="Gõ để tìm chi nhánh..."
                                                     autocomplete="off"
                                                />
-                                               <div t-if="state.showBranchDropdown and state.branches.length > 0" 
+                                               <div t-if="state.showBranchDropdown and state.filteredBranches.length > 0" 
                                                     class="autocomplete-dropdown"
                                                     style="position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; margin-top: 4px;">
-                                                    <div t-foreach="state.branches" t-as="branch" t-key="branch.id"
+                                                    <div t-foreach="state.filteredBranches" t-as="branch" t-key="branch.id"
                                                          t-on-click="() => this.selectBranch(branch)"
                                                          class="autocomplete-item"
                                                          style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0;">
@@ -184,7 +185,9 @@ class BankInfoWidget extends Component {
             filteredBanks: [],
             showBankDropdown: false,
             selectedBankId: null,
+            allBranches: [],
             branches: [],
+            filteredBranches: [],
             showBranchDropdown: false,
         });
 
@@ -421,25 +424,49 @@ class BankInfoWidget extends Component {
 
     async loadBranches(bankId) {
         try {
-            const response = await fetch(`/get_bank_branch_data?limit=1000`);
+            const response = await fetch(`/get_bank_branch_data?limit=1000&bank_id=${bankId}`);
             if (!response.ok) {
                  throw new Error(`Server returned ${response.status} ${response.statusText}`);
             }
             const data = await response.json();
             if (data && data.records) {
-                // Filter branches by bank name (since API doesn't support bank_id filter)
                 const selectedBank = this.state.allBanks.find(b => b.id === bankId);
+                let activeBranches;
                 if (selectedBank) {
-                    this.state.branches = data.records.filter(br =>
-                        br.bank_id === selectedBank.name && br.active
+                    activeBranches = data.records.filter(br =>
+                        br.active && (br.bank_name === selectedBank.name || br.bank_name === selectedBank.short_name)
                     );
-                    console.log('✅ Loaded', this.state.branches.length, 'branches for', selectedBank.short_name);
+                    if (activeBranches.length === 0 && data.records.length > 0) {
+                        activeBranches = data.records.filter(br => br.active);
+                    }
+                } else {
+                    activeBranches = data.records.filter(br => br.active);
                 }
+                this.state.allBranches = activeBranches;
+                this.state.branches = activeBranches;
+                this.state.filteredBranches = [...activeBranches];
+                console.log('✅ Loaded', activeBranches.length, 'branches for', selectedBank?.short_name || bankId);
             }
         } catch (error) {
             console.error('❌ Error loading branches:', error);
+            this.state.allBranches = [];
             this.state.branches = [];
+            this.state.filteredBranches = [];
         }
+    }
+
+    filterBranches(ev) {
+        const searchTerm = (ev.target.value || '').toLowerCase();
+        if (!searchTerm) {
+            this.state.filteredBranches = [...this.state.allBranches];
+        } else {
+            this.state.filteredBranches = this.state.allBranches.filter(br =>
+                br.name.toLowerCase().includes(searchTerm) ||
+                (br.address && br.address.toLowerCase().includes(searchTerm)) ||
+                (br.code && br.code.toLowerCase().includes(searchTerm))
+            );
+        }
+        this.state.showBranchDropdown = true;
     }
 
     selectBranch(branch) {

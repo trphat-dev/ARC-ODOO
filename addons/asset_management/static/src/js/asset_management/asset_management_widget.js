@@ -37,7 +37,7 @@ export class AssetManagementWidget extends Component {
                             <table class="hd-table">
                                 <thead>
                                     <tr>
-                                        <th>Quy</th>
+                                        <th>Quỹ</th>
                                         <th class="text-center">Số lượng</th>
                                         <th class="text-center">Lãi/Lỗ</th>
                                         <th class="text-center">Thao tác</th>

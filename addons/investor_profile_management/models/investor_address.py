@@ -16,7 +16,7 @@ class InvestorAddress(models.Model):
     district = fields.Char(string='Quận/Huyện', required=True)
     ward = fields.Char(string='Phường/Xã', required=True)
     state_id = fields.Many2one('res.country.state', string='Tỉnh/Thành', required=True)
-    zip = fields.Char(string='ZIP')
+
     country_id = fields.Many2one('res.country', string='Quốc gia', required=True)
     is_default = fields.Boolean(string='Default Address')
 
@@ -90,12 +90,7 @@ class InvestorAddress(models.Model):
                 if not record.country_id:
                     raise ValidationError(_('Vui lòng chọn quốc gia.'))
 
-    @api.constrains('zip')
-    def _check_zip(self):
-        for record in self:
-            if record.zip:
-                if not record.zip.isdigit() or len(record.zip) != 6:
-                    raise ValidationError(_('Mã bưu điện phải gồm 6 chữ số.'))
+
 
     @api.constrains('address_type')
     def _check_address_type(self):

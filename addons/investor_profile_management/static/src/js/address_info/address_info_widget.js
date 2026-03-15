@@ -54,17 +54,13 @@ class AddressInfoWidget extends Component {
                                      </div>
                                      
                                      <div class="row">
-                                         <div class="col-md-4 mb-3">
+                                         <div class="col-md-6 mb-3">
                                               <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
                                               <input id="district" type="text" class="form-control" t-model="state.formData.district" required="required" />
                                          </div>
-                                         <div class="col-md-4 mb-3">
+                                         <div class="col-md-6 mb-3">
                                               <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
                                               <input id="ward" type="text" class="form-control" t-model="state.formData.ward" required="required" />
-                                         </div>
-                                         <div class="col-md-4 mb-3">
-                                              <label for="zip" class="form-label">Mã bưu điện</label>
-                                              <input id="zip" type="text" class="form-control" t-model="state.formData.zip" />
                                          </div>
                                      </div>
                                      <div class="form-text text-muted mb-2"><i class="fa fa-info-circle"></i> (*) Thông tin bắt buộc</div>
@@ -196,7 +192,6 @@ class AddressInfoWidget extends Component {
             formData: {
                 street: '',
                 state: '',
-                zip: '',
                 district: '',
                 ward: '',
                 country_id: '',
@@ -332,7 +327,7 @@ class AddressInfoWidget extends Component {
             this.state.formData.district = this.state.profile.district || '';
             this.state.formData.ward = this.state.profile.ward || '';
             this.state.formData.state = this.state.profile.state_id ? String(this.state.profile.state_id) : '';
-            this.state.formData.zip = this.state.profile.zip || '';
+
             this.state.formData.country_id = this.state.profile.country_id ? String(this.state.profile.country_id) : '';
             console.log("✅ Form data initialized with existing profile data:", this.state.formData);
         } else {

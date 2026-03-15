@@ -10,7 +10,7 @@
         - Cung cấp Chatbot / Trợ lý ra quyết định Mua/Bán/Nắm giữ trên Odoo.
     """,
     'author': 'https://github.com/billzcasso',
-    'website': 'https://www.yourcompany.com',
+    'website': 'https://github.com/billzcasso',
     'depends': ['base', 'mail', 'web'], # mail is used for chatter/bot features if needed
     'data': [
         'data/ssi_api_config.xml',
