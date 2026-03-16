@@ -391,7 +391,7 @@ export class InvestorListWidget extends Component {
       activeCount: 0,
       vsdCount: 0,
       rejectedCount: 0,
-      dateFrom: new Date().toISOString().split('T')[0],
+      dateFrom: null,
       dateFilter: 'custom', // Use custom date filter
       sortField: 'open_date',
       sortOrder: 'desc',
@@ -485,9 +485,6 @@ export class InvestorListWidget extends Component {
     try {
       this.state.loading = true;
       this.state.error = null;
-      
-
-      
       // Kiểm tra xem có dữ liệu từ controller không
       if (window.allDashboardData && window.allDashboardData.investors) {
         this.state.investors = window.allDashboardData.investors;
@@ -535,24 +532,20 @@ export class InvestorListWidget extends Component {
         })
       });
 
-      console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('API Response:', result);
       
       if (result.result && result.result.records && result.result.records.length > 0) {
-        console.log('Found records from API:', result.result.records.length);
         this.state.investors = result.result.records;
         this.calculateStats();
         this.applyFilters();
         this.updatePagination();
         this.state.loading = false;
       } else {
-        console.log('No records found in database, trying to sync portal users...');
         await this.syncPortalUsers();
         await this.loadDataAfterSync();
       }
@@ -566,7 +559,6 @@ export class InvestorListWidget extends Component {
 
   async loadDataAfterSync() {
     try {
-      console.log('Loading data after sync...');
       
       const response = await fetch('/web/dataset/call_kw/investor.list/search_read', {
         method: 'POST',
@@ -591,16 +583,13 @@ export class InvestorListWidget extends Component {
       });
 
       const result = await response.json();
-      console.log('Data after sync:', result);
       
       if (result.result && result.result.records && result.result.records.length > 0) {
-        console.log('Found records after sync:', result.result.records.length);
         this.state.investors = result.result.records;
         this.calculateStats();
         this.applyFilters();
         this.updatePagination();
       } else {
-        console.log('Still no records, showing empty state');
         this.state.investors = [];
         this.calculateStats();
         this.applyFilters();
@@ -617,7 +606,6 @@ export class InvestorListWidget extends Component {
 
   async syncPortalUsers() {
     try {
-      console.log('Syncing portal users...');
       
       const response = await fetch('/web/dataset/call_kw/investor.list/sync_portal_users', {
         method: 'POST',
@@ -639,10 +627,8 @@ export class InvestorListWidget extends Component {
       });
 
       const result = await response.json();
-      console.log('Sync result:', result);
       
       if (result.result) {
-        console.log('Portal users synced successfully');
       }
     } catch (error) {
       console.error('Error syncing portal users:', error);

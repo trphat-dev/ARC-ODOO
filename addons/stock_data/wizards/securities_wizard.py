@@ -30,7 +30,7 @@ def fetch_securities(wizard):
     
     for market in markets:
         try:
-            _logger.info("Fetching securities for %s...", market)
+            _logger.debug("Fetching securities for %s...", market)
             # Gateway handles pagination internally? No, returns raw response.
             # We need to loop pages here or Gateway should helper. 
             # Gateway `get_securities` is raw.

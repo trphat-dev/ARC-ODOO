@@ -27,7 +27,7 @@ def fetch_all_ohlc(wizard, client, sdk_config):
             if manual_symbols:
                 domain.append(('symbol', 'in', manual_symbols))
                 max_symbols = None  # Bypass limit when symbols are explicitly requested
-                _logger.info("Fetch OHLC: Using manual target symbols: %s", ', '.join(manual_symbols))
+                _logger.debug("Fetch OHLC: Using manual target symbols: %s", ', '.join(manual_symbols))
         else:
             # Fallback to system config
             icp = wizard.env['ir.config_parameter'].sudo()
@@ -36,7 +36,7 @@ def fetch_all_ohlc(wizard, client, sdk_config):
                 target_symbols = [s.strip().upper() for s in symbols_str.split(',') if s.strip()]
                 if target_symbols:
                     domain.append(('symbol', 'in', target_symbols))
-                    _logger.info("Using configured target symbols: %s", ', '.join(target_symbols))
+                    _logger.debug("Using configured target symbols: %s", ', '.join(target_symbols))
 
             max_symbols_raw = icp.get_param(_MAX_OHLC_SYMBOLS_KEY, default=str(_DEFAULT_MAX_OHLC_SYMBOLS))
             try:
@@ -53,7 +53,7 @@ def fetch_all_ohlc(wizard, client, sdk_config):
         _logger.warning("Không tìm thấy chứng khoán nào để fetch OHLC")
         return
     
-    _logger.info("Bắt đầu fetch OHLC cho %d mã chứng khoán", len(securities))
+    _logger.debug("Bắt đầu fetch OHLC cho %d mã chứng khoán", len(securities))
 
     daily_success = 0
     intraday_success = 0
@@ -70,7 +70,7 @@ def fetch_all_ohlc(wizard, client, sdk_config):
 
     for security in securities:
         try:
-            _logger.info("Fetching OHLC for symbol: %s (ID: %s)", security.symbol, security.id)
+            _logger.debug("Fetching OHLC for symbol: %s (ID: %s)", security.symbol, security.id)
 
             # 1. Fetch Daily OHLC for the range
             daily_req = model.daily_ohlc(
@@ -124,7 +124,7 @@ def fetch_all_ohlc(wizard, client, sdk_config):
 
             # 2. Fetch Intraday OHLC for each day in range
             for single_date in daterange(from_date, to_date):
-                _logger.info("Fetching Intraday OHLC for %s on %s", security.symbol, single_date)
+                _logger.debug("Fetching Intraday OHLC for %s on %s", security.symbol, single_date)
                 current_page = 1
                 page_size = getattr(wizard, 'page_size', None) or 500
                 total_day_saved = 0

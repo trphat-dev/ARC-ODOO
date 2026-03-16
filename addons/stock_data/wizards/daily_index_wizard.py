@@ -156,7 +156,7 @@ def fetch_daily_index(wizard, client, sdk_config):
     )
 
     response = client.daily_index(sdk_config, req)
-    _logger.info("Daily index response: %s", response)
+    _logger.debug("Daily index response: %s", response)
 
     if response.get('status') == 'Success' and response.get('data'):
         daily_index_model = wizard.env['ssi.daily.index']

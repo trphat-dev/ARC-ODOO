@@ -42,7 +42,7 @@ def fetch_backtest(wizard, client, sdk_config):
             )
             
             response = client.backtest(sdk_config, req)
-            _logger.info("Backtest response for %s on %s: %s", wizard.symbol, current_date, response.get('status'))
+            _logger.debug("Backtest response for %s on %s: %s", wizard.symbol, current_date, response.get('status'))
             
             if response.get('status') == 'Success' and response.get('data'):
                 # Check if record already exists

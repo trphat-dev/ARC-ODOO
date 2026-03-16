@@ -389,7 +389,7 @@ class AIStrategy(models.Model):
                     # Dimension khớp — dùng model.predict() chuẩn
                     action, _ = loaded_model.predict(obs_array, deterministic=True)
                     pred_action = float(np.mean(action))
-                    _logger.info("FinRL predict() OK for %s: action=%.4f (dim match: %d)",
+                    _logger.debug("FinRL predict() OK for %s: action=%.4f (dim match: %d)",
                                  ticker_to_predict.name, pred_action, expected_dim)
                 else:
                     # Dimension mismatch (model multi-stock, env single-stock)
@@ -412,7 +412,7 @@ class AIStrategy(models.Model):
                         mean_actions = policy.action_net(latent_pi)
                         pred_action = float(mean_actions.mean().item())
                     
-                    _logger.info("FinRL padded inference for %s: action=%.4f", 
+                    _logger.debug("FinRL padded inference for %s: action=%.4f", 
                                  ticker_to_predict.name, pred_action)
                     
             except Exception as e_predict:

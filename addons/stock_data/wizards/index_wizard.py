@@ -33,7 +33,7 @@ def fetch_index_list(wizard, client, sdk_config):
     for exchange in exchanges_to_fetch:
         exchange_total = 0
         current_page = 1
-        _logger.info("Starting to fetch index list for exchange: %s", exchange)
+        _logger.debug("Starting to fetch index list for exchange: %s", exchange)
         
         while True:
             try:
@@ -44,29 +44,29 @@ def fetch_index_list(wizard, client, sdk_config):
                     exchange=exchange
                 )
                 response = client.index_list(sdk_config, req)
-                _logger.info("Index list response for %s page %s: status=%s, has_data=%s", 
-                           exchange, current_page, response.get('status'), bool(response.get('data')))
+                _logger.debug("Index list response for %s page %s: status=%s", 
+                           exchange, current_page, response.get('status'))
 
                 # Nếu không có data, thử lại với exchange dạng UPPER
                 if not (response.get('status') == 'Success' and response.get('data')):
                     alt_exchange = exchange.upper()
-                    _logger.info("Retry index list for %s (upper=%s) page %s", exchange, alt_exchange, current_page)
+                    _logger.debug("Retry index list for %s (upper=%s) page %s", exchange, alt_exchange, current_page)
                     req = model.index_list(
                         pageIndex=current_page,
                         pageSize=wizard.page_size or 100,
                         exchange=alt_exchange
                     )
                     response = client.index_list(sdk_config, req)
-                    _logger.info("Retry response for %s page %s: status=%s, has_data=%s", 
-                               alt_exchange, current_page, response.get('status'), bool(response.get('data')))
+                    _logger.debug("Retry response for %s page %s: status=%s", 
+                               alt_exchange, current_page, response.get('status'))
 
                 if response.get('status') == 'Success' and response.get('data'):
                     items = response['data'].get('items', []) if isinstance(response['data'], dict) else response['data']
                     if not items:
-                        _logger.info("No more items for exchange %s at page %s - stopping", exchange, current_page)
+                        _logger.debug("No more items for exchange %s at page %s", exchange, current_page)
                         break
                     
-                    _logger.info("Processing %d items from page %d for exchange %s", len(items), current_page, exchange)
+                    _logger.debug("Processing %d items from page %d for exchange %s", len(items), current_page, exchange)
                     
                     for item in items:
                         # New payload fields: IndexCode, IndexName, Exchange
@@ -118,7 +118,7 @@ def fetch_index_list(wizard, client, sdk_config):
                 errors_by_exchange[exchange].append(f"Page {current_page}: {error_msg}")
                 break
         
-        _logger.info("Completed fetching %d index records for exchange %s", exchange_total, exchange)
+        _logger.debug("Completed fetching %d index records for exchange %s", exchange_total, exchange)
 
     if not fetched_any:
         error_details = "\n".join([f"{ex}: {', '.join(errs)}" for ex, errs in errors_by_exchange.items()])
