@@ -438,6 +438,195 @@ $bot-msg-bg: rgba(255, 255, 255, 0.05);
 }
 
 /* ──────────────────────────────────
+   Markdown Rendered Elements
+   ────────────────────────────────── */
+
+/* Headings */
+.ai-md-h3 {
+    color: #60a5fa;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 18px 0 8px 0;
+    border-left: 3px solid #3b82f6;
+    padding-left: 10px;
+    line-height: 1.3;
+}
+
+.ai-md-h4 {
+    color: #93c5fd;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 14px 0 6px 0;
+    border-left: 3px solid #60a5fa;
+    padding-left: 8px;
+    line-height: 1.3;
+}
+
+.ai-md-h5 {
+    color: #bfdbfe;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 10px 0 4px 0;
+    padding-left: 6px;
+}
+
+/* Tables */
+.ai-md-table-wrap {
+    overflow-x: auto;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+
+    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(59, 130, 246, 0.3);
+        border-radius: 4px;
+    }
+}
+
+.ai-md-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    line-height: 1.4;
+
+    thead {
+        tr {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.15));
+        }
+
+        th {
+            padding: 8px 10px;
+            color: #93c5fd;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+            border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+    }
+
+    tbody {
+        tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.15s ease;
+
+            &:nth-child(even) {
+                background: rgba(255, 255, 255, 0.02);
+            }
+
+            &:hover {
+                background: rgba(59, 130, 246, 0.08);
+            }
+        }
+
+        td {
+            padding: 6px 10px;
+            color: #e2e8f0;
+            font-size: 12px;
+        }
+    }
+}
+
+/* Horizontal Rule */
+.ai-md-hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+    margin: 14px 0;
+}
+
+/* Code Block */
+.ai-md-code {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+
+    code {
+        color: #93c5fd;
+        font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        white-space: pre;
+    }
+}
+
+/* Inline Code */
+.ai-md-inline-code {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Bold & Italic */
+.ai-md-bold {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.ai-md-italic {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+/* Bullet List */
+.ai-md-bullet {
+    padding-left: 12px;
+    margin: 3px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+
+    .ai-md-dot {
+        color: #3b82f6;
+        font-size: 8px;
+        margin-top: 6px;
+        flex-shrink: 0;
+    }
+}
+
+/* Numbered List */
+.ai-md-num {
+    padding-left: 12px;
+    margin: 3px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+
+    .ai-md-num-idx {
+        color: #f59e0b;
+        font-weight: 600;
+        min-width: 18px;
+        flex-shrink: 0;
+    }
+}
+
+/* Checkboxes */
+.ai-md-check {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    color: #94a3b8;
+    font-size: 13px;
+
+    i { color: #475569; font-size: 14px; }
+
+    &.done {
+        color: #10b981;
+        i { color: #10b981; }
+    }
+}
+
+/* ──────────────────────────────────
    Analysis Card Styles
    ────────────────────────────────── */
 .ai-chat-recommendation {

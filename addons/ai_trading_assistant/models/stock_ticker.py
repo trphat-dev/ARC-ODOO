@@ -15,17 +15,6 @@ _logger = logging.getLogger(__name__)
 # Vietnamese stock symbols: 3 uppercase letters (VNM, FPT, HPG, SSI, etc.)
 _TICKER_RE = re.compile(r'\b([A-Z][A-Z0-9]{2,4})\b')
 
-# Keywords indicating a MACRO question (market overview, VN-Index, etc.)
-_MACRO_KEYWORDS = [
-    'thị trường', 'thi truong', 'vn-index', 'vnindex', 'vn30', 'hnx-index',
-    'toàn cảnh', 'toan canh', 'tổng quan', 'tong quan', 'vĩ mô', 'vi mo',
-    'nhóm ngành', 'nhom nganh', 'dòng tiền', 'dong tien', 'blue chip', 'bluechip',
-    'thị trường chung', 'hose', 'hnx', 'upcom', 'sàn chứng khoán', 'index',
-    'chỉ số', 'chi so', 'ngành nào', 'nganh nao', 'cổ phiếu nào', 'co phieu nao',
-    'xu hướng', 'xu huong', 'sập', 'crash', 'bull', 'bear', 'tăng hay giảm',
-    'hôm nay', 'tuần này', 'tháng này', 'phiên sáng', 'phiên chiều',
-    'fed', 'lạm phát', 'lam phat', 'lãi suất', 'lai suat', 'gdp',
-]
 
 # Known VN stock tickers — validated against DB at runtime via _is_valid_ticker()
 # This static set is only used as a fast-path hint for common tickers
@@ -103,48 +92,33 @@ class StockTicker(models.Model):
     ]
 
     # ──────────────────────────────────────────────
-    # Intent Classification (Offline, regex-based)
+    # Intent Classification — Only TICKER vs GENERAL
     # ──────────────────────────────────────────────
     @api.model
     def _classify_intent(self, message):
         """
-        Phân loại ý định bằng regex/keywords. Không gọi LLM.
-        Returns: (intent: str, symbols: list[str])
-          intent = 'TICKER' | 'MACRO' | 'CHAT'
+        Phân loại ý định: Chỉ TICKER (có mã CK) vs GENERAL (mọi thứ khác).
+        LLM tự xử lý việc phân loại nội dung (vĩ mô, kiến thức, giao tiếp...).
         """
-        msg_lower = message.lower().strip()
         msg_upper = message.upper().strip()
 
-        # 1. Extract potential stock symbols
         raw_symbols = _TICKER_RE.findall(msg_upper)
-        # Filter noise and validate
         symbols = []
         for s in raw_symbols:
             if s in _TICKER_NOISE:
                 continue
-            # Accept if in known list OR exists in database
             if s in _KNOWN_PREFIXES:
                 symbols.append(s)
             elif len(s) == 3 and s.isalpha():
-                # Could be a valid ticker — check DB
                 exists = self.sudo().search_count([('name', '=', s)], limit=1)
                 if exists:
                     symbols.append(s)
-        symbols = list(dict.fromkeys(symbols))  # deduplicate, preserve order
+        symbols = list(dict.fromkeys(symbols))
 
-        # 2. Check for TICKER intent
         if symbols:
-            # User mentioned specific tickers — this is a TICKER query
-            has_analysis_keyword = any(kw in msg_lower for kw in _ANALYSIS_KEYWORDS)
-            # Even without analysis keywords, if they just say a ticker name, analyze it
             return 'TICKER', symbols
 
-        # 3. Check for MACRO intent
-        if any(kw in msg_lower for kw in _MACRO_KEYWORDS):
-            return 'MACRO', []
-
-        # 4. Default: CHAT (knowledge Q&A, greetings, explanations)
-        return 'CHAT', []
+        return 'GENERAL', []
 
     # ──────────────────────────────────────────────
     # Main Chat Entry Point
@@ -152,7 +126,7 @@ class StockTicker(models.Model):
     @api.model
     def ai_chat(self, message):
         """
-        Xử lý tin nhắn đa năng. Phân loại offline, chỉ gọi LLM 1 lần cho response.
+        Xử lý tin nhắn đa năng. Chỉ có 2 loại: TICKER (có mã CK) vs GENERAL.
         Luôn trả về dict có cấu trúc chuẩn — KHÔNG BAO GIỜ crash.
         """
         try:
@@ -160,10 +134,8 @@ class StockTicker(models.Model):
 
             if intent == 'TICKER' and symbols:
                 return self._handle_ticker(message, symbols)
-            elif intent == 'MACRO':
-                return self._handle_macro(message)
             else:
-                return self._handle_chat(message)
+                return self._handle_general(message)
 
         except Exception as e:
             _logger.error("ai_chat unhandled error: %s", e, exc_info=True)
@@ -179,27 +151,70 @@ class StockTicker(models.Model):
             }
 
     # ──────────────────────────────────────────────
-    # CHAT Handler — Knowledge Q&A, greetings, explanations
+    # GENERAL Handler — Unified: macro + knowledge + chat
+    # LLM tự động quyết định cách trả lời dựa trên context
     # ──────────────────────────────────────────────
     @api.model
-    def _handle_chat(self, message):
+    def _handle_general(self, message):
         import pytz
         vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
         current_date_str = datetime.now(vn_tz).strftime('%d/%m/%Y')
 
-        system_prompt = f"""Bạn là ARC Intelligence - Cố vấn tài chính chuyên nghiệp am hiểu chứng khoán Việt Nam. Hôm nay là {current_date_str}.
+        # Always try to fetch VN-Index for context (non-blocking)
+        market_context = ""
+        try:
+            ssi_id, ssi_secret, api_url = self._get_ssi_credentials()
+            if ssi_id and ssi_secret:
+                from ssi_fc_data import fc_md_client, model as ssi_model
+                class Config:
+                    pass
+                conf = Config()
+                conf.consumerID, conf.consumerSecret, conf.url = ssi_id, ssi_secret, api_url
+                client = fc_md_client.MarketDataClient(conf)
+                end_d = datetime.now(vn_tz)
+                start_d = end_d - timedelta(days=5)
+                req = ssi_model.daily_ohlc(
+                    'VNINDEX', start_d.strftime('%d/%m/%Y'), end_d.strftime('%d/%m/%Y'), 1, 10, True
+                )
+                res = client.daily_ohlc(conf, req)
+                data = res if isinstance(res, dict) else json.loads(res)
+                if str(data.get('status')) == '200' and data.get('data'):
+                    candles = data.get('data', [])
+                    if candles:
+                        latest = candles[0]
+                        vni_close = float(latest.get('Close', 0))
+                        if vni_close > 0:
+                            market_context = (
+                                f"\n[DỮ LIỆU THỊ TRƯỜNG]: VN-Index phiên {latest.get('TradingDate')}: "
+                                f"Đóng cửa {latest.get('Close')} điểm, KL: {latest.get('Volume', 0):,} cp."
+                            )
+        except Exception as e:
+            _logger.debug("VN-Index fetch for context: %s", e)
 
-NHIỆM VỤ:
-- Trả lời câu hỏi giao tiếp, giải thích kiến thức, thuật ngữ tài chính một cách chuyên nghiệp, khách quan và dễ hiểu.
-- Hỗ trợ giải thích: Chỉ báo kỹ thuật (RSI, MACD, Bollinger Bands...), Phân tích cơ bản (P/E, P/B, ROE...), Chiến lược đầu tư, Quy tắc giao dịch T+2.5, Thuế & phí giao dịch, Kiến thức phái sinh, Quản trị rủi ro.
-- Nếu người dùng muốn phân tích mã cổ phiếu cụ thể, hướng dẫn họ nhập mã (VD: "FPT" hoặc "Phân tích HPG").
-- Tuyệt đối KHÔNG BỊA ĐẶT SỐ LIỆU GIÁ CỔ PHIẾU (AI không có dữ liệu realtime).
-- Nếu câu hỏi hoàn toàn không liên quan tài chính/kinh tế, từ chối lịch sự và hướng về chủ đề đầu tư.
+        system_prompt = f"""Bạn là ARC Intelligence — Senior Advisor tại quỹ đầu tư hàng đầu Việt Nam.
+Hôm nay: {current_date_str}.{market_context}
 
-PHONG CÁCH:
-- Chuyên nghiệp nhưng thân thiện, dễ hiểu.
-- Trả lời bằng tiếng Việt, sử dụng markdown (bold, italic, bullet points).
-- Ngắn gọn, súc tích, tránh lan man."""
+PHONG CÁCH VIẾT (RẤT QUAN TRỌNG):
+1. CỰC KỲ NGẮN GỌN — Tối đa 150 từ. Mỗi ý tối đa 1 câu. KHÔNG liệt kê dài, KHÔNG viết essay.
+2. TRỰC TIẾP — Đưa nhận định ngay, không vòng vo. Bạn là chuyên gia, hãy đưa quan điểm rõ ràng.
+3. DỄ HIỂU — Giải thích thuật ngữ ngắn gọn trong ngoặc nếu cần.
+4. DÙNG BẢNG khi so sánh — table ngắn gọn thay vì bullet list.
+5. KẾT LUẬN — Kết bằng "📌 Tóm lại:" 1-2 câu hành động cụ thể.
+6. KHÔNG viết disclaimer, KHÔNG hướng dẫn đi xem website khác.
+
+KIẾN THỨC CHUYÊN MÔN:
+- Kỹ thuật: RSI, MACD, Bollinger, Ichimoku, Fibonacci, Price Action, Volume Profile
+- Cơ bản: P/E, P/B, ROE, DCF, đọc BCTC, định giá
+- Vĩ mô VN: NHNN, SBV, CPI, GDP, tỷ giá, dòng tiền khối ngoại/tự doanh
+- Giao dịch: T+2.5, biên độ HOSE/HNX/UPCOM, thuế/phí, margin
+- Phái sinh: VN30F, chứng quyền, Greeks
+- Chiến lược: Swing, DCA, Value/Growth Investing, quản trị rủi ro
+
+QUY TẮC:
+- KHÔNG bịa số liệu giá, nhưng VẪN đưa nhận định dựa trên phân tích logic.
+- Nếu câu hỏi không liên quan tài chính → từ chối lịch sự.
+- Viết tiếng Việt, dùng markdown (bold, table, bullet points).
+- Xưng hô: "anh/chị" thay vì "bạn" — phong thái chuyên nghiệp nhưng thân thiện."""
 
         result = self.env['ai.chatbot.service'].call_openrouter(message, system_prompt)
 
@@ -250,85 +265,12 @@ PHONG CÁCH:
         return None, None, None
 
     # ──────────────────────────────────────────────
-    # MACRO Handler — Market overview, VN-Index, sectors
+    # MACRO Handler (legacy — redirects to unified handler)
     # ──────────────────────────────────────────────
     @api.model
     def _handle_macro(self, message):
-        import pytz
-        vn_tz = pytz.timezone('Asia/Ho_Chi_Minh')
-
-        # Fetch VN-Index data from SSI
-        market_context = "Hiện chưa lấy được dữ liệu thị trường mới nhất."
-        latest_vni_price = None
-
-        ssi_id, ssi_secret, api_url = self._get_ssi_credentials()
-
-        if ssi_id and ssi_secret:
-            try:
-                from ssi_fc_data import fc_md_client, model as ssi_model
-
-                class Config:
-                    pass
-                conf = Config()
-                conf.consumerID, conf.consumerSecret, conf.url = ssi_id, ssi_secret, api_url
-                client = fc_md_client.MarketDataClient(conf)
-
-                end_d = datetime.now(vn_tz)
-                start_d = end_d - timedelta(days=5)
-                req = ssi_model.daily_ohlc(
-                    'VNINDEX', start_d.strftime('%d/%m/%Y'), end_d.strftime('%d/%m/%Y'), 1, 10, True
-                )
-                res = client.daily_ohlc(conf, req)
-                data = res if isinstance(res, dict) else json.loads(res)
-
-                if str(data.get('status')) == '200' and data.get('data'):
-                    candles = data.get('data', [])
-                    if candles:
-                        latest = candles[0]
-                        latest_vni_price = float(latest.get('Close', 0))
-                        if latest_vni_price > 0:
-                            market_context = (
-                                f"VN-Index phiên mới nhất ({latest.get('TradingDate')}): "
-                                f"Đóng cửa tại {latest.get('Close')} điểm. "
-                                f"Khối lượng: {latest.get('Volume', 0):,} cp."
-                            )
-            except Exception as e:
-                _logger.warning("Error fetching VN-Index data: %s", e)
-                market_context = "Không truy cập được dữ liệu VN-Index realtime."
-        else:
-            _logger.warning("No SSI credentials configured (checked ssi.api.config and ir.config_parameter)")
-
-        current_date_str = datetime.now(vn_tz).strftime('%d/%m/%Y')
-
-        vni_prompt_part = (
-            f"Hãy cung cấp nhận định chuyên sâu dựa trên số điểm {latest_vni_price} này."
-            if latest_vni_price
-            else "Hãy cung cấp nhận định chuyên sâu dựa trên tình trạng hiện tại."
-        )
-
-        system_prompt = f"""Bạn là ARC Intelligence - Giám đốc Phân tích vĩ mô. Hôm nay là ngày thực tế: {current_date_str}.
-Người dùng đang hỏi về vĩ mô/toàn cảnh thị trường chứng khoán Việt Nam.
-[DỮ LIỆU VN-INDEX MỚI NHẤT]: {market_context}
-{vni_prompt_part}
-
-PHONG CÁCH:
-- Đề xuất các nhóm ngành hot và 3 mã tiềm năng.
-- Phong thái Giám đốc Chiến lược, am hiểu dòng tiền tổ chức.
-- Trả lời bằng tiếng Việt, sử dụng markdown formatting.
-- Ngắn gọn, có chiều sâu, không lan man."""
-
-        result = self.env['ai.chatbot.service'].call_openrouter(message, system_prompt)
-
-        if not result['success']:
-            return self._llm_error_response(result['error'])
-
-        return {
-            'status': 'success',
-            'type': 'general',
-            'data': {
-                'text_content': result['content']
-            }
-        }
+        """Legacy — all general/macro queries handled by _handle_general."""
+        return self._handle_general(message)
 
     # ──────────────────────────────────────────────
     # TICKER Handler — Analyze specific stock symbols
@@ -632,65 +574,95 @@ PHONG CÁCH:
         # Each signal returns a value in [-1, +1]: negative = bearish, positive = bullish
 
         def _rsi_signal(rsi):
-            if rsi >= 80: return -1.0     # Extremely overbought
-            if rsi >= 70: return -0.6     # Overbought
-            if rsi <= 20: return 1.0      # Extremely oversold
-            if rsi <= 30: return 0.6      # Oversold
-            if rsi <= 45: return 0.2      # Slightly bullish
-            if rsi >= 55: return -0.2     # Slightly bearish
-            return 0.0                     # Neutral
+            """RSI: Broader ranges, stronger signals for moderate zones."""
+            if rsi >= 80: return -1.0
+            if rsi >= 70: return -0.8
+            if rsi >= 60: return -0.4
+            if rsi >= 55: return -0.2
+            if rsi <= 20: return 1.0
+            if rsi <= 30: return 0.8
+            if rsi <= 40: return 0.4
+            if rsi <= 45: return 0.2
+            return 0.0
 
         def _macd_signal(macd, signal, hist, prev_hist):
+            """MACD: Crossover + histogram momentum."""
             s = 0.0
-            if macd > signal: s += 0.4     # MACD above signal
-            else: s -= 0.4
-            if hist > 0 and prev_hist <= 0: s += 0.6  # Bullish crossover
-            elif hist < 0 and prev_hist >= 0: s -= 0.6 # Bearish crossover
-            elif hist > prev_hist: s += 0.2  # Momentum increasing
-            else: s -= 0.2
+            if macd > signal: s += 0.3
+            else: s -= 0.3
+            # Histogram direction is key
+            if hist > 0 and prev_hist <= 0: s += 0.7    # Bullish crossover
+            elif hist < 0 and prev_hist >= 0: s -= 0.7   # Bearish crossover
+            elif hist > 0 and hist > prev_hist: s += 0.4  # Bullish accelerating
+            elif hist > 0 and hist < prev_hist: s += 0.1  # Bullish decelerating
+            elif hist < 0 and hist < prev_hist: s -= 0.4  # Bearish accelerating
+            elif hist < 0 and hist > prev_hist: s -= 0.1  # Bearish decelerating
             return max(min(s, 1.0), -1.0)
 
         def _bb_signal(bb_pct, bb_width):
-            if bb_pct <= 0.0: return 0.8            # Below lower band (oversold)
-            if bb_pct <= 0.2: return 0.4             # Near lower band
-            if bb_pct >= 1.0: return -0.8            # Above upper band (overbought)
-            if bb_pct >= 0.8: return -0.4            # Near upper band
-            if bb_width < 3: return 0.3              # Squeeze (potential breakout)
-            return 0.0
+            """Bollinger Bands: Linear interpolation for smoother signals."""
+            if bb_pct <= 0.0: return 1.0
+            if bb_pct >= 1.0: return -1.0
+            # Linear mapping: 0.0->+0.8, 0.5->0.0, 1.0->-0.8
+            base = 0.8 - (bb_pct * 1.6)
+            # Squeeze bonus: narrowing bands = potential breakout
+            squeeze = 0.2 if bb_width < 3 else 0.0
+            return max(min(base + squeeze, 1.0), -1.0)
 
         def _ema_signal(price, ema9, ema50):
+            """EMA: Trend direction with price position."""
             s = 0.0
+            # Price vs fast EMA
             if price > ema9: s += 0.3
             else: s -= 0.3
-            if ema9 > ema50: s += 0.4   # Golden cross territory
-            else: s -= 0.4               # Death cross territory
-            if price > ema50: s += 0.3
-            else: s -= 0.3
+            # Fast vs slow EMA (trend)
+            if ema9 > ema50: s += 0.5
+            else: s -= 0.5
+            # Price vs slow EMA (major trend)
+            if price > ema50: s += 0.2
+            else: s -= 0.2
             return max(min(s, 1.0), -1.0)
 
         def _volume_signal(vol_ratio, obv, obv_sma):
+            """Volume: OBV trend + volume ratio confirmation."""
             s = 0.0
-            if vol_ratio > 2.0: s += 0.4      # High volume (confirming)
-            elif vol_ratio > 1.2: s += 0.2
-            elif vol_ratio < 0.5: s -= 0.2     # Low volume (weak move)
-            if obv > obv_sma: s += 0.4         # OBV trending up
-            else: s -= 0.3
+            # OBV trend is primary
+            if obv > obv_sma: s += 0.5
+            else: s -= 0.4
+            # Volume ratio adds confirmation
+            if vol_ratio > 2.0: s += 0.5
+            elif vol_ratio > 1.5: s += 0.3
+            elif vol_ratio > 1.0: s += 0.1
+            elif vol_ratio < 0.5: s -= 0.3
             return max(min(s, 1.0), -1.0)
 
         def _adx_signal(adx, plus_di, minus_di):
-            """ADX measures trend STRENGTH, DI± measures direction."""
-            if adx < 20: return 0.0             # No trend
-            direction = 0.5 if plus_di > minus_di else -0.5
-            if adx >= 40: return direction * 2   # Strong trend
-            if adx >= 25: return direction * 1.5
-            return direction
+            """ADX: Trend strength × direction."""
+            if adx < 15: return 0.0
+            # Direction from DI
+            di_diff = plus_di - minus_di
+            if di_diff > 0:
+                direction = min(di_diff / 20.0, 1.0)
+            else:
+                direction = max(di_diff / 20.0, -1.0)
+            # Strength multiplier from ADX
+            if adx >= 40: strength = 1.0
+            elif adx >= 25: strength = 0.7
+            else: strength = 0.4
+            return max(min(direction * strength, 1.0), -1.0)
 
         def _stoch_signal(k, d):
-            if k <= 20 and d <= 20: return 0.7   # Oversold
-            if k >= 80 and d >= 80: return -0.7   # Overbought
-            if k > d and k < 50: return 0.3       # Bullish crossover in oversold
-            if k < d and k > 50: return -0.3      # Bearish crossover in overbought
-            return 0.0
+            """Stochastic: Full range coverage with crossover."""
+            s = 0.0
+            # Zone signal
+            if k <= 20: s += 0.5
+            elif k <= 35: s += 0.2
+            elif k >= 80: s -= 0.5
+            elif k >= 65: s -= 0.2
+            # Crossover signal
+            if k > d: s += 0.3    # Bullish
+            elif k < d: s -= 0.3  # Bearish
+            return max(min(s, 1.0), -1.0)
 
         # Calculate individual signals
         prev_hist = float(prev_row.get('macd_hist', 0)) if hasattr(prev_row, 'get') else float(prev_row['macd'] - prev_row['signal_line']) if 'macd' in prev_row.index else 0
@@ -727,23 +699,33 @@ PHONG CÁCH:
             + sig_stoch * WEIGHTS['stoch']
         )
 
-        # Determine signal from confluence
+        # Determine signal: Hybrid of confluence score + majority vote
         ai_conf = min(abs(pred_action * 100), 100) if pred_action != -999.0 else 0.0
 
-        if pred_action == -999.0:
-            # AI unavailable — use pure technical analysis signal
-            if confluence >= 0.30:
-                tech_signal = "MUA"
-            elif confluence <= -0.30:
-                tech_signal = "BÁN"
-            else:
-                tech_signal = "TRUNG LẬP"
-        elif confluence >= 0.30:
-            tech_signal = "MUA"
-        elif confluence <= -0.30:
-            tech_signal = "BÁN"
+        # Count bullish vs bearish indicators (majority vote)
+        tech_signals = [sig_rsi, sig_macd, sig_bb, sig_ema, sig_vol, sig_adx, sig_stoch]
+        if pred_action != -999.0:
+            tech_signals.append(sig_ai)
+        bullish_count = sum(1 for s in tech_signals if s > 0.05)
+        bearish_count = sum(1 for s in tech_signals if s < -0.05)
+        total_indicators = len(tech_signals)
+
+        # Decision logic: combine confluence + majority
+        # Terminology matches Vietnamese brokerage research (SSI, VCSC, VNDirect)
+        if confluence >= 0.30 or (confluence >= 0.10 and bullish_count >= total_indicators * 0.7):
+            tech_signal = "KHẢ QUAN"         # Outperform — strong buy
+        elif confluence >= 0.15 or (confluence >= 0.05 and bullish_count >= total_indicators * 0.6):
+            tech_signal = "MUA"               # Buy
+        elif confluence >= 0.03 and bullish_count > bearish_count:
+            tech_signal = "TÍCH LŨY"          # Accumulate — lean buy
+        elif confluence <= -0.30 or (confluence <= -0.10 and bearish_count >= total_indicators * 0.7):
+            tech_signal = "CẮT LỖ"            # Cut loss — strong sell
+        elif confluence <= -0.15 or (confluence <= -0.05 and bearish_count >= total_indicators * 0.6):
+            tech_signal = "BÁN"               # Sell
+        elif confluence <= -0.03 and bearish_count > bullish_count:
+            tech_signal = "XEM XÉT BÁN"       # Consider selling
         else:
-            tech_signal = "TRUNG LẬP"
+            tech_signal = "TRUNG LẬP"         # Neutral / Hold
 
         # Star Metrics — Composite scoring from actual indicators
         # Price strength: RSI + Stochastic position
@@ -770,8 +752,8 @@ PHONG CÁCH:
         khq_c = "#10b981" if score > 65 else ("#f59e0b" if score > 45 else "#ef4444")
         khq_l = "Khả quan" if score > 65 else ("Trung lập" if score > 45 else "Kém khả quan")
 
-        is_neg = ("BÁN" in tech_signal)
-        is_neutral = ("TRUNG LẬP" in tech_signal)
+        is_neg = tech_signal in {"CẮT LỖ", "BÁN", "XEM XÉT BÁN"}
+        is_neutral = tech_signal == "TRUNG LẬP"
 
         # Position sizing & R:R (using ATR and support/resistance)
         support_v = max(recent_low, sma_v - (atr_v * 1.5))
@@ -809,7 +791,9 @@ PHONG CÁCH:
             vol_ratio=vol_ratio
         )
 
-        action_c = "#00d084" if "MUA" in tech_signal else ("#e74c3c" if "BÁN" in tech_signal else "#f39c12")
+        BULLISH_SIGNALS = {"KHẢ QUAN", "MUA", "TÍCH LŨY"}
+        BEARISH_SIGNALS = {"CẮT LỖ", "BÁN", "XEM XÉT BÁN"}
+        action_c = "#00d084" if tech_signal in BULLISH_SIGNALS else ("#e74c3c" if tech_signal in BEARISH_SIGNALS else "#f39c12")
 
         if is_neutral:
             z_label, z_val = "", ""

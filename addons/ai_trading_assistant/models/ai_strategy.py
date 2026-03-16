@@ -3,10 +3,10 @@ from odoo import models, fields, api
 # ─── Vietnam Stock Market Trading Constants ───
 # These reflect HOSE/HNX/UPCOM trading rules and typical broker fees.
 VN_HMAX = 10_000              # Max shares per action (HOSE standard lot)
-VN_INITIAL_CAPITAL = 1_000_000_000  # Starting capital: 1 Billion VND
+VN_INITIAL_CAPITAL = 100_000_000    # Starting capital: 100 Million VND
 VN_BUY_COST_PCT = 0.0015      # Broker commission ~0.15%
 VN_SELL_COST_PCT = 0.0025      # Broker 0.15% + PIT/VAT ~0.10%
-VN_REWARD_SCALING = 1e-4
+VN_REWARD_SCALING = 1e-8       # Scale down 100M VND rewards to ~1.0 range
 
 class AIStrategy(models.Model):
     _name = 'ai.strategy'
@@ -41,9 +41,9 @@ class AIStrategy(models.Model):
     model_filename = fields.Char(string='Tên File')
     
     # Hyperparameters
-    learning_rate = fields.Float(string='Learning Rate', digits=(16, 6), default=0.00025, tracking=True)
-    batch_size = fields.Integer(string='Batch Size', default=64, tracking=True)
-    ent_coef = fields.Float(string='Entropy Coefficient', digits=(16, 4), default=0.01, tracking=True)
+    learning_rate = fields.Float(string='Learning Rate', digits=(16, 6), default=5e-5, tracking=True)
+    batch_size = fields.Integer(string='Batch Size', default=128, tracking=True)
+    ent_coef = fields.Float(string='Entropy Coefficient', digits=(16, 4), default=0.005, tracking=True)
     
     # metrics
     sharpe_ratio = fields.Float(string='Sharpe Ratio (Backtest)', tracking=True)
@@ -203,9 +203,9 @@ class AIStrategy(models.Model):
             'algorithm': metadata.get('algorithm', vals.get('algorithm', 'ppo')),
             'evaluated_algorithms': metadata.get('evaluated_algorithms', ''),
             'epochs': metadata.get('epochs', 0),
-            'learning_rate': metadata.get('learning_rate', 0.00025),
-            'batch_size': metadata.get('batch_size', 64),
-            'ent_coef': metadata.get('ent_coef', 0.01),
+            'learning_rate': metadata.get('learning_rate', 5e-5),
+            'batch_size': metadata.get('batch_size', 128),
+            'ent_coef': metadata.get('ent_coef', 0.005),
             'sharpe_ratio': metadata.get('sharpe_ratio', 0.0),
             'expected_return': metadata.get('expected_return', 0.0),
             'max_drawdown': metadata.get('max_drawdown', 0.0),

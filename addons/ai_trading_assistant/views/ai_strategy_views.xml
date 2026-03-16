@@ -4,11 +4,25 @@
         <field name="name">ai.strategy.tree</field>
         <field name="model">ai.strategy</field>
         <field name="arch" type="xml">
-            <list string="AI Strategies" decoration-info="status == 'draft'" decoration-warning="status == 'training'" decoration-success="status == 'active'" decoration-muted="status == 'trained'">
+            <list string="AI Strategies"
+                  decoration-info="status == 'draft'"
+                  decoration-warning="status == 'training'"
+                  decoration-success="status == 'active'"
+                  decoration-muted="status == 'trained'">
                 <field name="name"/>
                 <field name="algorithm"/>
-                <field name="status" widget="badge" decoration-info="status == 'draft'" decoration-warning="status == 'training'" decoration-success="status == 'active'" decoration-muted="status == 'trained'"/>
-                <field name="sharpe_ratio"/>
+                <field name="ticker_ids" widget="many2many_tags"/>
+                <field name="epochs"/>
+                <field name="learning_rate"/>
+                <field name="sharpe_ratio" decoration-success="sharpe_ratio &gt; 0" decoration-danger="sharpe_ratio &lt; 0"/>
+                <field name="expected_return" string="Return (%)" decoration-success="expected_return &gt; 0" decoration-danger="expected_return &lt; 0"/>
+                <field name="max_drawdown" string="Max DD (%)" decoration-danger="max_drawdown &lt; -10"/>
+                <field name="training_time"/>
+                <field name="status" widget="badge"
+                       decoration-info="status == 'draft'"
+                       decoration-warning="status == 'training'"
+                       decoration-success="status == 'active'"
+                       decoration-muted="status == 'trained'"/>
             </list>
         </field>
     </record>
@@ -19,8 +33,8 @@
         <field name="arch" type="xml">
             <form string="AI Strategy">
                 <header>
-                     <button name="action_activate" string="Sử dụng chiến lược này" type="object" class="oe_highlight" invisible="status == 'active'"/>
-                     <button name="action_draft" string="Chuyển về Nháp" type="object" invisible="status == 'draft'"/>
+                     <button name="action_activate" string="🚀 Kích hoạt chiến lược" type="object" class="oe_highlight" invisible="status == 'active'"/>
+                     <button name="action_draft" string="↩ Chuyển về Nháp" type="object" invisible="status == 'draft'"/>
                     <field name="status" widget="statusbar" statusbar_visible="draft,trained,active"/>
                 </header>
                 <sheet>
@@ -31,35 +45,62 @@
                         </h1>
                     </div>
                     <group>
-                        <group string="Thông tin Chung">
+                        <group string="📋 Thông tin Chung">
                             <field name="algorithm"/>
                             <field name="evaluated_algorithms" invisible="not evaluated_algorithms"/>
-                            <field name="epochs"/>
-                            <field name="ticker_ids" widget="many2many_tags" placeholder="Chọn các mã áp dụng model này..."/>
+                            <field name="epochs" string="Timesteps"/>
+                            <field name="ticker_ids" widget="many2many_tags" placeholder="Chọn mã áp dụng..."/>
                             <field name="model_file" filename="model_filename"/>
                             <field name="model_filename" invisible="1"/>
+                            <field name="user_id" string="Người tạo"/>
                         </group>
-                        <group string="Cấu hình Hyperparameters">
-                            <field name="learning_rate"/>
+                        <group string="⚙️ Hyperparameters">
+                            <field name="learning_rate" string="Learning Rate (LR)"/>
                             <field name="batch_size"/>
-                            <field name="ent_coef"/>
+                            <field name="ent_coef" string="Entropy Coef"/>
                         </group>
                     </group>
                     <group>
-                        <group string="Chỉ số Cắt Khảo (Tập Test/Trade)">
-                            <field name="sharpe_ratio" string="Sharpe Ratio (Thực Tế)"/>
-                            <field name="expected_return" string="CAGR (%)"/>
-                            <field name="max_drawdown" string="Max Drawdown (%)"/>
+                        <group string="📊 Backtest Results">
+                            <field name="sharpe_ratio" string="Sharpe Ratio"
+                                   decoration-success="sharpe_ratio &gt; 0"
+                                   decoration-danger="sharpe_ratio &lt; 0"/>
+                            <field name="expected_return" string="Return (%)"
+                                   decoration-success="expected_return &gt; 0"
+                                   decoration-danger="expected_return &lt; 0"/>
+                            <field name="max_drawdown" string="Max Drawdown (%)"
+                                   decoration-danger="max_drawdown &lt; -10"/>
                         </group>
-                        <group string="Hệ thống">
+                        <group string="🖥️ Hệ thống">
                             <field name="training_time"/>
                             <field name="framework_version"/>
                         </group>
                     </group>
                     <label for="description"/>
-                    <field name="description"/>
+                    <field name="description" placeholder="Ghi chú về chiến lược này..."/>
                 </sheet>
             </form>
+        </field>
+    </record>
+
+    <record id="view_ai_strategy_search" model="ir.ui.view">
+        <field name="name">ai.strategy.search</field>
+        <field name="model">ai.strategy</field>
+        <field name="arch" type="xml">
+            <search string="AI Strategies">
+                <field name="name"/>
+                <field name="algorithm"/>
+                <field name="ticker_ids"/>
+                <filter string="Active" name="active" domain="[('status','=','active')]"/>
+                <filter string="Trained" name="trained" domain="[('status','=','trained')]"/>
+                <filter string="Draft" name="draft" domain="[('status','=','draft')]"/>
+                <separator/>
+                <filter string="Sharpe &gt; 0" name="positive_sharpe" domain="[('sharpe_ratio','&gt;',0)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Algorithm" name="groupby_algo" context="{'group_by':'algorithm'}"/>
+                    <filter string="Status" name="groupby_status" context="{'group_by':'status'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
@@ -67,6 +108,7 @@
         <field name="name">Danh sách Chiến lược AI</field>
         <field name="res_model">ai.strategy</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_ai_strategy_search"/>
     </record>
 
     <menuitem id="menu_ai_trading_strategies" name="AI Strategies Workspace" parent="menu_ai_trading_root" sequence="20" groups="base.group_system"/>

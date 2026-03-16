@@ -10,10 +10,10 @@ import zipfile
 # ─── Vietnam Stock Market Trading Constants ───
 # Must match ai_strategy.py constants
 VN_HMAX = 10_000              # Max shares per action (HOSE standard lot)
-VN_INITIAL_CAPITAL = 1_000_000_000  # Starting capital: 1 Billion VND
+VN_INITIAL_CAPITAL = 100_000_000    # Starting capital: 100 Million VND
 VN_BUY_COST_PCT = 0.0015      # Broker commission ~0.15%
 VN_SELL_COST_PCT = 0.0025      # Broker 0.15% + PIT/VAT ~0.10%
-VN_REWARD_SCALING = 1e-4
+VN_REWARD_SCALING = 1e-8       # Scale down 100M VND rewards to ~1.0 range
 
 # ─── Default Indicators (synced with inference engine) ───
 DEFAULT_INDICATORS = [
@@ -28,20 +28,23 @@ DEFAULT_INDICATORS = [
 # ─── Algorithm Hyperparameters ───
 ALGO_CONFIGS = {
     'ppo': {
-        "learning_rate": 0.00025,
+        "learning_rate": 5e-5,          # FIX: Lower LR to prevent NaN explosion
         "batch_size": 128,
-        "ent_coef": 0.01,
-        "n_steps": 2048,
+        "ent_coef": 0.005,              # FIX: Lower entropy for more stable learning
+        "n_steps": 1024,                # FIX: Smaller rollout to reduce numerical accumulation
         "gamma": 0.99,
+        "max_grad_norm": 0.5,           # FIX: Gradient clipping
+        "clip_range": 0.2,
     },
     'a2c': {
-        "learning_rate": 0.0007,
+        "learning_rate": 3e-4,          # FIX: Lower LR
         "n_steps": 5,
         "gamma": 0.99,
-        "ent_coef": 0.01,
+        "ent_coef": 0.005,
+        "max_grad_norm": 0.5,           # FIX: Gradient clipping
     },
     'ddpg': {
-        "learning_rate": 0.001,
+        "learning_rate": 1e-4,          # FIX: Lower LR
         "batch_size": 128,
         "gamma": 0.99,
         "buffer_size": 50_000,
@@ -467,7 +470,14 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
 
     # ──── 10. Save Model ────
     final_tickers = valid_tics if ticker_input.upper() == "ALL" else tickers
-    prefix = "ALL_STOCKS" if ticker_input.upper() == "ALL" else ("MULTI" if len(final_tickers) > 1 else final_tickers[0])
+    if len(final_tickers) == 1:
+        prefix = final_tickers[0]
+    else:
+        # Use actual ticker names (max 5 in filename to avoid path length issues)
+        name_part = "_".join(final_tickers[:5])
+        if len(final_tickers) > 5:
+            name_part += f"_+{len(final_tickers)-5}"
+        prefix = name_part
     save_path = os.path.abspath(f"./{prefix}_{best_algo}")
     os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
 
@@ -536,6 +546,7 @@ if __name__ == "__main__":
     parser.add_argument('--from-date', type=str, default=None, help='Từ ngày (DD/MM/YYYY)')
     parser.add_argument('--to-date', type=str, default=None, help='Đến ngày (DD/MM/YYYY)')
     parser.add_argument('--indicators', type=str, default=None, help='Chỉ báo, cách nhau bởi dấu phẩy')
+    parser.add_argument('--batch-size', type=int, default=100, help='Số mã mỗi batch khi train ALL (default: 100)')
 
     parser.add_argument('--ssi-client', type=str, default=os.environ.get('SSI_CLIENT_ID', ''), help='SSI Consumer ID')
     parser.add_argument('--ssi-secret', type=str, default=os.environ.get('SSI_CLIENT_SECRET', ''), help='SSI Consumer Secret')
@@ -590,10 +601,53 @@ if __name__ == "__main__":
             print("[ERROR] Bắt buộc phải nhập SSI Consumer Secret!")
             sys.exit(1)
 
-    try:
-        train_model(ticker, algo, epochs, from_date, to_date, ssi_client, ssi_secret, args.ssi_url, indicator_list)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        print(f"[ERROR] Quá trình huấn luyện thất bại: {str(e)}")
-        sys.exit(1)
+    # ──── Batch Training for ALL tickers ────
+    if ticker.upper() == "ALL":
+        batch_size = args.batch_size
+        print(f"\n[*] Chế độ BATCH: Tải danh sách tất cả mã từ SSI...")
+        all_tickers = fetch_all_tickers_from_ssi(ssi_client, ssi_secret, args.ssi_url)
+        total_tickers = len(all_tickers)
+        total_batches = (total_tickers + batch_size - 1) // batch_size
+
+        print(f"[*] Tổng: {total_tickers} mã → {total_batches} batch x {batch_size} mã/batch")
+        print(f"{'='*50}\n")
+
+        failed_batches = []
+        for batch_idx in range(total_batches):
+            start = batch_idx * batch_size
+            end = min(start + batch_size, total_tickers)
+            batch_tickers = all_tickers[start:end]
+            batch_name = f"BATCH_{batch_idx+1:03d}"
+            batch_ticker_str = ",".join(batch_tickers)
+
+            print(f"\n{'='*60}")
+            print(f"[BATCH {batch_idx+1}/{total_batches}] {batch_name}: {batch_ticker_str}")
+            print(f"{'='*60}")
+
+            try:
+                train_model(batch_ticker_str, algo, epochs, from_date, to_date,
+                            ssi_client, ssi_secret, args.ssi_url, indicator_list)
+            except Exception as e:
+                print(f"[ERROR] Batch {batch_name} thất bại: {e}")
+                failed_batches.append((batch_name, str(e)))
+                continue
+
+        # Summary
+        print(f"\n{'='*60}")
+        print(f"[TỔNG KẾT] {total_batches - len(failed_batches)}/{total_batches} batch thành công")
+        if failed_batches:
+            print(f"[!] Batch thất bại:")
+            for name, err in failed_batches:
+                print(f"    - {name}: {err}")
+        print(f"{'='*60}")
+
+    else:
+        # Single ticker or comma-separated list
+        try:
+            train_model(ticker, algo, epochs, from_date, to_date, ssi_client, ssi_secret, args.ssi_url, indicator_list)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"[ERROR] Quá trình huấn luyện thất bại: {str(e)}")
+            sys.exit(1)
+

@@ -8,10 +8,11 @@ import { useService } from "@web/core/utils/hooks";
 // Quick Action Suggestions
 // ──────────────────────────────────────────────
 const QUICK_ACTIONS = [
-    { icon: "fa-line-chart", label: "Phân tích FPT", message: "Phân tích FPT" },
-    { icon: "fa-globe", label: "Toàn cảnh thị trường", message: "Thị trường hôm nay thế nào?" },
-    { icon: "fa-book", label: "RSI là gì?", message: "RSI là gì? Cách sử dụng trong giao dịch?" },
-    { icon: "fa-balance-scale", label: "So sánh VNM & HPG", message: "So sánh VNM và HPG" },
+    { icon: "fa-briefcase", label: "Phân tích danh mục", message: "Phân tích danh mục đầu tư gồm VCB, FPT, HPG, MWG, VNM — đánh giá rủi ro và cơ hội" },
+    { icon: "fa-industry", label: "So sánh ngành", message: "So sánh nhóm ngành Ngân hàng (VCB, BID, TCB) với Bất động sản (VHM, NVL, KDH) — ngành nào đang hấp dẫn hơn?" },
+    { icon: "fa-signal", label: "Đọc tín hiệu kỹ thuật", message: "Giải thích ý nghĩa khi RSI dưới 30, MACD cắt lên, và giá chạm Bollinger Band dưới — nên hành động gì?" },
+    { icon: "fa-shield", label: "Quản trị rủi ro", message: "Chiến lược quản trị rủi ro cho danh mục 500 triệu: phân bổ tỷ trọng, điểm cắt lỗ, và T+2.5 cần lưu ý gì?" },
+    { icon: "fa-globe", label: "Toàn cảnh thị trường", message: "Phân tích tổng quan VNINDEX hôm nay: dòng tiền, breadth, và các nhóm ngành dẫn dắt/kéo lùi?" },
 ];
 
 // ──────────────────────────────────────────────
@@ -21,28 +22,68 @@ function renderMarkdown(text) {
     if (!text) return "";
     let html = text;
 
-    // Headings: ### Title, ## Title
-    html = html.replace(/^### (.+)$/gm, '<h4 style="color: #60a5fa; font-size: 14px; font-weight: 700; margin: 14px 0 6px 0; border-left: 3px solid #3b82f6; padding-left: 8px;">$1</h4>');
-    html = html.replace(/^## (.+)$/gm, '<h3 style="color: #60a5fa; font-size: 15px; font-weight: 700; margin: 16px 0 8px 0; border-left: 3px solid #3b82f6; padding-left: 8px;">$1</h3>');
+    // Normalize <br/> back to \n for processing
+    html = html.replace(/<br\s*\/?>/gi, '\n');
 
-    // Bold: **text**
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color: #60a5fa;">$1</strong>');
+    // ── Code blocks: ```lang\n...\n``` ──
+    html = html.replace(/```[\w]*\n([\s\S]*?)```/g, (_, code) => {
+        const escaped = code.replace(/</g, '&lt;').replace(/>/g, '&gt;').trim();
+        return `<pre class="ai-md-code"><code>${escaped}</code></pre>`;
+    });
 
-    // Italic: *text*
-    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em style="color: #94a3b8;">$1</em>');
+    // ── Tables: |col|col| ──
+    html = html.replace(/((?:^\|.+\|$\n?)+)/gm, (tableBlock) => {
+        const rows = tableBlock.trim().split('\n').filter(r => r.trim());
+        if (rows.length < 2) return tableBlock;
 
-    // Bullet lists: - item or * item
-    html = html.replace(/^[\-\*] (.+)$/gm, '<div style="padding-left: 12px; margin: 3px 0; display: flex; align-items: flex-start; gap: 6px;"><span style="color: #3b82f6; font-size: 8px; margin-top: 6px;">●</span><span>$1</span></div>');
+        // Check if 2nd row is separator (|---|---|)
+        const isSep = /^\|[\s\-:]+\|/.test(rows[1]);
+        let headerRow = null;
+        let bodyRows = rows;
 
-    // Numbered lists: 1. item
-    html = html.replace(/^(\d+)\. (.+)$/gm, '<div style="padding-left: 12px; margin: 3px 0; display: flex; align-items: flex-start; gap: 6px;"><span style="color: #f59e0b; font-weight: 600; min-width: 18px;">$1.</span><span>$2</span></div>');
+        if (isSep) {
+            headerRow = rows[0];
+            bodyRows = rows.slice(2);
+        }
 
-    // Inline code: `code`
-    html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(59,130,246,0.15); color: #93c5fd; padding: 1px 5px; border-radius: 3px; font-size: 13px;">$1</code>');
+        const parseRow = (row, tag) => {
+            const cells = row.split('|').filter((c, i, a) => i > 0 && i < a.length - 1);
+            return '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+        };
 
-    // Emojis are already supported, no conversion needed
+        let table = '<div class="ai-md-table-wrap"><table class="ai-md-table">';
+        if (headerRow) {
+            table += '<thead>' + parseRow(headerRow, 'th') + '</thead>';
+        }
+        table += '<tbody>' + bodyRows.map(r => parseRow(r, 'td')).join('') + '</tbody>';
+        table += '</table></div>';
+        return table;
+    });
 
-    // Line breaks
+    // ── Horizontal rules: --- or *** ──
+    html = html.replace(/^[\-\*]{3,}$/gm, '<hr class="ai-md-hr"/>');
+
+    // ── Headings ──
+    html = html.replace(/^#### (.+)$/gm, '<h5 class="ai-md-h5">$1</h5>');
+    html = html.replace(/^### (.+)$/gm, '<h4 class="ai-md-h4">$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3 class="ai-md-h3">$1</h3>');
+
+    // ── Checkboxes ──
+    html = html.replace(/^\[x\] (.+)$/gm, '<div class="ai-md-check done"><i class="fa fa-check-square-o"></i> $1</div>');
+    html = html.replace(/^\[ \] (.+)$/gm, '<div class="ai-md-check"><i class="fa fa-square-o"></i> $1</div>');
+
+    // ── Bold + Italic ──
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="ai-md-bold">$1</strong>');
+    html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em class="ai-md-italic">$1</em>');
+
+    // ── Lists ──
+    html = html.replace(/^[\-\*] (.+)$/gm, '<div class="ai-md-bullet"><span class="ai-md-dot">●</span><span>$1</span></div>');
+    html = html.replace(/^(\d+)\. (.+)$/gm, '<div class="ai-md-num"><span class="ai-md-num-idx">$1.</span><span>$2</span></div>');
+
+    // ── Inline code ──
+    html = html.replace(/`([^`]+)`/g, '<code class="ai-md-inline-code">$1</code>');
+
+    // ── Line breaks ──
     html = html.replace(/\n/g, '<br/>');
 
     return html;

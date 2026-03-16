@@ -6,7 +6,7 @@ from odoo import models, api
 _logger = logging.getLogger(__name__)
 
 # Unified default — must match ssi_config.py field default
-DEFAULT_LLM_MODEL = 'google/gemini-2.0-flash-001'
+DEFAULT_LLM_MODEL = 'openrouter/hunter-alpha'
 
 
 class AIChatbotService(models.AbstractModel):
