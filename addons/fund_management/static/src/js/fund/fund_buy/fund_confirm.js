@@ -1,4 +1,4 @@
-﻿// ===== Hàm: Lấy ngày giờ định dạng đẹp =====
+// ===== Hàm: Lấy ngày giờ định dạng đẹp =====
 function getFormattedDateTime() {
   const now = new Date();
   const pad = n => n.toString().padStart(2, '0');
@@ -951,6 +951,11 @@ async function createPayOSPayment() {
       }
     }
 
+    // Start polling for payment status
+    if (orderCode) {
+      startPaymentStatusPolling(orderCode);
+    }
+
   } catch (err) {
     if (errorMsg) errorMsg.textContent = err?.message || 'Lỗi không xác định';
     if (errorBox) errorBox.style.display = 'block';
@@ -962,6 +967,116 @@ async function createPayOSPayment() {
     }
   }
 }
+
+// =============================================================================
+// PAYMENT STATUS POLLING - Auto-detect PayOS payment success
+// =============================================================================
+let _paymentPollingInterval = null;
+let _paymentPollingTimeout = null;
+
+function stopPaymentPolling() {
+  if (_paymentPollingInterval) {
+    clearInterval(_paymentPollingInterval);
+    _paymentPollingInterval = null;
+  }
+  if (_paymentPollingTimeout) {
+    clearTimeout(_paymentPollingTimeout);
+    _paymentPollingTimeout = null;
+  }
+}
+
+function startPaymentStatusPolling(orderCode) {
+  // Prevent duplicate polling
+  stopPaymentPolling();
+
+  if (!orderCode) {
+    console.warn('[PaymentPoll] No orderCode to poll');
+    return;
+  }
+
+  console.log('[PaymentPoll] Starting polling for orderCode:', orderCode);
+
+  // Poll every 5 seconds
+  const POLL_INTERVAL_MS = 5000;
+  // Stop after 10 minutes
+  const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+
+  _paymentPollingInterval = setInterval(async () => {
+    try {
+      const response = await fetch('/payos/payment-requests/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'call',
+          params: { id: orderCode }
+        })
+      });
+
+      const result = await response.json();
+      const data = result.result || result;
+
+      if (!data || data.status === 'error') {
+        console.log('[PaymentPoll] Waiting for payment...');
+        return;
+      }
+
+      // PayOS payment status: check nested data
+      const paymentData = data.data || data;
+      const paymentStatus = paymentData.status || paymentData.data?.status;
+
+      console.log('[PaymentPoll] Status:', paymentStatus);
+
+      if (paymentStatus === 'PAID' || paymentStatus === 'paid') {
+        // Payment confirmed!
+        stopPaymentPolling();
+
+        console.log('[PaymentPoll] Payment confirmed! Auto-proceeding...');
+
+        // Update PP status so order creation can proceed
+        sessionStorage.setItem('normal_order_pp_status', 'sufficient');
+
+        // Show success notification
+        await Swal.fire({
+          icon: 'success',
+          title: 'Thanh toán thành công!',
+          text: 'Hệ thống đã nhận được thanh toán. Đang tiếp tục đặt lệnh...',
+          timer: 2500,
+          showConfirmButton: false,
+          timerProgressBar: true
+        });
+
+        // Auto-retry order creation
+        await createBuyOrderFromConfirm();
+      } else if (paymentStatus === 'CANCELLED' || paymentStatus === 'cancelled' || paymentStatus === 'EXPIRED') {
+        stopPaymentPolling();
+        console.log('[PaymentPoll] Payment cancelled/expired');
+
+        Swal.fire({
+          icon: 'warning',
+          title: 'Thanh toán đã hủy',
+          text: 'Vui lòng tạo lại mã QR để thanh toán.',
+          toast: true,
+          position: 'top-end',
+          timer: 5000,
+          showConfirmButton: false
+        });
+      }
+    } catch (err) {
+      console.warn('[PaymentPoll] Error:', err.message);
+      // Don't stop polling on transient errors
+    }
+  }, POLL_INTERVAL_MS);
+
+  // Auto-stop after timeout
+  _paymentPollingTimeout = setTimeout(() => {
+    stopPaymentPolling();
+    console.log('[PaymentPoll] Polling stopped after timeout');
+  }, POLL_TIMEOUT_MS);
+}
+
+// Stop polling on page unload
+window.addEventListener('beforeunload', stopPaymentPolling);
 
 
 // ===== GOM TẤT CẢ VÀO 1 DOMContentLoaded =====

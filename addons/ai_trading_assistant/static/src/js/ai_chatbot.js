@@ -8,11 +8,8 @@ import { useService } from "@web/core/utils/hooks";
 // Quick Action Suggestions
 // ──────────────────────────────────────────────
 const QUICK_ACTIONS = [
-    { icon: "fa-briefcase", label: "Phân tích danh mục", message: "Phân tích danh mục đầu tư gồm VCB, FPT, HPG, MWG, VNM — đánh giá rủi ro và cơ hội" },
-    { icon: "fa-industry", label: "So sánh ngành", message: "So sánh nhóm ngành Ngân hàng (VCB, BID, TCB) với Bất động sản (VHM, NVL, KDH) — ngành nào đang hấp dẫn hơn?" },
-    { icon: "fa-signal", label: "Đọc tín hiệu kỹ thuật", message: "Giải thích ý nghĩa khi RSI dưới 30, MACD cắt lên, và giá chạm Bollinger Band dưới — nên hành động gì?" },
-    { icon: "fa-shield", label: "Quản trị rủi ro", message: "Chiến lược quản trị rủi ro cho danh mục 500 triệu: phân bổ tỷ trọng, điểm cắt lỗ, và T+2.5 cần lưu ý gì?" },
-    { icon: "fa-globe", label: "Toàn cảnh thị trường", message: "Phân tích tổng quan VNINDEX hôm nay: dòng tiền, breadth, và các nhóm ngành dẫn dắt/kéo lùi?" },
+    { icon: "fa-globe", label: "Phân tích thị trường hôm nay", message: "Phân tích tổng quan thị trường chứng khoán Việt Nam hôm nay" },
+    { icon: "fa-search", label: "Phân tích mã cổ phiếu", message: "Tôi muốn phân tích một mã cổ phiếu" },
 ];
 
 // ──────────────────────────────────────────────
