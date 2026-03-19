@@ -819,10 +819,10 @@ class PartialMatchingEngine(models.Model):
             sell_new_matched = sell_current_matched + matched_quantity
             sell_new_remaining = max(0, sell_units - sell_new_matched)
             
-            # Cập nhật buy order
+            # Update buy order
+            # NOTE: matched_units and remaining_units are computed fields from executions
+            # Do NOT write to them directly — they will recompute automatically
             buy_vals = {
-                'matched_units': buy_new_matched,
-                'remaining_units': buy_new_remaining,
                 'ccq_remaining_to_match': buy_new_remaining,
                 'status': 'completed' if buy_new_remaining <= 0 else 'pending',
             }
@@ -832,10 +832,8 @@ class PartialMatchingEngine(models.Model):
             else:
                 buy_order.with_context(bypass_investment_update=True).sudo().write(buy_vals)
             
-            # Cập nhật sell order
+            # Update sell order
             sell_vals = {
-                'matched_units': sell_new_matched,
-                'remaining_units': sell_new_remaining,
                 'ccq_remaining_to_match': sell_new_remaining,
                 'status': 'completed' if sell_new_remaining <= 0 else 'pending',
             }

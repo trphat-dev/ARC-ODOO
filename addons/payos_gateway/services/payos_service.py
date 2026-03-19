@@ -16,7 +16,7 @@ class PayOSService:
 
     @staticmethod
     def _hmac_sha256_hex(secret: str, message: str) -> str:
-        return hmac.new(secret.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
+        return hmac.HMAC(secret.encode('utf-8'), message.encode('utf-8'), hashlib.sha256).hexdigest()
 
     def _signature_for_create_payment(self, payload: Dict[str, Any]) -> str:
         # Follow createSignatureOfPaymentRequest: use a stable key order relevant for create payment

@@ -82,7 +82,7 @@ class PayOSWebhookController(http.Controller):
             ], limit=1)
             
             # Nếu không tìm thấy, thử tìm theo orderCode = transaction.id
-            if not transaction and order_code.isdigit():
+            if not transaction and str(order_code).isdigit():
                 try:
                     transaction = request.env['portfolio.transaction'].sudo().browse(int(order_code))
                     if not transaction.exists():
@@ -94,16 +94,43 @@ class PayOSWebhookController(http.Controller):
             if webhook_code == '00' and webhook_desc == 'success':
                 # Thanh toán thành công
                 if transaction:
-                    # Cập nhật transaction status
-                    transaction.write({
+                    # Use bypass context to avoid triggering freeze/investment logic
+                    # PayOS payments are deposits, not buy-order completions
+                    transaction.with_context(bypass_investment_update=True).write({
                         'status': 'completed',
                         'reference': f'PAYOS-{order_code}',
                     })
                     
-                    # Log thông tin thanh toán
+                    # Credit the deposited amount to user's account balance
+                    deposit_amount = webhook_data.get('amount', 0)
+                    if deposit_amount and deposit_amount > 0 and transaction.user_id:
+                        balance = request.env['portfolio.account_balance'].sudo().search(
+                            [('user_id', '=', transaction.user_id.id)], limit=1
+                        )
+                        if balance:
+                            balance.write({'balance': balance.balance + deposit_amount})
+                        else:
+                            # Create balance record if none exists
+                            request.env['portfolio.account_balance'].sudo().create({
+                                'user_id': transaction.user_id.id,
+                                'balance': deposit_amount,
+                            })
+                        
+                        # Log balance history
+                        try:
+                            request.env['portfolio.balance_history'].sudo().create({
+                                'user_id': transaction.user_id.id,
+                                'transaction_type': 'deposit',
+                                'amount': deposit_amount,
+                                'description': f'PayOS deposit - Order {order_code}',
+                            })
+                        except Exception:
+                            pass  # Don't block on history logging
+                    
+                    # Log payment info
                     payment_info = {
                         'orderCode': order_code,
-                        'amount': webhook_data.get('amount'),
+                        'amount': deposit_amount,
                         'accountNumber': webhook_data.get('accountNumber'),
                         'accountName': webhook_data.get('accountName'),
                         'transactionDateTime': webhook_data.get('transactionDateTime'),

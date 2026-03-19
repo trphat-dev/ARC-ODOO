@@ -46,7 +46,7 @@ class StatusInfo(models.Model):
                 while True:
                     # Use secrets for cryptographically strong random numbers
                     random_digits = ''.join(secrets.choice(string.digits) for _ in range(5))
-                    account_number = f"HDC{random_digits}"
+                    account_number = f"ARC{random_digits}"
                     # Check uniqueness
                     if not self.search([('account_number', '=', account_number)]):
                         vals['account_number'] = account_number

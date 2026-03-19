@@ -628,6 +628,21 @@ async function initContractSellForm() {
       });
     }
 
+    // Price Input Listener (allow investor to change sell price)
+    const priceInput = document.getElementById('contract-sell-price');
+    if (priceInput) {
+      priceInput.addEventListener('input', (e) => {
+        // Format price with thousand separators
+        let raw = e.target.value.replace(/[^0-9]/g, '');
+        if (raw) {
+          e.target.value = parseInt(raw).toLocaleString('vi-VN');
+        } else {
+          e.target.value = '';
+        }
+        calculateContractSellValue();
+      });
+    }
+
     if (confirmCheck) {
       confirmCheck.addEventListener('change', () => {
         calculateContractSellValue();

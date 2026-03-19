@@ -9,22 +9,24 @@ set -e
 : ${USER:=${DB_ENV_POSTGRES_USER:=${POSTGRES_USER:='odoo'}}}
 : ${PASSWORD:=${DB_ENV_POSTGRES_PASSWORD:=${POSTGRES_PASSWORD:='odoo18@2024'}}}
 
-# Cài đặt system dependencies
+# Install system dependencies
 apt-get update && apt-get install -y git swig gcc g++ python3-venv
 
-# Thiết lập Virtual Environment cô lập (Isolating AI environment)
+# Set up isolated Virtual Environment for AI/extra libraries
 VENV_PATH="/opt/odoo_venv"
-if [ ! -d "$VENV_PATH" ]; then
+if [ ! -f "$VENV_PATH/bin/activate" ]; then
+    echo "ARC-ODOO: Virtual environment not found or broken, creating..."
+    rm -rf "$VENV_PATH"
     python3 -m venv --system-site-packages "$VENV_PATH"
 fi
 source "$VENV_PATH/bin/activate"
 
-# Nâng cấp pip và cài đặt requirements (Xóa --ignore-installed để tránh hỏng package gốc của Odoo)
+# Upgrade pip and install requirements (no --ignore-installed to avoid breaking base Odoo packages)
 pip install --upgrade pip
-echo "ARC-ODOO: Đang kiểm tra và cài đặt thư viện Python..."
-pip install --no-cache-dir -r /etc/odoo/requirements.txt || echo "CẢNH BÁO: pip install có lỗi/cảnh báo nhưng vẫn tiếp tục..."
+echo "ARC-ODOO: Checking and installing Python libraries..."
+pip install --no-cache-dir -r /etc/odoo/requirements.txt || echo "WARNING: pip install had errors/warnings but continuing..."
 
-# Đảm bảo Odoo nhận diện được thư viện trong venv khi chạy
+# Ensure Odoo can find libraries installed in the venv at runtime
 export PYTHONPATH="$VENV_PATH/lib/python$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')/site-packages:$PYTHONPATH"
 # sed -i 's|raise werkzeug.exceptions.BadRequest(msg)|self.jsonrequest = {}|g' /usr/lib/python3/dist-packages/odoo/http.py
 

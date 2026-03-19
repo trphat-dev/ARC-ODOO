@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 from ..utils import constants, investment_utils
 
@@ -108,6 +109,19 @@ class Investment(models.Model):
         help='CCQ thỏa thuận đã về và chưa đặt bán'
     )
     
+    # --- Freeze fields for sell orders ---
+    frozen_units = fields.Float(
+        string='CCQ bị phong tỏa',
+        default=0.0,
+        help='CCQ bị giữ lại bởi các lệnh bán đang chờ xử lý'
+    )
+    sellable_units = fields.Float(
+        string='CCQ có thể bán',
+        compute='_compute_sellable_units',
+        store=True,
+        help='CCQ khả dụng trừ phần bị phong tỏa'
+    )
+    
     # Total value from transactions
     total_value = fields.Monetary(
         string='Tổng giá trị',
@@ -116,6 +130,33 @@ class Investment(models.Model):
         readonly=False,
         currency_field='currency_id'
     )
+
+    @api.depends('available_units', 'frozen_units')
+    def _compute_sellable_units(self):
+        for rec in self:
+            rec.sellable_units = max(0.0, rec.available_units - rec.frozen_units)
+
+    def freeze_for_sell(self, units):
+        """Freeze CCQ units when a sell order is placed.
+        Raises ValidationError if insufficient sellable units.
+        """
+        self.ensure_one()
+        if self.sellable_units < units:
+            raise ValidationError(
+                _('Insufficient sellable CCQ. Available: %s, Required: %s')
+                % (self.sellable_units, units)
+            )
+        self.frozen_units += units
+
+    def unfreeze_for_sell(self, units):
+        """Unfreeze CCQ units when sell order is cancelled."""
+        self.ensure_one()
+        self.frozen_units = max(0.0, self.frozen_units - units)
+
+    def complete_sell(self, units):
+        """Release frozen CCQ when sell order is completed."""
+        self.ensure_one()
+        self.frozen_units = max(0.0, self.frozen_units - units)
 
     @api.depends('user_id', 'fund_id', 'units')
     def _compute_name(self):
@@ -167,6 +208,8 @@ class Investment(models.Model):
                 rec.pending_t2_units = 0
                 rec.available_units = 0
                 rec.total_ccq = 0
+                rec.normal_available_units = 0
+                rec.negotiated_available_units = 0
                 continue
             
             # Get all completed buy transactions
@@ -177,49 +220,6 @@ class Investment(models.Model):
                 ('status', '=', 'completed')
             ])
             
-            normal_cleared = 0.0
-            negotiated_cleared = 0.0
-            normal_units = 0.0
-            negotiated_units = 0.0
-            pending_t2 = 0.0
-            
-            for tx in txs:
-                units = float(getattr(tx, 'matched_units', 0) or tx.units or 0)
-                order_mode = getattr(tx, 'order_mode', 'negotiated') or 'negotiated'
-                
-                # Check T+2 status
-                t2_date = getattr(tx, 't2_date', None)
-                is_cleared = False
-                if t2_date and t2_date <= today:
-                    is_cleared = True
-                
-                # Count by order mode
-                if order_mode == 'negotiated':
-                    negotiated_units += units
-                    if is_cleared:
-                        negotiated_cleared += units
-                else:  # normal
-                    normal_units += units
-                    if is_cleared:
-                        normal_cleared += units
-                    else:
-                        pending_t2 += units # Only count T+2 pending for normal for display? 
-                        # Or if Negotiated also has T+2, we should track it?
-                        # Existing logic only tracked pending_t2 for display.
-                        # Let's assume pending_t2_units field is aggregate or mainly for Normal.
-                        # Logic in line 178 (original) added to pending_t2 regardless of type if else branch taken?
-                        # Re-reading original: "else: pending_t2 += units". It was inside the loop, unaware of mode?
-                        # Actually Step 689 Line 178 "pending_t2 += units" was outside the if/else of order_mode.
-                        # So it counted Pending T2 for BOTH.
-                        if not is_cleared and order_mode == 'negotiated':
-                             pass # We can add to pending_t2 if we want total pending t2.
-            
-            # To preserve original pending_t2 logic (Total Pending T2):
-            # But line 178 was inside loop.
-            # Let's replicate exact T2 logic but split the "Available/Cleared" buckets.
-            
-            # Re-loop or refine loop above:
-            # Reset counters
             normal_units = 0.0
             negotiated_units = 0.0
             normal_cleared = 0.0
@@ -255,6 +255,18 @@ class Investment(models.Model):
             pending_normal_sells = sum(float(tx.units or 0) for tx in pending_sells.filtered(lambda t: t.order_mode == 'normal'))
             pending_negotiated_sells = sum(float(tx.units or 0) for tx in pending_sells.filtered(lambda t: t.order_mode == 'negotiated'))
             
+            # Subtract completed sell transactions from total CCQ
+            completed_sells = Transaction.search([
+                ('user_id', '=', rec.user_id.id),
+                ('fund_id', '=', rec.fund_id.id),
+                ('transaction_type', '=', 'sell'),
+                ('status', '=', 'completed')
+            ])
+            completed_sell_units = sum(
+                float(getattr(tx, 'matched_units', 0) or tx.units or 0)
+                for tx in completed_sells
+            )
+            
             rec.normal_available_units = max(0.0, normal_cleared - pending_normal_sells)
             rec.negotiated_available_units = max(0.0, negotiated_cleared - pending_negotiated_sells)
             
@@ -263,7 +275,7 @@ class Investment(models.Model):
             rec.normal_order_units = normal_units
             rec.negotiated_order_units = negotiated_units
             rec.pending_t2_units = pending_t2
-            rec.total_ccq = normal_units + negotiated_units
+            rec.total_ccq = max(0.0, normal_units + negotiated_units - completed_sell_units)
 
     @api.depends('user_id', 'fund_id', 'amount')
     def _compute_total_value(self):

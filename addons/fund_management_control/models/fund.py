@@ -301,8 +301,6 @@ class FundCertificate(models.Model):
         total_created = 0
         total_updated = 0
         total_skipped = 0
-        total_updated = 0
-        total_skipped = 0
         
         for data in securities_data:
             symbol = data.get('symbol')

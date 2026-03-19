@@ -751,14 +751,15 @@ class PortfolioTransaction(models.Model):
             if record.status != 'pending' or matched_total <= 0 or remaining <= 0:
                 raise ValidationError(_("Chỉ có thể đóng lệnh đang khớp một phần (pending, matched > 0, remaining > 0)."))
 
-            # Đặt matched_units = units để remaining_units = 0 (theo chuẩn Stock Exchange)
+            # Reduce units to match matched_units so remaining = 0 naturally
+            # This avoids writing to the computed field 'matched_units'
             vals = {
-                'matched_units': units_total,  # Đặt matched_units = units để remaining = 0
+                'units': matched_total,  # Reduce order size to what was actually matched
                 'status': 'completed',
                 'approved_by': self.env.user,
                 'approved_at': fields.Datetime.now(),
             }
-            # remaining_units sẽ tự động tính lại = 0 sau khi matched_units = units
+            # remaining_units will auto-recompute to 0 since units now equals matched_units
 
             # Bỏ cập nhật Investment phía fund_management (tránh duplicate)
             record.with_context(bypass_investment_update=True).write(vals)

@@ -109,8 +109,13 @@ class UserPermissionManagement(models.Model):
         return super().create(vals)
 
     def write(self, vals):
-        """Cập nhật user permission"""
-        # Cập nhật user Odoo nếu có thay đổi
+        """Update user permission — call super first, then sync linked res.users"""
+        # Remove password from vals before saving (it's not a stored field)
+        password = vals.pop('password', None)
+        
+        res = super().write(vals)
+        
+        # Now update linked Odoo users
         for rec in self:
             user_vals = {}
             
@@ -122,25 +127,19 @@ class UserPermissionManagement(models.Model):
                 user_vals['email'] = vals['email']
             if 'active' in vals:
                 user_vals['active'] = vals['active']
-            # Cập nhật groups nếu permission_type thay đổi
+            # Update groups if permission_type changed
             if 'permission_type' in vals:
                 group_ids = self._get_group_ids_for_permission(vals['permission_type'])
-                # Sử dụng (6, 0, group_ids) để replace tất cả groups
-                # Điều này đảm bảo loại bỏ groups cũ và chỉ giữ lại groups mới
                 user_vals['groups_id'] = [(6, 0, group_ids)]
             
             if user_vals and rec.user_id:
                 rec.user_id.sudo().write(user_vals)
             
             # Update password if provided (separate from other updates)
-            if 'password' in vals and vals['password']:
-                rec.user_id.sudo().write({'password': vals['password']})
+            if password and rec.user_id:
+                rec.user_id.sudo().write({'password': password})
         
-        # Remove password from vals before saving (it's not a stored field)
-        if 'password' in vals:
-            del vals['password']
-        
-        return super().write(vals)
+        return res
 
     def _get_group_ids_for_permission(self, permission_type):
         """Lấy danh sách group IDs theo loại quyền - Chỉ dùng groups mặc định của Odoo

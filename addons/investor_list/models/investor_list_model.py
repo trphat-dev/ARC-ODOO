@@ -318,13 +318,18 @@ class StatusInfo(models.Model):
 
     def write(self, vals):
         res = super(StatusInfo, self).write(vals)
-        # Nếu thay đổi trạng thái, kích hoạt tính toán lại trong investor.list
+        # If status changed, trigger recompute in investor.list
         if any(field in vals for field in ['account_status', 'profile_status']):
             for record in self:
                 investor_records = self.env['investor.list'].sudo().search([
                     ('partner_id', '=', record.partner_id.id)
                 ])
                 if investor_records:
-                    # Kích hoạt recompute cho các trường phụ thuộc
-                    investor_records.modified(['account_status', 'profile_status'])
+                    # Force recompute by invalidating computed fields and calling compute methods
+                    investor_records.invalidate_recordset([
+                        'account_status', 'profile_status', 'status', 'account_number'
+                    ])
+                    investor_records._compute_status_info_fields()
+                    investor_records._compute_lifecycle_status()
+                    investor_records._compute_account_number()
         return res

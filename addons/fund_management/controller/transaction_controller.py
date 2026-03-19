@@ -69,11 +69,11 @@ class TransactionController(http.Controller):
                 })
 
             tx_id = tx.id
-            tx.unlink()
+            tx.action_cancel()
 
             return self._json_response({
                 "success": True,
-                "message": "Đã xoá lệnh khỏi hệ thống thành công",
+                "message": "Đã huỷ lệnh thành công",
                 "transaction_id": tx_id
             })
 
@@ -139,6 +139,9 @@ class TransactionController(http.Controller):
                     "amount": inv.amount,
                     "current_nav": inv.fund_id.current_nav,
                     "investment_type": inv.fund_id.investment_type,
+                    "frozen_units": getattr(inv, 'frozen_units', 0) or 0,
+                    "sellable_units": getattr(inv, 'sellable_units', inv.units) or inv.units,
+                    "available_units": getattr(inv, 'sellable_units', inv.units) or inv.units,
                 }
                 for inv in investments
             ]

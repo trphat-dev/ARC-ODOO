@@ -24,12 +24,9 @@ class Transaction(models.Model):
 
     # Chỉ thêm các method mới hoặc override method từ parent
     def _update_fund_units(self):
-        """Override method từ parent để thêm logic mới"""
+        """Override method to update fund units via explicit write() for ORM safety"""
         self.ensure_one()
         if self.transaction_type == 'buy':
-            self.fund_id.total_units += self.units
+            self.fund_id.write({'total_units': self.fund_id.total_units + self.units})
         elif self.transaction_type == 'sell':
-            self.fund_id.total_units -= self.units
-        elif self.transaction_type == 'exchange':
-            self.fund_id.total_units -= self.units
-            self.destination_fund_id.total_units += self.destination_units
+            self.fund_id.write({'total_units': self.fund_id.total_units - self.units})

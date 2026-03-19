@@ -87,7 +87,6 @@ class CustomAuthController(AuthSignupHome):
             return {
                 'success': True, 
                 'message': 'Mã OTP đã được gửi đến số điện thoại của bạn',
-                'otp': otp,
                 'phone': phone
             }
             
@@ -108,6 +107,11 @@ class CustomAuthController(AuthSignupHome):
             
             if not otp or len(otp) != 6:
                 return {'success': False, 'message': 'Vui lòng nhập đủ 6 số OTP'}
+            
+            # Verify OTP against stored value
+            stored_otp = request.session.get('signup_otp')
+            if not stored_otp or otp != stored_otp:
+                return {'success': False, 'message': _('Mã OTP không đúng hoặc đã hết hạn.')}
             
             # Create user
             user = self._create_user_from_data(signup_data)

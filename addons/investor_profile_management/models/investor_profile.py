@@ -131,7 +131,7 @@ class InvestorProfile(models.Model):
         return self.browse(thread_id).exists()
 
     def write(self, vals):
-        # Xử lý filename cho CCCD images nếu có
+        # Handle filename for CCCD images if present
         if 'id_front' in vals and vals['id_front']:
             if 'id_front_filename' not in vals:
                 vals['id_front_filename'] = 'cccd_front.jpg'
@@ -143,12 +143,18 @@ class InvestorProfile(models.Model):
         res = super().write(vals)
         if self.partner_id:
             self.env['status.info']._check_and_update_profile_status(self.partner_id.id)
-            # Notify investor_list if exists
+            # Force recompute on investor.list (replaces fragile modified() calls)
             investor_records = self.env['investor.list'].sudo().search([
                 ('partner_id', '=', self.partner_id.id)
             ])
             if investor_records:
-                investor_records.modified(['partner_name', 'phone', 'email', 'id_number'])
+                investor_records.invalidate_recordset([
+                    'partner_name', 'phone', 'email', 'id_number',
+                    'account_status', 'profile_status', 'status'
+                ])
+                investor_records._compute_profile_info()
+                investor_records._compute_status_info_fields()
+                investor_records._compute_lifecycle_status()
         return res
 
     @api.model_create_multi
@@ -161,7 +167,13 @@ class InvestorProfile(models.Model):
                     ('partner_id', '=', record.partner_id.id)
                 ])
                 if investor_records:
-                    investor_records.modified(['partner_name', 'phone', 'email', 'id_number'])
+                    investor_records.invalidate_recordset([
+                        'partner_name', 'phone', 'email', 'id_number',
+                        'account_status', 'profile_status', 'status'
+                    ])
+                    investor_records._compute_profile_info()
+                    investor_records._compute_status_info_fields()
+                    investor_records._compute_lifecycle_status()
         return records
 
     @api.onchange('id_front')

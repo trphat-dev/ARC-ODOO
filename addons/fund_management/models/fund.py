@@ -23,7 +23,6 @@ class Fund(models.Model):
     # Thay thế các trường cũ bằng low/high/open để đồng bộ với fund_management_control
     low_price = fields.Float(string="Low Price")
     high_price = fields.Float(string="High Price")
-    high_price = fields.Float(string="High Price")
     open_price = fields.Float(string="Open Price")
     
     # Reference prices for color coding

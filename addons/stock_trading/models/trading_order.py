@@ -461,11 +461,14 @@ class TradingOrder(models.Model):
         if self.user_id and self.config_id and self.config_id.account:
             self.account = self.config_id.account.strip().upper()
 
-    @api.depends('account_balance_id', 'account_balance_id.purchasing_power')
+    @api.depends('account', 'config_id')
     def _compute_purchasing_power(self):
         for record in self:
-            record.purchasing_power = record.account_balance_id.purchasing_power or 0.0
-            if not record.purchasing_power and record.account and record.config_id:
-                 # Try one-time fallback search
-                 bal = self.env['trading.account.balance'].search([('account','=',record.account), ('config_id','=',record.config_id.id)], limit=1)
-                 if bal: record.purchasing_power = bal.purchasing_power
+            bal = False
+            if record.account and record.config_id:
+                bal = self.env['trading.account.balance'].search([
+                    ('account', '=', record.account),
+                    ('config_id', '=', record.config_id.id)
+                ], limit=1)
+            record.account_balance_id = bal
+            record.purchasing_power = bal.purchasing_power if bal else 0.0

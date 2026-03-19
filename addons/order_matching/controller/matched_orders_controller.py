@@ -130,11 +130,11 @@ class MatchedOrdersController(http.Controller):
                     if matched_price <= 0 or matched_price != (sell_tx.price or sell_tx.current_nav or 0):
                         matched_price = sell_tx.price or sell_tx.current_nav or 0
                     
-                    # QUAN TRỌNG: Không set name thủ công - để sequence tự động tạo format HDC-DDMMYY/STT
+                    # QUAN TRỌNG: Không set name thủ công - để sequence tự động tạo format ARC-DDMMYY/STT
                     # Mỗi cặp lệnh sẽ có mã thỏa thuận riêng từ sequence
                     
                     Model.create({
-                        # Không set name - để sequence tự động tạo format HDC-DDMMYY/STT
+                        # Không set name - để sequence tự động tạo format ARC-DDMMYY/STT
                         'buy_order_id': buy_tx.id,
                         'sell_order_id': sell_tx.id,
                         'matched_quantity': qty,
@@ -908,7 +908,7 @@ class MatchedOrdersController(http.Controller):
             buy_type = _detect_user_type(buy_tx)
             sell_type = _detect_user_type(sell_tx)
             
-            # QUAN TRỌNG: Không tạo name thủ công - để sequence tự động tạo format HDC-DDMMYY/STT
+            # QUAN TRỌNG: Không tạo name thủ công - để sequence tự động tạo format ARC-DDMMYY/STT
             # Mỗi cặp lệnh sẽ có mã thỏa thuận riêng từ sequence
             # Indicators cho lệnh nhỏ sẽ được thêm sau khi tạo record (trong create() method)
 
@@ -918,7 +918,7 @@ class MatchedOrdersController(http.Controller):
                 final_matched_price = float(sell_tx.price or sell_tx.current_nav or 0)
             
             mo = request.env['transaction.matched.orders'].sudo().create({
-                # Không set name - để sequence tự động tạo format HDC-DDMMYY/STT
+                # Không set name - để sequence tự động tạo format ARC-DDMMYY/STT
                 'buy_order_id': buy_tx.id,
                 'sell_order_id': sell_tx.id,
                 'matched_quantity': qty_f,

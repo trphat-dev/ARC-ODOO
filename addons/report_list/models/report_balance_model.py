@@ -3,13 +3,13 @@ from odoo import models, fields, api
 class ReportBalance(models.Model):
     _inherit = 'portfolio.investment'
     
-    # --- REPORT SPECIFIC FIELDS (Computed) ---
+    # --- REPORT SPECIFIC FIELDS (Computed, non-stored to always get fresh data) ---
     
-    report_account_number = fields.Char(string="Số tài khoản", compute='_compute_report_fields', store=True)
-    report_investor_name = fields.Char(string="Nhà đầu tư", compute='_compute_report_fields', store=True)
-    report_phone_number = fields.Char(string="Số điện thoại", compute='_compute_report_fields', store=True)
-    report_id_number = fields.Char(string="ĐKSH", compute='_compute_report_fields', store=True)
-    report_email = fields.Char(string="Email", compute='_compute_report_fields', store=True)
+    report_account_number = fields.Char(string="Số tài khoản", compute='_compute_report_fields')
+    report_investor_name = fields.Char(string="Nhà đầu tư", compute='_compute_report_fields')
+    report_phone_number = fields.Char(string="Số điện thoại", compute='_compute_report_fields')
+    report_id_number = fields.Char(string="ĐKSH", compute='_compute_report_fields')
+    report_email = fields.Char(string="Email", compute='_compute_report_fields')
 
     report_fund_name = fields.Char(string="Quỹ", related='fund_id.name', store=True)
     report_program_name = fields.Char(string="Chương trình", related='fund_id.name', store=True)

@@ -25,9 +25,6 @@ class Transaction(models.Model):
         required=True
     )
     units = fields.Float(string="Units", required=True)
-    # Trường phục vụ giao dịch chuyển đổi (exchange) tương thích view
-    destination_fund_id = fields.Many2one('portfolio.fund', string='Destination Fund')
-    destination_units = fields.Float(string="Destination Units")
     amount = fields.Float(string="Amount", required=True)
     fee = fields.Float(string="Phí mua", default=0.0, help="Phí mua cho giao dịch này")
     created_at = fields.Datetime(string="Created At", required=True, default=fields.Datetime.now)
@@ -733,8 +730,12 @@ class Transaction(models.Model):
                 ], limit=1)
                 if active_inv:
                     remaining_units = max(0.0, float(active_inv.units or 0.0) - effective_units)
+                    # Also deduct amount proportionally
+                    sell_amount = effective_units * unit_price
+                    remaining_amount = max(0.0, float(active_inv.amount or 0.0) - sell_amount)
                     active_inv.write({
                         'units': remaining_units,
+                        'amount': remaining_amount,
                         'status': (
                             constants.INVESTMENT_STATUS_CLOSED
                             if remaining_units <= 0
@@ -743,8 +744,9 @@ class Transaction(models.Model):
                     })
 
     def write(self, vals):
-        """Cập nhật Investment khi trạng thái chuyển sang completed.
-        Có thể bỏ qua bằng context: bypass_investment_update=True
+        """Update Investment when status changes to completed.
+        Also handles freeze/unfreeze logic for balance and CCQ.
+        Can be bypassed with context: bypass_investment_update=True
         """
         prev_status_map = {rec.id: rec.status for rec in self}
         res = super().write(vals)
@@ -754,14 +756,25 @@ class Transaction(models.Model):
 
         for rec in self:
             prev_status = prev_status_map.get(rec.id)
+
+            # --- Status changed to COMPLETED ---
             if prev_status != constants.STATUS_COMPLETED and rec.status == constants.STATUS_COMPLETED:
                 rec._update_investment()
+                rec._handle_freeze_on_complete()
+
+            # --- Status changed to CANCELLED ---
+            if prev_status != constants.STATUS_CANCELLED and rec.status == constants.STATUS_CANCELLED:
+                rec._handle_freeze_on_cancel()
         return res
 
     @api.model_create_multi
     def create(self, vals_list):
-        """Create transactions with basic validation"""
-        return super().create(vals_list)
+        """Create transactions with freeze logic for pending buy/sell orders."""
+        records = super().create(vals_list)
+        for rec in records:
+            if rec.status == 'pending':
+                rec._handle_freeze_on_create()
+        return records
 
     def action_complete(self):
         """Complete transaction - change status to completed"""
@@ -770,8 +783,7 @@ class Transaction(models.Model):
                 record.write({
                     'status': constants.STATUS_COMPLETED,
                 })
-                # Update investment when transaction is completed
-                record._update_investment()
+                # _update_investment + freeze handling done by write() override
         return True
 
     def action_cancel(self):
@@ -781,5 +793,109 @@ class Transaction(models.Model):
                 record.write({
                     'status': constants.STATUS_CANCELLED,
                 })
+                # Unfreeze handled by write() override
         return True
 
+    # ===== Freeze / Unfreeze helpers =====
+
+    def _get_order_amount(self):
+        """Calculate the total monetary value of this order."""
+        self.ensure_one()
+        units = float(self.units or 0)
+        price = float(self.price or getattr(self, 'current_nav', 0) or 0)
+        if price <= 0 and self.fund_id:
+            price = float(self.fund_id.current_nav or 0)
+        return units * price
+
+    def _handle_freeze_on_create(self):
+        """Freeze balance/CCQ when a pending order is placed."""
+        for rec in self:
+            try:
+                if rec.transaction_type == constants.TRANSACTION_TYPE_BUY:
+                    amount = rec._get_order_amount()
+                    if amount > 0:
+                        balance = self.env['portfolio.account_balance'].sudo().search(
+                            [('user_id', '=', rec.user_id.id)], limit=1
+                        )
+                        if balance:
+                            balance.freeze_for_buy(amount)
+
+                elif rec.transaction_type == constants.TRANSACTION_TYPE_SELL:
+                    units = float(rec.units or 0)
+                    if units > 0:
+                        inv = self.env['portfolio.investment'].sudo().search([
+                            ('user_id', '=', rec.user_id.id),
+                            ('fund_id', '=', rec.fund_id.id),
+                            ('status', '=', 'active'),
+                        ], limit=1)
+                        if inv:
+                            inv.freeze_for_sell(units)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Freeze on create failed for tx %s: %s", rec.id, e
+                )
+
+    def _handle_freeze_on_cancel(self):
+        """Unfreeze balance/CCQ when an order is cancelled."""
+        for rec in self:
+            try:
+                if rec.transaction_type == constants.TRANSACTION_TYPE_BUY:
+                    amount = rec._get_order_amount()
+                    if amount > 0:
+                        balance = self.env['portfolio.account_balance'].sudo().search(
+                            [('user_id', '=', rec.user_id.id)], limit=1
+                        )
+                        if balance:
+                            balance.unfreeze_for_buy(amount)
+
+                elif rec.transaction_type == constants.TRANSACTION_TYPE_SELL:
+                    units = float(rec.units or 0)
+                    if units > 0:
+                        inv = self.env['portfolio.investment'].sudo().search([
+                            ('user_id', '=', rec.user_id.id),
+                            ('fund_id', '=', rec.fund_id.id),
+                        ], limit=1)
+                        if inv:
+                            inv.unfreeze_for_sell(units)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Unfreeze on cancel failed for tx %s: %s", rec.id, e
+                )
+
+    def _handle_freeze_on_complete(self):
+        """Finalize freeze: deduct balance for buy, release CCQ for sell."""
+        for rec in self:
+            try:
+                if rec.transaction_type == constants.TRANSACTION_TYPE_BUY:
+                    amount = rec._get_order_amount()
+                    if amount > 0:
+                        balance = self.env['portfolio.account_balance'].sudo().search(
+                            [('user_id', '=', rec.user_id.id)], limit=1
+                        )
+                        if balance:
+                            balance.complete_buy(amount)
+
+                elif rec.transaction_type == constants.TRANSACTION_TYPE_SELL:
+                    units = float(rec.units or 0)
+                    if units > 0:
+                        inv = self.env['portfolio.investment'].sudo().search([
+                            ('user_id', '=', rec.user_id.id),
+                            ('fund_id', '=', rec.fund_id.id),
+                        ], limit=1)
+                        if inv:
+                            inv.complete_sell(units)
+                        # Credit balance from sell
+                        sell_amount = rec._get_order_amount()
+                        if sell_amount > 0:
+                            balance = self.env['portfolio.account_balance'].sudo().search(
+                                [('user_id', '=', rec.user_id.id)], limit=1
+                            )
+                            if balance:
+                                balance.complete_sell(sell_amount)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Freeze on complete failed for tx %s: %s", rec.id, e
+                )
