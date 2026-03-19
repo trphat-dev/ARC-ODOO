@@ -94,6 +94,66 @@ class CustomAuthController(AuthSignupHome):
             _logger.error("Error sending OTP: %s", str(e), exc_info=True)
             return {'success': False, 'message': 'Có lỗi xảy ra khi gửi OTP.'}
 
+    @http.route('/web/signup/direct', type='json', auth='public', methods=['POST'])
+    def signup_direct(self, **post):
+        """Create account directly without OTP verification"""
+        try:
+            phone = post.get('phone', '').strip()
+            email = post.get('email', '').strip()
+            password = post.get('password', '')
+            name = post.get('name', '').strip()
+
+            # 1. Validate Name
+            if not name or len(name) < 2:
+                return {'success': False, 'message': 'Vui lòng nhập họ và tên (ít nhất 2 ký tự).'}
+
+            # 2. Validate Phone
+            if not phone:
+                return {'success': False, 'message': 'Vui lòng nhập số điện thoại.'}
+            phone_digits = re.sub(r'[^0-9]', '', phone)
+            if len(phone_digits) != 10:
+                return {'success': False, 'message': 'Số điện thoại phải có đúng 10 chữ số.'}
+
+            # 3. Check phone duplicate
+            existing_phone = request.env['res.partner'].sudo().search_count([
+                ('phone', '=', phone)
+            ])
+            if existing_phone:
+                return {'success': False, 'message': 'Số điện thoại này đã được sử dụng bởi tài khoản khác.'}
+
+            # 4. Validate Email
+            if not email:
+                return {'success': False, 'message': 'Vui lòng nhập email.'}
+            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                return {'success': False, 'message': 'Email không hợp lệ.'}
+
+            # 5. Check email duplicate
+            existing_email = request.env['res.users'].sudo().search_count([
+                ('login', '=', email)
+            ])
+            if existing_email:
+                return {'success': False, 'message': 'Email này đã được sử dụng bởi tài khoản khác.'}
+
+            # 6. Validate Password
+            is_valid_password, password_error = self._validate_password(password)
+            if not is_valid_password:
+                return {'success': False, 'message': password_error}
+
+            # 7. Create user directly
+            user = self._create_user_from_data(post)
+
+            return {
+                'success': True,
+                'message': 'Đăng ký thành công! Bạn sẽ được chuyển hướng đến trang đăng nhập.',
+                'redirect_url': '/web/login'
+            }
+
+        except UserError as e:
+            return {'success': False, 'message': str(e)}
+        except Exception as e:
+            _logger.error("Error during direct signup: %s", str(e), exc_info=True)
+            return {'success': False, 'message': 'Đã xảy ra lỗi. Vui lòng thử lại.'}
+
     
     @http.route('/web/signup/verify-otp', type='json', auth='public', methods=['POST'])
     def verify_otp(self, **post):

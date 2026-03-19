@@ -325,15 +325,15 @@ odoo.define('custom_auth.signup_with_otp', function (require) {
                 confirm_password: confirmInput.val()
             };
             
-            console.log('Sending OTP request with data:', formData);
+            console.log('Sending signup request with data:', formData);
             
             // Show loading state
             var submitButton = this.$('#signup-submit');
             var originalText = submitButton.text();
-            submitButton.text('Đang gửi OTP...').prop('disabled', true);
+            submitButton.text('Đang tạo tài khoản...').prop('disabled', true);
             
-            // Send OTP
-            this._sendOTP(formData, submitButton, originalText);
+            // Direct signup (no OTP step)
+            this._directSignup(formData, submitButton, originalText);
         },
 
         _sendOTP: function (formData, submitButton, originalText) {
@@ -356,6 +356,44 @@ odoo.define('custom_auth.signup_with_otp', function (require) {
                     self._showFormError('Có lỗi xảy ra khi gửi OTP');
                     submitButton.text(originalText).prop('disabled', false);
                 });
+        },
+
+        _directSignup: function (formData, submitButton, originalText) {
+            var self = this;
+            console.log('Making AJAX call to create account directly...');
+            
+            ajax.jsonRpc('/web/signup/direct', 'call', formData)
+                .then(function (result) {
+                    console.log('Signup response:', result);
+                    if (result.success) {
+                        // Show success and redirect
+                        self._showSignupSuccess(result.message, result.redirect_url || '/web/login');
+                    } else {
+                        self._showFormError(result.message);
+                        submitButton.text(originalText).prop('disabled', false);
+                    }
+                })
+                .fail(function (error) {
+                    console.error('Signup request failed:', error);
+                    self._showFormError('Có lỗi xảy ra khi tạo tài khoản. Vui lòng thử lại.');
+                    submitButton.text(originalText).prop('disabled', false);
+                });
+        },
+
+        _showSignupSuccess: function (message, redirectUrl) {
+            // Replace form with success message
+            var formContainer = this.$('#signup-form');
+            formContainer.html(
+                '<div style="text-align: center; padding: 40px 20px;">' +
+                    '<div style="font-size: 50px; color: #10b981; margin-bottom: 16px;">✓</div>' +
+                    '<h3 style="color: #10b981; margin-bottom: 8px;">Đăng ký thành công!</h3>' +
+                    '<p style="color: #6b7280;">' + (message || 'Tài khoản đã được tạo.') + '</p>' +
+                    '<p style="color: #9ca3af; font-size: 14px;">Đang chuyển hướng...</p>' +
+                '</div>'
+            );
+            setTimeout(function () {
+                window.location.href = redirectUrl;
+            }, 2000);
         },
 
         _showOTPPopup: function (email, formData) {
