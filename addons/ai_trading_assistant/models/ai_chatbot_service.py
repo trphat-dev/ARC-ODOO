@@ -6,7 +6,7 @@ from odoo import models, api
 _logger = logging.getLogger(__name__)
 
 # Unified default — must match ssi_config.py field default
-DEFAULT_LLM_MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
+DEFAULT_LLM_MODEL = 'google/gemma-3-27b-it:free'
 
 
 class AIChatbotService(models.AbstractModel):

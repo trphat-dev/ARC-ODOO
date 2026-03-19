@@ -152,21 +152,7 @@ class InvestorList(models.Model):
                 record.account_status = 'pending'
                 record.profile_status = 'incomplete'
     
-    @api.onchange('account_status', 'profile_status')
-    def _onchange_status_info(self):
-        """Update status when status.info changes"""
-        for record in self:
-            # Update status.info if exists
-            if record.partner_id:
-                status_info = self.env['status.info'].search([
-                    ('partner_id', '=', record.partner_id.id)
-                ], limit=1)
-                
-                if status_info:
-                    status_info.write({
-                        'account_status': record.account_status,
-                        'profile_status': record.profile_status
-                    })
+
     
     @api.depends('account_status', 'profile_status', 'status_manual')
     def _compute_lifecycle_status(self):
@@ -224,6 +210,35 @@ class InvestorList(models.Model):
             vals['status_manual'] = True
         
         result = super().write(vals)
+        
+        # Sync status changes back to status.info (prevent recursion)
+        if not self.env.context.get('skip_status_sync'):
+            status_vals = {}
+            if 'account_status' in vals:
+                status_vals['account_status'] = vals['account_status']
+            if 'profile_status' in vals:
+                status_vals['profile_status'] = vals['profile_status']
+            # When lifecycle status is set manually, sync account_status accordingly
+            if 'status' in vals and vals.get('status_manual'):
+                status_map = {
+                    'active': 'approved',
+                    'vsd': 'approved',
+                    'rejected': 'rejected',
+                    'pending': 'pending',
+                    'draft': 'pending',
+                }
+                mapped = status_map.get(vals['status'])
+                if mapped:
+                    status_vals['account_status'] = mapped
+            
+            if status_vals:
+                for record in self:
+                    if record.partner_id:
+                        status_info = self.env['status.info'].sudo().search([
+                            ('partner_id', '=', record.partner_id.id)
+                        ], limit=1)
+                        if status_info:
+                            status_info.with_context(skip_investor_sync=True).write(status_vals)
         
         # Gửi bus notification
         self._notify_investor_change('write')
@@ -318,18 +333,19 @@ class StatusInfo(models.Model):
 
     def write(self, vals):
         res = super(StatusInfo, self).write(vals)
-        # If status changed, trigger recompute in investor.list
-        if any(field in vals for field in ['account_status', 'profile_status']):
-            for record in self:
-                investor_records = self.env['investor.list'].sudo().search([
-                    ('partner_id', '=', record.partner_id.id)
-                ])
-                if investor_records:
-                    # Force recompute by invalidating computed fields and calling compute methods
-                    investor_records.invalidate_recordset([
-                        'account_status', 'profile_status', 'status', 'account_number'
+        # Sync status changes to investor.list (prevent recursion)
+        if not self.env.context.get('skip_investor_sync'):
+            if any(field in vals for field in ['account_status', 'profile_status']):
+                for record in self:
+                    investor_records = self.env['investor.list'].sudo().search([
+                        ('partner_id', '=', record.partner_id.id)
                     ])
-                    investor_records._compute_status_info_fields()
-                    investor_records._compute_lifecycle_status()
-                    investor_records._compute_account_number()
+                    if investor_records:
+                        sync_vals = {}
+                        if 'account_status' in vals:
+                            sync_vals['account_status'] = vals['account_status']
+                        if 'profile_status' in vals:
+                            sync_vals['profile_status'] = vals['profile_status']
+                        if sync_vals:
+                            investor_records.with_context(skip_status_sync=True).write(sync_vals)
         return res

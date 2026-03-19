@@ -396,51 +396,98 @@ class UserPermissionController(http.Controller):
                     status=400
                 )
             
-            if not password:
-                return request.make_response(
-                    json.dumps({'error': 'Mật khẩu không được để trống', 'success': False}),
-                    headers=[('Content-Type', 'application/json')],
-                    status=400
-                )
+            # Check if frontend found an existing user via email search
+            existing_user_id = kwargs.get('existing_user_id')
             
-            if len(password) < 6:
-                return request.make_response(
-                    json.dumps({'error': 'Mật khẩu phải có ít nhất 6 ký tự', 'success': False}),
-                    headers=[('Content-Type', 'application/json')],
-                    status=400
-                )
-            
-            # Kiểm tra email/login đã tồn tại chưa (vì email được dùng làm login)
-            existing_user = request.env['res.users'].sudo().search([
-                '|',
-                ('login', '=', email),
-                ('email', '=', email)
-            ], limit=1)
-            if existing_user:
-                return request.make_response(
-                    json.dumps({'error': f'Email "{email}" đã được sử dụng', 'success': False}),
-                    headers=[('Content-Type', 'application/json')],
-                    status=400
-                )
-            
-            # Tạo user mới thông qua user.permission.management (model sẽ tự tạo res.users)
-            # Sử dụng email làm login
-            vals = {
-                'name': name,
-                'login': email,  # Email được dùng làm login
-                'email': email,
-                'password': password,
-                'permission_type': kwargs.get('permission_type', 'fund_operator'),
-                'active': kwargs.get('active', True),
-                'phone': kwargs.get('phone', ''),
-                'notes': kwargs.get('notes', ''),
-            }
-            
-            # Thêm is_market_maker nếu là investor_user
-            if kwargs.get('permission_type') == 'investor_user':
-                vals['is_market_maker'] = kwargs.get('is_market_maker', False)
-            
-            permission_record = request.env['user.permission.management'].sudo().create(vals)
+            if existing_user_id:
+                # Link to existing res.users instead of creating new
+                existing_user = request.env['res.users'].sudo().browse(int(existing_user_id))
+                if not existing_user.exists():
+                    return request.make_response(
+                        json.dumps({'error': 'User không tồn tại', 'success': False}),
+                        headers=[('Content-Type', 'application/json')],
+                        status=404
+                    )
+                
+                # Check if already has permission record
+                existing_perm = request.env['user.permission.management'].sudo().search([
+                    ('user_id', '=', existing_user.id)
+                ], limit=1)
+                if existing_perm:
+                    return request.make_response(
+                        json.dumps({'error': f'Email "{email}" đã có quyền trong hệ thống', 'success': False}),
+                        headers=[('Content-Type', 'application/json')],
+                        status=400
+                    )
+                
+                # Create permission record linked to existing user
+                vals = {
+                    'user_id': existing_user.id,
+                    'name': name,
+                    'login': existing_user.login,
+                    'email': email,
+                    'permission_type': kwargs.get('permission_type', 'fund_operator'),
+                    'active': kwargs.get('active', True),
+                    'phone': kwargs.get('phone', ''),
+                    'notes': kwargs.get('notes', ''),
+                }
+                if kwargs.get('permission_type') == 'investor_user':
+                    vals['is_market_maker'] = kwargs.get('is_market_maker', False)
+                
+                # Update password if provided
+                if password:
+                    existing_user.sudo().write({'password': password})
+                
+                # Update user groups to match permission_type
+                group_ids = request.env['user.permission.management']._get_group_ids_for_permission(vals['permission_type'])
+                if group_ids:
+                    existing_user.sudo().write({'groups_id': [(6, 0, group_ids)]})
+                
+                permission_record = request.env['user.permission.management'].sudo().create(vals)
+            else:
+                # Create new user - validate password
+                if not password:
+                    return request.make_response(
+                        json.dumps({'error': 'Mật khẩu không được để trống', 'success': False}),
+                        headers=[('Content-Type', 'application/json')],
+                        status=400
+                    )
+                
+                if len(password) < 6:
+                    return request.make_response(
+                        json.dumps({'error': 'Mật khẩu phải có ít nhất 6 ký tự', 'success': False}),
+                        headers=[('Content-Type', 'application/json')],
+                        status=400
+                    )
+                
+                # Kiểm tra email/login đã tồn tại chưa
+                existing_user = request.env['res.users'].sudo().search([
+                    '|',
+                    ('login', '=', email),
+                    ('email', '=', email)
+                ], limit=1)
+                if existing_user:
+                    return request.make_response(
+                        json.dumps({'error': f'Email "{email}" đã được sử dụng', 'success': False}),
+                        headers=[('Content-Type', 'application/json')],
+                        status=400
+                    )
+                
+                # Tạo user mới thông qua user.permission.management
+                vals = {
+                    'name': name,
+                    'login': email,
+                    'email': email,
+                    'password': password,
+                    'permission_type': kwargs.get('permission_type', 'fund_operator'),
+                    'active': kwargs.get('active', True),
+                    'phone': kwargs.get('phone', ''),
+                    'notes': kwargs.get('notes', ''),
+                }
+                if kwargs.get('permission_type') == 'investor_user':
+                    vals['is_market_maker'] = kwargs.get('is_market_maker', False)
+                
+                permission_record = request.env['user.permission.management'].sudo().create(vals)
             
             result = {
                 'success': True,
@@ -794,6 +841,71 @@ class UserPermissionController(http.Controller):
             )
         except Exception as e:
             _logger.error(f"Error getting user: {str(e)}", exc_info=True)
+            return request.make_response(
+                json.dumps({'error': str(e), 'success': False}),
+                headers=[('Content-Type', 'application/json')],
+                status=500
+            )
+
+    @http.route('/api/user-permission/search-by-email', type='http', auth='user', methods=['POST'], csrf=False)
+    def search_by_email(self, **kwargs):
+        """API search existing res.users by email for auto-fill when creating permission"""
+        try:
+            if not request.env.user.has_group('base.group_system'):
+                return request.make_response(
+                    json.dumps({'error': 'Access Denied', 'success': False}),
+                    headers=[('Content-Type', 'application/json')],
+                    status=403
+                )
+
+            try:
+                data = json.loads(request.httprequest.data.decode('utf-8'))
+                kwargs.update(data)
+            except:
+                pass
+
+            email = kwargs.get('email', '').strip()
+            if not email:
+                return request.make_response(
+                    json.dumps({'success': True, 'found': False}),
+                    headers=[('Content-Type', 'application/json')]
+                )
+
+            # Search for existing user by email or login
+            existing_user = request.env['res.users'].sudo().search([
+                '|',
+                ('login', '=', email),
+                ('email', '=', email)
+            ], limit=1)
+
+            if existing_user:
+                # Check if already has a permission record
+                has_permission = bool(request.env['user.permission.management'].sudo().search([
+                    ('user_id', '=', existing_user.id)
+                ], limit=1))
+
+                return request.make_response(
+                    json.dumps({
+                        'success': True,
+                        'found': True,
+                        'user': {
+                            'id': existing_user.id,
+                            'name': existing_user.name,
+                            'email': existing_user.email,
+                            'login': existing_user.login,
+                            'phone': existing_user.phone or '',
+                        },
+                        'has_permission': has_permission,
+                    }),
+                    headers=[('Content-Type', 'application/json')]
+                )
+            else:
+                return request.make_response(
+                    json.dumps({'success': True, 'found': False}),
+                    headers=[('Content-Type', 'application/json')]
+                )
+        except Exception as e:
+            _logger.error(f"Error searching by email: {str(e)}", exc_info=True)
             return request.make_response(
                 json.dumps({'error': str(e), 'success': False}),
                 headers=[('Content-Type', 'application/json')],

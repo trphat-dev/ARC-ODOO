@@ -52,7 +52,7 @@ export class UserPermissionWidget extends Component {
                 password: '',
                 position: '',
                 permission_type: permissionType,
-                is_market_maker: false, // Chỉ áp dụng cho investor_user
+                is_market_maker: false,
                 active: true,
             },
             formErrors: {},
@@ -287,12 +287,10 @@ export class UserPermissionWidget extends Component {
 
             if (!this.state.editingUser) {
                 // Khi tạo mới, gửi thông tin user mới
-                // Sử dụng email làm login
                 payload.name = this.state.formData.name.trim();
                 payload.email = this.state.formData.email.trim();
-                payload.login = this.state.formData.email.trim(); // Email được dùng làm login
+                payload.login = this.state.formData.email.trim();
                 payload.password = this.state.formData.password;
-                // Thêm is_market_maker nếu là investor_user
                 if (this.state.formData.permission_type === 'investor_user') {
                     payload.is_market_maker = this.state.formData.is_market_maker || false;
                 }
