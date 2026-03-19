@@ -6,7 +6,7 @@ from odoo import models, api
 _logger = logging.getLogger(__name__)
 
 # Unified default — must match ssi_config.py field default
-DEFAULT_LLM_MODEL = 'google/gemma-3-4b-it:free'
+DEFAULT_LLM_MODEL = 'arcee-ai/trinity-large-preview:free'
 
 
 class AIChatbotService(models.AbstractModel):
@@ -45,6 +45,7 @@ class AIChatbotService(models.AbstractModel):
         messages.append({"role": "user", "content": prompt})
 
         data = {"model": model_name, "messages": messages}
+        _logger.info("OpenRouter call: model=%s, messages=%d", model_name, len(messages))
 
         last_error = None
         for attempt in range(max_retries + 1):
@@ -58,8 +59,8 @@ class AIChatbotService(models.AbstractModel):
                     last_error = 'empty_response'
                 else:
                     last_error = f"http_{response.status_code}"
-                    _logger.warning("OpenRouter API HTTP %s (attempt %d): %s",
-                                    response.status_code, attempt + 1, response.text[:300])
+                    _logger.warning("OpenRouter API HTTP %s (attempt %d) model=%s: %s",
+                                    response.status_code, attempt + 1, model_name, response.text[:500])
             except requests.exceptions.Timeout:
                 last_error = 'timeout'
                 _logger.warning("OpenRouter API timeout (attempt %d/%d)", attempt + 1, max_retries + 1)

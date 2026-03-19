@@ -90,11 +90,11 @@ export class AIChatbot extends Component {
     setup() {
         this.orm = useService("orm");
         this.chatBodyRef = useRef("chatBody");
+        this.chatInputRef = useRef("chatInput");
 
         this.state = useState({
             isOpen: false,
             isTyping: false,
-            inputValue: "",
             showQuickActions: true,
             messages: [
                 {
@@ -119,13 +119,18 @@ export class AIChatbot extends Component {
     }
 
     onQuickAction(action) {
-        this.state.inputValue = action.message;
         this.state.showQuickActions = false;
+        // Set input value via ref and send
+        if (this.chatInputRef.el) {
+            this.chatInputRef.el.value = action.message;
+        }
         this.sendMessage();
     }
 
     async sendMessage() {
-        const text = this.state.inputValue.trim();
+        // Read value directly from DOM ref
+        const inputEl = this.chatInputRef.el;
+        const text = inputEl ? inputEl.value.trim() : '';
         if (!text || this.state.isTyping) return;
 
         // Hide quick actions after first message
@@ -139,7 +144,8 @@ export class AIChatbot extends Component {
             text: text
         });
 
-        this.state.inputValue = "";
+        // Clear input via DOM
+        if (inputEl) inputEl.value = '';
         this.state.isTyping = true;
         this.scrollToBottom();
 
@@ -203,11 +209,11 @@ export class AIChatbot extends Component {
     }
 
     retryLastMessage() {
-        // Find the last user message and resend it
         for (let i = this.state.messages.length - 1; i >= 0; i--) {
             if (this.state.messages[i].sender === 'user') {
-                this.state.inputValue = this.state.messages[i].text;
-                // Remove the error message
+                if (this.chatInputRef.el) {
+                    this.chatInputRef.el.value = this.state.messages[i].text;
+                }
                 if (this.state.messages[this.state.messages.length - 1].type === 'error') {
                     this.state.messages.pop();
                 }
@@ -217,8 +223,10 @@ export class AIChatbot extends Component {
         }
     }
 
-    onKeyUp(ev) {
-        if (ev.key === "Enter") {
+    onKeyDown(ev) {
+        if (ev.key === 'Enter' && !ev.shiftKey) {
+            ev.preventDefault();
+            ev.stopPropagation();
             this.sendMessage();
         }
     }

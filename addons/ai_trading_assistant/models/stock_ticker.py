@@ -319,13 +319,47 @@ QUY TẮC:
                 "💡 *Mẹo*: Bạn vẫn có thể nhập mã cổ phiếu (VD: **FPT**) "
                 "để xem phân tích kỹ thuật mà không cần AI."
             ),
+            'empty_response': (
+                "⚠️ **AI không trả về kết quả**\n\n"
+                "Model AI không phản hồi nội dung. Vui lòng thử lại.\n\n"
+                "💡 *Mẹo*: Bạn vẫn có thể nhập mã cổ phiếu (VD: **FPT**) "
+                "để xem phân tích kỹ thuật."
+            ),
+            'http_401': (
+                "🔑 **API Key không hợp lệ**\n\n"
+                "OpenRouter API Key không đúng hoặc đã hết hạn. "
+                "Vui lòng liên hệ Admin kiểm tra trong **Cài đặt → AI Trading**."
+            ),
+            'http_402': (
+                "💳 **Hết quota API**\n\n"
+                "Tài khoản OpenRouter đã hết credits. "
+                "Vui lòng liên hệ Admin để nạp thêm credits."
+            ),
+            'http_429': (
+                "⏱️ **Quá nhiều yêu cầu**\n\n"
+                "Hệ thống AI đang bị giới hạn tốc độ. Vui lòng đợi vài giây rồi thử lại."
+            ),
         }
-        text = error_messages.get(error_code, (
-            "⚠️ **Không thể kết nối AI**\n\n"
-            "Hệ thống gặp sự cố tạm thời. Vui lòng thử lại.\n\n"
-            "💡 *Mẹo*: Bạn vẫn có thể nhập mã cổ phiếu (VD: **FPT**) "
-            "để xem phân tích kỹ thuật."
-        ))
+        
+        # Handle http_XXX error codes
+        text = error_messages.get(error_code)
+        if not text and error_code and error_code.startswith('http_'):
+            http_code = error_code.replace('http_', '')
+            text = (
+                f"⚠️ **Lỗi từ máy chủ AI (HTTP {http_code})**\n\n"
+                "Hệ thống gặp sự cố tạm thời. Vui lòng thử lại.\n\n"
+                "💡 *Mẹo*: Bạn vẫn có thể nhập mã cổ phiếu (VD: **FPT**) "
+                "để xem phân tích kỹ thuật."
+            )
+        
+        if not text:
+            text = (
+                "⚠️ **Không thể kết nối AI**\n\n"
+                "Hệ thống gặp sự cố tạm thời. Vui lòng thử lại.\n\n"
+                "💡 *Mẹo*: Bạn vẫn có thể nhập mã cổ phiếu (VD: **FPT**) "
+                "để xem phân tích kỹ thuật."
+            )
+        
         return {
             'status': 'success',
             'type': 'general',

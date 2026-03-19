@@ -2,7 +2,7 @@ from odoo import models, fields, api, exceptions
 import requests
 
 # Must match ai_chatbot_service.DEFAULT_LLM_MODEL
-DEFAULT_LLM_MODEL = 'google/gemini-2.0-flash-001'
+DEFAULT_LLM_MODEL = 'arcee-ai/trinity-large-preview:free'
 
 
 class SSIConfig(models.TransientModel):
