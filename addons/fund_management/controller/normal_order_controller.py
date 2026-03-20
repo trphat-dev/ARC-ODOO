@@ -347,16 +347,18 @@ class NormalOrderController(http.Controller):
                 'order_id': transaction.id,
                 'reference': transaction.reference,
                 'exchange_success': exchange_success,
-                'message': str(exchange_msg) if exchange_success else _('Đặt lệnh thành công! %s') % str(exchange_msg),
+                'message': _('Đặt lệnh thành công!'),
             }
             
         except ValidationError as e:
             _logger.warning(f"Validation error creating normal order: {e}")
             _logger.error(f"Error creating normal order: {e}", exc_info=True)
-            return {'success': False, 'message': _('Lỗi hệ thống khi tạo lệnh.')}
+            error_msg = str(e.args[0]) if e.args else str(e)
+            return {'success': False, 'message': error_msg}
         except Exception as e:
             _logger.error(f"Unexpected error: {e}", exc_info=True)
-            return {'success': False, 'message': _('Lỗi hệ thống.')}
+            error_msg = str(e)
+            return {'success': False, 'message': _('Lỗi tạo lệnh: %s') % error_msg}
 
     # ==========================================================================
     # LIST NORMAL ORDERS
@@ -562,6 +564,12 @@ class NormalOrderController(http.Controller):
             (trading.order, str): (record, None) if success, (None, error_msg) if failed
         """
         try:
+            # Guard: check required models exist
+            if 'trading.order' not in request.env:
+                return None, "Module trading chưa được cài đặt"
+            if 'ssi.securities' not in request.env:
+                return None, "Module SSI Securities chưa được cài đặt"
+
             TradingOrder = request.env['trading.order'].sudo()
             
             _logger.info(f"[CREATE_TRADING_ORDER] Starting for order {order.id} - Fund: {order.fund_id.name if order.fund_id else 'N/A'}")
