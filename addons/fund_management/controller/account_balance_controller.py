@@ -31,6 +31,8 @@ class AccountBalanceController(http.Controller):
             
             values = {
                 'balance': account_balance.balance if account_balance else 0.0,
+                'frozen_balance': account_balance.frozen_balance if account_balance else 0.0,
+                'available_balance': account_balance.available_balance if account_balance else 0.0,
                 'balance_history': balance_history,
             }
             

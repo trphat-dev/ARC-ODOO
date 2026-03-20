@@ -140,11 +140,73 @@ class NormalOrderController(http.Controller):
                         'message': f'Giá đặt ({price:,.0f}) không được nhỏ hơn giá sàn ({floor_price:,.0f})'
                     }
             
-            # Purchasing power check (buy orders)
-            # PP is validated client-side and bypassed for normal orders.
-            # Server-side enforcement is intentionally skipped.
+            # Purchasing power check (buy orders) — dual-balance: internal + exchange
             if transaction_type == 'buy':
-                pass
+                order_amount = units * price
+                if order_amount > 0:
+                    # 1. Get internal balance (portfolio.account_balance)
+                    internal_balance = request.env['portfolio.account_balance'].sudo().search(
+                        [('user_id', '=', current_user.id)], limit=1
+                    )
+                    internal_available = internal_balance.available_balance if internal_balance else 0.0
+
+                    # 2. Get exchange balance (trading.account.balance) — sync from SSI API
+                    exchange_pp = 0.0
+                    exchange_synced = False
+                    try:
+                        exchange_bal = request.env['trading.account.balance'].sudo().search([
+                            ('user_id', '=', current_user.id),
+                            ('balance_type', '=', 'stock'),
+                        ], limit=1)
+                        if exchange_bal:
+                            try:
+                                exchange_bal.action_sync_balance()
+                                exchange_synced = True
+                            except Exception as sync_err:
+                                _logger.warning(
+                                    'Exchange balance sync failed for user %s: %s',
+                                    current_user.id, sync_err
+                                )
+                            exchange_pp = exchange_bal.purchasing_power or 0.0
+                    except Exception:
+                        pass  # Graceful fallback — exchange module may not be installed
+
+                    # 3. Total buying power = internal + exchange
+                    total_buying_power = internal_available + exchange_pp
+
+                    if total_buying_power < order_amount:
+                        return {
+                            'success': False,
+                            'message': (
+                                'Sức mua không đủ. Cần: %s, '
+                                'Số dư hệ thống: %s, '
+                                'Số dư TK chứng khoán: %s, '
+                                'Tổng sức mua: %s'
+                            ) % (
+                                f'{order_amount:,.0f}',
+                                f'{internal_available:,.0f}',
+                                f'{exchange_pp:,.0f}',
+                                f'{total_buying_power:,.0f}',
+                            ),
+                            'error_code': 'insufficient_buying_power',
+                        }
+
+                    # 4. Auto top-up exchange if exchange funds are insufficient
+                    if exchange_pp < order_amount and internal_available > 0:
+                        shortfall = order_amount - exchange_pp
+                        top_up_amount = min(shortfall, internal_available)
+                        if top_up_amount > 0 and internal_balance:
+                            try:
+                                internal_balance.top_up_exchange(top_up_amount)
+                                _logger.info(
+                                    'Auto top-up exchange for user %s: %s from internal balance',
+                                    current_user.id, top_up_amount,
+                                )
+                            except Exception as topup_err:
+                                _logger.warning(
+                                    'Auto top-up failed for user %s: %s',
+                                    current_user.id, topup_err,
+                                )
             elif transaction_type == 'sell':
                 # Get investment with T+2 aware available_units
                 investment = request.env['portfolio.investment'].sudo().search([

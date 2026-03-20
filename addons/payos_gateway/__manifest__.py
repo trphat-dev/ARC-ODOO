@@ -34,7 +34,7 @@ Key Features:
         'security/ir.model.access.csv',
         # Data
         'data/payos_credentials_data.xml',
-        # Views
+        # Views (emptied — ensures old menus are removed on upgrade)
         'views/payos_settings.xml',
         'views/payos_config_views.xml',
     ],

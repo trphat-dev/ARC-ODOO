@@ -1,37 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Simplified PayOS Settings - chỉ hiển thị link đến payos.config -->
-    <record id="payos_res_config_settings_view" model="ir.ui.view">
-        <field name="name">payos.res.config.settings.form</field>
-        <field name="model">res.config.settings</field>
-        <field name="priority" eval="30"/>
-        <field name="arch" type="xml">
-            <form string="PayOS Settings">
-                <sheet>
-                    <div class="oe_title mb-3">
-                        <h1>PayOS Gateway</h1>
-                    </div>
-
-                    <div class="alert alert-info" role="alert">
-                        <h4 class="alert-heading">Cấu hình PayOS</h4>
-                        <p>Nhấn nút bên dưới để mở trang cấu hình PayOS chi tiết.</p>
-                        <hr/>
-                        <button name="action_open_payos_config" string="🔧 Mở cấu hình PayOS" type="object" class="btn-primary"/>
-                    </div>
-                </sheet>
-            </form>
-        </field>
-    </record>
-
-    <record id="action_payos_res_config_settings" model="ir.actions.act_window">
-        <field name="name">PayOS Settings</field>
-        <field name="res_model">res.config.settings</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="payos_res_config_settings_view"/>
-        <field name="target">current</field>
-        <field name="context">{"module":"payos_gateway"}</field>
-    </record>
-
-    <menuitem id="menu_payos_settings" name="PayOS" groups="base.group_system" sequence="50"/>
-    <menuitem id="menu_payos_settings_form" name="Cài đặt PayOS" parent="menu_payos_settings" action="action_payos_res_config_settings" groups="base.group_system" sequence="10"/>
+    <!-- Delete old PayOS settings menus/actions (child first, then parent) -->
+    <delete model="ir.ui.menu" search="[('id', '=', ref('menu_payos_settings_form'))]" />
+    <delete model="ir.ui.menu" search="[('id', '=', ref('menu_payos_config'))]" />
+    <delete model="ir.ui.menu" search="[('id', '=', ref('menu_payos_config_list'))]" />
+    <delete model="ir.actions.act_window" search="[('id', '=', ref('action_payos_res_config_settings'))]" />
+    <delete model="ir.actions.act_window" search="[('id', '=', ref('action_payos_config_list'))]" />
+    <delete model="ir.ui.view" search="[('id', '=', ref('payos_res_config_settings_view'))]" />
+    <delete model="ir.ui.menu" search="[('id', '=', ref('menu_payos_settings'))]" />
 </odoo>

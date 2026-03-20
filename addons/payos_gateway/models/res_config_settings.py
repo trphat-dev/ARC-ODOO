@@ -13,16 +13,11 @@ class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     def action_open_payos_config(self):
-        """Mở trang cấu hình PayOS (singleton pattern)"""
-        PayOSConfig = self.env['payos.config']
-        config = PayOSConfig.get_or_create_config()
-        
+        """Open PayOS configuration list view"""
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Cấu hình PayOS',
+            'name': 'PayOS Configuration',
             'res_model': 'payos.config',
-            'res_id': config.id,
-            'view_mode': 'form',
+            'view_mode': 'list,form',
             'target': 'current',
-            'context': {'form_view_initial_mode': 'edit'},
         }

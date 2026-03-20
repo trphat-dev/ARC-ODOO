@@ -105,7 +105,68 @@ class NegotiatedOrderController(http.Controller):
             
             effective_unit_price = calculated_amount / units_float if units_float > 0 else 0
             fee = fee_utils.calculate_fee(calculated_amount)
-            
+
+            # === BUYING POWER CHECK (dual-balance: internal + exchange) ===
+            order_amount = calculated_amount
+            if order_amount > 0:
+                internal_balance = request.env['portfolio.account_balance'].sudo().search(
+                    [('user_id', '=', user_id)], limit=1
+                )
+                internal_available = internal_balance.available_balance if internal_balance else 0.0
+
+                exchange_pp = 0.0
+                try:
+                    exchange_bal = request.env['trading.account.balance'].sudo().search([
+                        ('user_id', '=', user_id),
+                        ('balance_type', '=', 'stock'),
+                    ], limit=1)
+                    if exchange_bal:
+                        try:
+                            exchange_bal.action_sync_balance()
+                        except Exception as sync_err:
+                            _logger.warning(
+                                'Exchange balance sync failed for user %s: %s',
+                                user_id, sync_err
+                            )
+                        exchange_pp = exchange_bal.purchasing_power or 0.0
+                except Exception:
+                    pass
+
+                total_buying_power = internal_available + exchange_pp
+
+                if total_buying_power < order_amount:
+                    return self._json_response({
+                        'success': False,
+                        'message': (
+                            'Sức mua không đủ. Cần: %s, '
+                            'Số dư hệ thống: %s, '
+                            'Số dư TK chứng khoán: %s, '
+                            'Tổng sức mua: %s'
+                        ) % (
+                            f'{order_amount:,.0f}',
+                            f'{internal_available:,.0f}',
+                            f'{exchange_pp:,.0f}',
+                            f'{total_buying_power:,.0f}',
+                        ),
+                        'error_code': 'insufficient_buying_power',
+                    })
+
+                if exchange_pp < order_amount and internal_available > 0:
+                    shortfall = order_amount - exchange_pp
+                    top_up_amount = min(shortfall, internal_available)
+                    if top_up_amount > 0 and internal_balance:
+                        try:
+                            internal_balance.top_up_exchange(top_up_amount)
+                            _logger.info(
+                                'Auto top-up exchange for user %s: %s from internal balance (negotiated)',
+                                user_id, top_up_amount,
+                            )
+                        except Exception as topup_err:
+                            _logger.warning(
+                                'Auto top-up failed for user %s: %s',
+                                user_id, topup_err,
+                            )
+
             # Get PDF path from session
             pdf_path = request.session.get("signed_pdf_path")
 

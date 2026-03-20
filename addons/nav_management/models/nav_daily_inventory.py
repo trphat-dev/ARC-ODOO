@@ -162,23 +162,14 @@ class NavDailyInventory(models.Model):
                 continue
             
             try:
-                # Lấy tất cả giao dịch đã khớp trong ngày - CHỈ LẤY GIAO DỊCH NHÀ TẠO LẬP MUA/BÁN LẠI
-                all_transactions = self.env['portfolio.transaction'].search([
+                # Get completed NEGOTIATED transactions for the fund on this date
+                transactions = self.env['portfolio.transaction'].search([
                     ('fund_id', '=', record.fund_id.id),
                     ('status', '=', 'completed'),
+                    ('order_mode', '=', 'negotiated'),
                     ('created_at', '>=', f"{record.inventory_date} 00:00:00"),
                     ('created_at', '<=', f"{record.inventory_date} 23:59:59")
                 ])
-                
-                # Lọc chỉ lấy giao dịch nhà tạo lập (dựa trên user_id có group base.group_user)
-                transactions = []
-                for tx in all_transactions:
-                    try:
-                        if tx.user_id and tx.user_id.has_group('base.group_user'):
-                            transactions.append(tx)
-                    except Exception as e:
-                        _logger.warning(f"Lỗi kiểm tra user group cho giao dịch {tx.id}: {e}")
-                        continue
                 
                 _logger.info(f"Hiển thị giao dịch cho fund {record.fund_id.name} ngày {record.inventory_date}: {len(transactions)} giao dịch")
             
@@ -312,31 +303,16 @@ class NavDailyInventory(models.Model):
             if not self.fund_id or not self.inventory_date:
                 return self.opening_ccq or 0.0
             
-            # Lấy tất cả giao dịch đã khớp trong ngày - CHỈ LẤY GIAO DỊCH NHÀ TẠO LẬP MUA/BÁN LẠI
-            all_transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions for the fund on this date
+            transactions = self.env['portfolio.transaction'].search([
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
+                ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
             ], order='create_date')
             
-            # Lọc chỉ lấy giao dịch nhà tạo lập (dựa trên user_id có group base.group_user)
-            transactions = []
-            error_count = 0
-            for tx in all_transactions:
-                try:
-                    if tx.user_id and tx.user_id.has_group('base.group_user'):
-                        transactions.append(tx)
-                    error_count = 0  # Reset on success
-                except Exception as e:
-                    error_count += 1
-                    _logger.warning(f"Lỗi kiểm tra user group cho giao dịch {tx.id}: {e}")
-                    if error_count >= MAX_CONSECUTIVE_ERRORS:
-                        _logger.error(_("Stopping after %s consecutive errors"), MAX_CONSECUTIVE_ERRORS)
-                        break
-                    continue
-            
-            _logger.debug(f"Tính CCQ cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch")
+            _logger.debug(f"Tính CCQ cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch thỏa thuận")
         
             current_ccq = self.opening_ccq or 0.0
             error_count = 0  # Reset for processing loop
@@ -383,31 +359,16 @@ class NavDailyInventory(models.Model):
             if not self.fund_id or not self.inventory_date:
                 return self.opening_avg_price or 0.0
             
-            # Lấy tất cả giao dịch đã khớp trong ngày - CHỈ LẤY GIAO DỊCH NHÀ TẠO LẬP MUA/BÁN LẠI
-            all_transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions for the fund on this date
+            transactions = self.env['portfolio.transaction'].search([
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
+                ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
             ], order='create_date')
             
-            # Lọc chỉ lấy giao dịch nhà tạo lập (dựa trên user_id có group base.group_user)
-            transactions = []
-            error_count = 0
-            for tx in all_transactions:
-                try:
-                    if tx.user_id and tx.user_id.has_group('base.group_user'):
-                        transactions.append(tx)
-                    error_count = 0  # Reset on success
-                except Exception as e:
-                    error_count += 1
-                    _logger.warning(f"Lỗi kiểm tra user group cho giao dịch {tx.id}: {e}")
-                    if error_count >= MAX_CONSECUTIVE_ERRORS:
-                        _logger.error(_("Stopping transaction filtering after %s consecutive errors"), MAX_CONSECUTIVE_ERRORS)
-                        break
-                    continue
-            
-            _logger.debug(f"Tính giá TB cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch")
+            _logger.debug(f"Tính giá TB cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch thỏa thuận")
             
             # Khởi tạo với dữ liệu đầu ngày
             weighted_sum = self.opening_value or 0.0  # = self.opening_ccq * self.opening_avg_price
@@ -476,23 +437,14 @@ class NavDailyInventory(models.Model):
             return "Không có dữ liệu để tính toán"
         
         try:
-            # Lấy tất cả giao dịch đã khớp trong ngày - CHỈ LẤY GIAO DỊCH NHÀ TẠO LẬP
-            all_transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions for the fund on this date
+            transactions = self.env['portfolio.transaction'].search([
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
+                ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
             ], order='create_date')
-            
-            # Lọc chỉ lấy giao dịch nhà tạo lập (dựa trên user_id có group base.group_user)
-            transactions = []
-            for tx in all_transactions:
-                try:
-                    if tx.user_id and tx.user_id.has_group('base.group_user'):
-                        transactions.append(tx)
-                except Exception as e:
-                    _logger.warning(f"Lỗi kiểm tra user group cho giao dịch {tx.id}: {e}")
-                    continue
             
             details = []
             details.append(f"=== CHI TIẾT TÍNH TOÁN TỒN KHO ===")

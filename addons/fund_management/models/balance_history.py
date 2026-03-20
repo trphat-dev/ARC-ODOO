@@ -14,6 +14,7 @@ class BalanceHistory(models.Model):
         ('Deposit', 'Deposit'),
         ('Withdrawal', 'Withdrawal'),
         ('Investment', 'Investment'),
-        ('Divestment', 'Divestment')
+        ('Divestment', 'Divestment'),
+        ('TopUp', 'Top Up Exchange'),
     ], string="Change Type", required=True)
     created_at = fields.Datetime(string="Created At", required=True, default=fields.Datetime.now)

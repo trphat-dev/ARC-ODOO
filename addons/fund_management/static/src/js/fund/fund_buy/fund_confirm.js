@@ -682,34 +682,22 @@ function renderCheckoutInline(container, checkoutUrl) {
   container.textContent = '';
 
   const wrapper = document.createElement('div');
-  wrapper.className = 'payos-inline-checkout';
+  wrapper.className = 'payos-inline-checkout text-center p-4';
 
-  const iframe = document.createElement('iframe');
-  iframe.src = checkoutUrl;
-  iframe.title = 'PayOS Checkout';
-  iframe.style.width = '100%';
-  iframe.style.minHeight = '480px';
-  iframe.style.border = '1px solid #e2e8f0';
-  iframe.style.borderRadius = '12px';
-  iframe.style.boxShadow = '0 20px 60px rgba(15, 23, 42, 0.15)';
-  iframe.setAttribute('loading', 'lazy');
-  iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+  // PayOS blocks iframe embedding (X-Frame-Options),
+  // so open checkout in a new tab instead
+  const linkBtn = document.createElement('a');
+  linkBtn.href = checkoutUrl;
+  linkBtn.target = '_blank';
+  linkBtn.rel = 'noopener';
+  linkBtn.className = 'btn btn-primary btn-lg d-inline-flex align-items-center gap-2';
+  linkBtn.innerHTML = '<i class="fas fa-external-link-alt"></i> Mở trang thanh toán PayOS';
 
   const helper = document.createElement('p');
-  helper.className = 'small text-muted mt-2';
-  helper.style.textAlign = 'center';
-  helper.textContent = 'Nếu khung thanh toán không hiển thị, ';
+  helper.className = 'small text-muted mt-3 mb-0';
+  helper.textContent = 'Click nút trên để mở trang thanh toán PayOS trong tab mới.';
 
-  const helperLink = document.createElement('a');
-  helperLink.href = checkoutUrl;
-  helperLink.target = '_blank';
-  helperLink.rel = 'noopener';
-  helperLink.textContent = 'bấm vào đây để mở PayOS trong tab mới';
-
-  helper.appendChild(helperLink);
-  helper.appendChild(document.createTextNode('.'));
-
-  wrapper.appendChild(iframe);
+  wrapper.appendChild(linkBtn);
   wrapper.appendChild(helper);
 
   container.appendChild(wrapper);
@@ -833,22 +821,42 @@ async function createPayOSPayment() {
       sessionStorage.removeItem('payos_transfer_reference');
     }
 
-    // Hiển thị PayOS inline (iframe) hoặc QR code
+    // Show both QR code and checkout button when available
     const inlineContainer = document.getElementById('payos-inline-checkout');
     const qrContainer = document.getElementById('payos-qr-code');
 
-    // Ưu tiên hiển thị iframe nếu có checkoutUrl
-    if (checkoutUrl && inlineContainer) {
-      // Xóa loading spinner và render iframe
-      renderCheckoutInline(inlineContainer, checkoutUrl);
-    } else if (qrCode && qrContainer) {
+    // 1. Always render QR code if available
+    if (qrCode && qrContainer) {
       qrContainer.textContent = '';
       renderQRCode(qrContainer, qrCode, () => {
         qrContainer.textContent = '';
-        qrContainer.insertAdjacentHTML('beforeend', '<div class="alert alert-warning"><small>Không thể hiển thị mã QR từ PayOS. Vui lòng sử dụng nút thanh toán để mở trang PayOS.</small></div>');
+        if (checkoutUrl) {
+          // Fallback: generate QR from checkout URL
+          const fallbackSrc = generateQRCodeImageUrl(checkoutUrl, QR_CONFIG.DEFAULT_SIZE);
+          const fallbackImg = createQRImageElement(fallbackSrc);
+          const fallbackText = createQRTextElement();
+          qrContainer.appendChild(fallbackImg);
+          qrContainer.appendChild(fallbackText);
+          qrContainer.style.display = 'block';
+        } else {
+          qrContainer.insertAdjacentHTML('beforeend', '<div class="alert alert-warning"><small>Không thể hiển thị mã QR từ PayOS.</small></div>');
+        }
       });
-    } else if (inlineContainer) {
-      // Không có QR code hoặc checkoutUrl - hiển thị thông báo
+    } else if (checkoutUrl && qrContainer) {
+      // No QR from API but have checkout URL -> generate QR from URL
+      qrContainer.textContent = '';
+      const generatedSrc = generateQRCodeImageUrl(checkoutUrl, QR_CONFIG.DEFAULT_SIZE);
+      const generatedImg = createQRImageElement(generatedSrc);
+      const generatedText = createQRTextElement();
+      qrContainer.appendChild(generatedImg);
+      qrContainer.appendChild(generatedText);
+      qrContainer.style.display = 'block';
+    }
+
+    // 2. Also show checkout button
+    if (checkoutUrl && inlineContainer) {
+      renderCheckoutInline(inlineContainer, checkoutUrl);
+    } else if (!qrCode && !checkoutUrl && inlineContainer) {
       inlineContainer.textContent = '';
       inlineContainer.insertAdjacentHTML('beforeend', `
         <div class="alert alert-info m-3">
@@ -959,7 +967,37 @@ function startPaymentStatusPolling(orderCode) {
         // Payment confirmed!
         stopPaymentPolling();
 
-        console.log('[PaymentPoll] Payment confirmed! Auto-proceeding...');
+        console.log('[PaymentPoll] Payment confirmed! Confirming balance credit...');
+
+        // Call server to verify and credit balance
+        // (webhook may not reach local/dev servers, so we confirm client-side)
+        const orderCode = sessionStorage.getItem('payos_transfer_reference');
+        const originalAmount = Number(sessionStorage.getItem('payos_transfer_amount') || 0);
+        try {
+          const confirmRes = await fetch('/payos/confirm-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              method: 'call',
+              params: {
+                orderCode: orderCode || data.data?.orderCode,
+                originalAmount: originalAmount
+              }
+            })
+          });
+          const confirmData = await confirmRes.json();
+          const confirmResult = confirmData.result || confirmData;
+          console.log('[PaymentPoll] Confirm-payment result:', confirmResult);
+
+          if (confirmResult.status === 'ok') {
+            console.log('[PaymentPoll] Balance credited:', confirmResult.credited_amount);
+          } else {
+            console.warn('[PaymentPoll] Confirm-payment warning:', confirmResult.message);
+          }
+        } catch (confirmErr) {
+          console.warn('[PaymentPoll] Confirm-payment error (non-blocking):', confirmErr);
+        }
 
         // Update PP status so order creation can proceed
         sessionStorage.setItem('normal_order_pp_status', 'sufficient');

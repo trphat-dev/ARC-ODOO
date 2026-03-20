@@ -66,3 +66,30 @@ class AccountBalance(models.Model):
             'change': amount,
             'change_type': 'Divestment',
         })
+
+    def top_up_exchange(self, amount):
+        """Deduct from internal balance to top-up exchange account.
+        Used when exchange account has insufficient funds for a buy order.
+        Raises ValidationError if insufficient available balance.
+
+        Args:
+            amount: Amount to transfer from internal to exchange account.
+
+        Returns:
+            float: The actual deducted amount.
+        """
+        self.ensure_one()
+        if self.available_balance < amount:
+            raise ValidationError(
+                _('Insufficient internal balance for exchange top-up. '
+                  'Available: %s, Required: %s')
+                % (self.available_balance, amount)
+            )
+        self.balance = max(0.0, self.balance - amount)
+        self.env['portfolio.balance_history'].sudo().create({
+            'user_id': self.user_id.id,
+            'balance': self.balance,
+            'change': -amount,
+            'change_type': 'TopUp',
+        })
+        return amount

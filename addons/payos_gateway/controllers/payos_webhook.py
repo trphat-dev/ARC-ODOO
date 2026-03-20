@@ -103,39 +103,61 @@ class PayOSWebhookController(http.Controller):
                         'reference': f'PAYOS-{order_code}',
                     })
                     
+                    # Check demo mode
+                    is_demo_mode = False
+                    try:
+                        payos_cfg = request.env['payos.config'].sudo().search(
+                            [('is_active', '=', True)], limit=1
+                        )
+                        if payos_cfg and payos_cfg.demo_mode:
+                            is_demo_mode = True
+                    except Exception:
+                        pass
+
                     # Credit the deposited amount to user's account balance
-                    # Validate: deposit_amount must match expected transaction amount
                     deposit_amount = webhook_data.get('amount', 0)
                     expected_amount = transaction.amount or 0
                     if deposit_amount and deposit_amount > 0 and transaction.user_id:
-                        if expected_amount > 0 and abs(deposit_amount - expected_amount) > 1:
+                        # Demo mode: always use the original transaction amount
+                        # (PayOS received reduced amount, but we credit full amount)
+                        if is_demo_mode:
+                            credit_amount = expected_amount or deposit_amount
+                            _logger.info(
+                                'PayOS webhook [DEMO]: Crediting original amount %s '
+                                '(PayOS paid: %s) for transaction %s',
+                                credit_amount, deposit_amount, transaction.id
+                            )
+                        elif expected_amount > 0 and abs(deposit_amount - expected_amount) > 1:
                             _logger.warning(
                                 'PayOS webhook: Amount mismatch for transaction %s. '
                                 'Expected: %s, Received: %s. Skipping balance credit.',
                                 transaction.id, expected_amount, deposit_amount
                             )
+                            credit_amount = 0
                         else:
                             credit_amount = deposit_amount
+
+                        if credit_amount > 0:
                             balance = request.env['portfolio.account_balance'].sudo().search(
                                 [('user_id', '=', transaction.user_id.id)], limit=1
                             )
                             if balance:
                                 balance.write({'balance': balance.balance + credit_amount})
                             else:
-                                # Create balance record if none exists
                                 request.env['portfolio.account_balance'].sudo().create({
                                     'user_id': transaction.user_id.id,
                                     'balance': credit_amount,
                                 })
                         
-                        # Log balance history
+                        # Log balance history (use credit_amount for accuracy)
                         try:
-                            request.env['portfolio.balance_history'].sudo().create({
-                                'user_id': transaction.user_id.id,
-                                'transaction_type': 'deposit',
-                                'amount': deposit_amount,
-                                'description': f'PayOS deposit - Order {order_code}',
-                            })
+                            if credit_amount > 0:
+                                request.env['portfolio.balance_history'].sudo().create({
+                                    'user_id': transaction.user_id.id,
+                                    'transaction_type': 'deposit',
+                                    'amount': credit_amount,
+                                    'description': f'PayOS deposit - Order {order_code}',
+                                })
                         except Exception:
                             pass  # Don't block on history logging
                     
@@ -178,6 +200,115 @@ class PayOSWebhookController(http.Controller):
             resp = service.get_payment_link_info(identifier)
             return {'status': 'ok', 'data': resp}
         except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+
+    @http.route(['/payos/confirm-payment'], type='json', auth='user', methods=['POST'], csrf=False)
+    def confirm_payment(self, **kwargs):
+        """
+        Client-side payment confirmation.
+        Called by frontend polling when PayOS payment status == PAID.
+        Verifies with PayOS API and credits balance to CURRENT USER.
+        Does NOT require a portfolio.transaction record to exist.
+        """
+        order_code = kwargs.get('orderCode')
+        original_amount = kwargs.get('originalAmount', 0)
+        if not order_code:
+            return {'status': 'error', 'message': 'missing orderCode'}
+
+        try:
+            # Idempotency: check if this orderCode was already processed
+            param_key = f'payos.processed.{order_code}'
+            already = request.env['ir.config_parameter'].sudo().get_param(param_key)
+            if already:
+                return {'status': 'ok', 'message': 'Already processed', 'already_credited': True}
+
+            # 1. Verify payment status via PayOS API
+            service = get_service_from_env(request.env)
+            resp = service.get_payment_link_info(order_code)
+
+            payment_data = resp.get('data', resp) if isinstance(resp, dict) else {}
+            if isinstance(payment_data, dict):
+                payment_status = payment_data.get('status', '')
+            else:
+                payment_status = ''
+
+            if payment_status not in ('PAID', 'paid'):
+                return {'status': 'error', 'message': f'Payment not confirmed. Status: {payment_status}'}
+
+            # 2. Determine credit amount
+            is_demo_mode = False
+            try:
+                payos_cfg = request.env['payos.config'].sudo().search(
+                    [('is_active', '=', True)], limit=1
+                )
+                if payos_cfg and payos_cfg.demo_mode:
+                    is_demo_mode = True
+            except Exception:
+                pass
+
+            paid_amount = 0
+            if isinstance(payment_data, dict):
+                paid_amount = payment_data.get('amount', 0) or payment_data.get('amountPaid', 0)
+
+            # Demo mode: use originalAmount from frontend (the full display amount)
+            # Normal mode: use paid_amount from PayOS API
+            if is_demo_mode and original_amount and original_amount > 0:
+                credit_amount = int(original_amount)
+            else:
+                credit_amount = int(paid_amount) if paid_amount else 0
+
+            if credit_amount <= 0:
+                return {'status': 'error', 'message': 'Invalid credit amount'}
+
+            # 3. Credit balance to CURRENT USER
+            current_user = request.env.user
+            balance = request.env['portfolio.account_balance'].sudo().search(
+                [('user_id', '=', current_user.id)], limit=1
+            )
+            if balance:
+                balance.write({'balance': balance.balance + credit_amount})
+            else:
+                request.env['portfolio.account_balance'].sudo().create({
+                    'user_id': current_user.id,
+                    'balance': credit_amount,
+                })
+
+            # Log balance history
+            try:
+                request.env['portfolio.balance_history'].sudo().create({
+                    'user_id': current_user.id,
+                    'transaction_type': 'deposit',
+                    'amount': credit_amount,
+                    'description': f'PayOS deposit - Order {order_code}',
+                })
+            except Exception:
+                pass
+
+            # 4. Also update transaction if it exists
+            transaction = request.env['portfolio.transaction'].sudo().search([
+                ('reference', '=', f'PAYOS-{order_code}')
+            ], limit=1)
+            if transaction and transaction.status != 'completed':
+                transaction.with_context(bypass_investment_update=True).write({
+                    'status': 'completed',
+                })
+
+            # Mark as processed (idempotency)
+            request.env['ir.config_parameter'].sudo().set_param(param_key, '1')
+
+            _logger.info(
+                'PayOS confirm-payment: Credited %s to user %s (uid=%s) for orderCode %s (demo=%s)',
+                credit_amount, current_user.name, current_user.id, order_code, is_demo_mode
+            )
+
+            return {
+                'status': 'ok',
+                'message': 'Payment confirmed and balance credited',
+                'credited_amount': credit_amount,
+            }
+
+        except Exception as e:
+            _logger.error('PayOS confirm-payment error: %s', str(e), exc_info=True)
             return {'status': 'error', 'message': str(e)}
 
     @http.route(['/payos/payment-requests/cancel'], type='json', auth='user', methods=['POST'], csrf=False)
@@ -254,24 +385,54 @@ class PayOSWebhookController(http.Controller):
             else:
                 order_code = int(time.time() * 1000)  # Millisecond timestamp
 
-            # Chuẩn bị dữ liệu cho PayOS
-            # PayOS yêu cầu description tối đa 25 ký tự
-            # Nếu description không có, tạo mặc định "Nap tien TK**** tai HDC"
+            # Build payment description (PayOS max 25 chars)
             if not description:
-                # Lấy 4 số cuối của order_code để tạo số tài khoản
-                order_code_str = str(order_code)
-                account_number = order_code_str[-4:] if len(order_code_str) >= 4 else '****'
-                payos_description = f'Nap tien TK{account_number} tai HDC'
+                # Use user's trading account number for clear identification
+                user_account = ''
+                try:
+                    if 'trading.config' in request.env:
+                        trading_cfg = request.env['trading.config'].sudo().search([
+                            ('user_id', '=', request.env.user.id),
+                            ('active', '=', True),
+                        ], limit=1)
+                        if trading_cfg and trading_cfg.account:
+                            user_account = trading_cfg.account.strip()
+                except Exception:
+                    pass
+
+                if user_account:
+                    # e.g. "Nap tien 0123456789"
+                    payos_description = f'Nap tien {user_account}'
+                else:
+                    # Fallback to user name (without accents for PayOS compatibility)
+                    user_name = request.env.user.name or 'User'
+                    payos_description = f'Nap tien {user_name}'
             else:
                 payos_description = description
-                
+
             if len(payos_description) > 25:
-                # Rút ngắn description xuống 25 ký tự
-                payos_description = payos_description[:22] + '...'
+                payos_description = payos_description[:25]
             
+            # Demo mode: divide amount for PayOS but keep original for display
+            payos_amount = int(amount)
+            is_demo = False
+            try:
+                payos_cfg = request.env['payos.config'].sudo().search(
+                    [('is_active', '=', True)], limit=1
+                )
+                if payos_cfg and payos_cfg.demo_mode and payos_cfg.demo_divisor > 0:
+                    is_demo = True
+                    payos_amount = max(1000, int(amount / payos_cfg.demo_divisor))
+                    _logger.info(
+                        'PayOS Demo Mode: original=%s, payos_amount=%s (divisor=%s)',
+                        int(amount), payos_amount, payos_cfg.demo_divisor
+                    )
+            except Exception:
+                pass
+
             payos_data = {
                 'orderCode': order_code,
-                'amount': int(amount),  # PayOS yêu cầu số nguyên (VND)
+                'amount': payos_amount,
                 'description': payos_description,
                 'returnUrl': return_url,
                 'cancelUrl': cancel_url,
@@ -375,25 +536,33 @@ class PayOSWebhookController(http.Controller):
                 result['qr_code'] = qr_code
                 result['data'] = {'qr_code': qr_code, 'checkout_url': checkout_url}
             
-            # Parse thông tin ngân hàng từ PayOS response
-            # Chỉ lấy dữ liệu từ PayOS API, không tạo mock data
+            # Bank info: prioritize real merchant bank from payos.config,
+            # fallback to PayOS API response (which returns virtual account)
             bank_info = None
-            if isinstance(resp, dict) and 'data' in resp and isinstance(resp['data'], dict):
+            try:
+                payos_cfg = request.env['payos.config'].sudo().search(
+                    [('is_active', '=', True)], limit=1
+                )
+                if payos_cfg and payos_cfg.merchant_account_number:
+                    bank_info = {
+                        'bank_name': payos_cfg.merchant_bank_name or '',
+                        'account_number': payos_cfg.merchant_account_number,
+                        'account_holder': payos_cfg.merchant_account_holder or '',
+                    }
+            except Exception:
+                pass
+
+            # Fallback to PayOS API response if merchant bank not configured
+            if not bank_info and isinstance(resp, dict) and 'data' in resp and isinstance(resp['data'], dict):
                 data = resp['data']
-                # Chỉ lấy nếu có đầy đủ thông tin từ PayOS
-                bank_name = data.get('bankName') or data.get('bank_name')
                 account_number = data.get('accountNumber') or data.get('account_number')
-                account_holder = data.get('accountHolder') or data.get('account_holder')
-                
-                # Chỉ tạo bank_info nếu có ít nhất account_number từ PayOS
                 if account_number:
                     bank_info = {
-                        'bank_name': bank_name,
+                        'bank_name': data.get('bankName') or data.get('bank_name') or '',
                         'account_number': account_number,
-                        'account_holder': account_holder
+                        'account_holder': data.get('accountHolder') or data.get('account_holder') or '',
                     }
-            
-            # Thêm thông tin ngân hàng vào response (chỉ nếu có từ PayOS)
+
             if bank_info:
                 result['bank_info'] = bank_info
                 result['data'] = result.get('data', {})

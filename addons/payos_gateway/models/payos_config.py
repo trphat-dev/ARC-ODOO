@@ -24,7 +24,26 @@ class PayOSConfig(models.Model):
     
     # Base URL
     base_url = fields.Char('Base URL', default='https://api-merchant.payos.vn')
-    
+
+    # Demo Mode (for thesis demo: display full amount but charge reduced amount)
+    demo_mode = fields.Boolean(
+        'Demo Mode',
+        default=False,
+        help='When enabled, the actual payment amount sent to PayOS is divided by the demo divisor. '
+             'Useful for thesis demos where you want to show large amounts but pay small amounts.'
+    )
+    demo_divisor = fields.Integer(
+        'Demo Divisor',
+        default=1000,
+        help='Divisor applied to the payment amount in demo mode. '
+             'Example: divisor=1000 means 3,000,000 VND displays but only 3,000 VND is charged.'
+    )
+
+    # Merchant Bank Account (overrides PayOS virtual account number)
+    merchant_bank_name = fields.Char('Bank Name')
+    merchant_account_number = fields.Char('Account Number')
+    merchant_account_holder = fields.Char('Account Holder')
+
     # Status
     is_active = fields.Boolean('Đang hoạt động', default=True)
     last_connection_date = fields.Datetime('Ngày kết nối lần cuối', readonly=True)

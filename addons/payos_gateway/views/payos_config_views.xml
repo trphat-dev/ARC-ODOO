@@ -1,129 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- ============================================================ -->
-    <!-- PayOS Configuration Form View - Singleton Style -->
-    <!-- ============================================================ -->
+    <!-- PayOS Configuration Form View -->
     <record id="view_payos_config_form" model="ir.ui.view">
         <field name="name">payos.config.form</field>
         <field name="model">payos.config</field>
         <field name="arch" type="xml">
-            <form string="Cấu hình PayOS">
+            <form string="PayOS Configuration">
                 <header>
-                    <button name="action_test_connection" string="🔌 Test Kết nối" type="object" class="btn-primary" invisible="not client_id or not api_key or not checksum_key"/>
+                    <button name="action_test_connection" string="Test Connection" type="object" class="btn-primary" invisible="not client_id or not api_key or not checksum_key"/>
                     <field name="is_active" widget="boolean_toggle"/>
                 </header>
                 <sheet>
-                    <!-- Status ribbon when inactive -->
-                    <widget name="web_ribbon" title="Không hoạt động" bg_color="text-bg-secondary" invisible="is_active"/>
-
-                    <!-- Title -->
+                    <widget name="web_ribbon" title="Inactive" bg_color="text-bg-secondary" invisible="is_active"/>
                     <div class="oe_title">
-                        <label for="name" string="Tên cấu hình"/>
-                        <h1>
-                            <field name="name" placeholder="VD: Production, Sandbox, ..."/>
-                        </h1>
+                        <h1><field name="name" placeholder="e.g. Production, Sandbox, ..."/></h1>
                     </div>
-
-                    <!-- Main Content -->
                     <group>
-                        <!-- Credentials -->
-                        <group string="🔐 Thông tin đăng nhập PayOS">
+                        <group string="PayOS Credentials">
                             <field name="client_id" placeholder="5edf2d5c-a8d9-4eb3-..."/>
                             <field name="api_key" password="True" placeholder="••••••••"/>
                             <field name="checksum_key" password="True" placeholder="••••••••"/>
                             <field name="base_url" placeholder="https://api-merchant.payos.vn"/>
                         </group>
-
-                        <!-- Connection Status -->
-                        <group string="📊 Trạng thái kết nối">
+                        <group string="Merchant Bank Account">
+                            <field name="merchant_bank_name" placeholder="e.g. Vietcombank"/>
+                            <field name="merchant_account_number" placeholder="Real bank account number"/>
+                            <field name="merchant_account_holder" placeholder="Account holder name"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Demo Mode (Thesis)">
+                            <field name="demo_mode" widget="boolean_toggle"/>
+                            <field name="demo_divisor" invisible="not demo_mode"/>
+                            <div class="text-muted" invisible="not demo_mode">
+                                <i class="fa fa-info-circle"/> Example: Amount 3,000,000 ÷ 1000 = 3,000 VND charged via PayOS
+                            </div>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Connection Status">
                             <field name="last_connection_status" widget="badge" decoration-success="last_connection_status == 'success'" decoration-danger="last_connection_status == 'failed'" decoration-muted="last_connection_status == 'not_tested'"/>
                             <field name="last_connection_date" widget="datetime"/>
                             <field name="connection_message" invisible="not connection_message"/>
                         </group>
-                    </group>
-
-                    <!-- Help Section -->
-                    <group string="📖 Hướng dẫn" invisible="client_id and api_key and checksum_key">
-                        <div class="alert alert-info" role="alert">
-                            <h4 class="alert-heading">Cách lấy thông tin đăng nhập PayOS</h4>
-                            <ol>
-                                <li>Đăng nhập vào <a href="https://my.payos.vn" target="_blank">PayOS Dashboard</a>
-                                </li>
-                                <li>Vào mục <strong>Quản lý kênh thanh toán</strong>
-                                </li>
-                                <li>Sao chép <strong>Client ID</strong>,                                    <strong>API Key</strong> và <strong>Checksum Key</strong>
-                                </li>
-                                <li>Dán vào các trường tương ứng ở trên</li>
-                                <li>Nhấn <strong>Test Kết nối</strong> để kiểm tra</li>
-                            </ol>
-                        </div>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <!-- ============================================================ -->
     <!-- PayOS Configuration List View -->
-    <!-- ============================================================ -->
     <record id="view_payos_config_tree" model="ir.ui.view">
         <field name="name">payos.config.tree</field>
         <field name="model">payos.config</field>
         <field name="arch" type="xml">
-            <list string="Danh sách cấu hình PayOS" decoration-success="is_active and last_connection_status == 'success'" decoration-muted="not is_active" decoration-danger="last_connection_status == 'failed'">
-                <field name="name" string="Tên cấu hình"/>
-                <field name="is_active" widget="boolean_toggle" string="Hoạt động"/>
-                <field name="last_connection_status" string="Trạng thái" widget="badge" decoration-success="last_connection_status == 'success'" decoration-danger="last_connection_status == 'failed'" decoration-muted="last_connection_status == 'not_tested'"/>
-                <field name="last_connection_date" string="Lần test cuối" widget="datetime"/>
+            <list string="PayOS Configurations" decoration-success="is_active and last_connection_status == 'success'" decoration-muted="not is_active" decoration-danger="last_connection_status == 'failed'">
+                <field name="name" string="Name"/>
+                <field name="client_id" string="Client ID"/>
+                <field name="merchant_account_number" string="Account Number"/>
+                <field name="merchant_bank_name" string="Bank"/>
+                <field name="is_active" widget="boolean_toggle" string="Active"/>
+                <field name="demo_mode" widget="boolean_toggle" string="Demo" optional="show"/>
+                <field name="last_connection_status" string="Status" widget="badge" decoration-success="last_connection_status == 'success'" decoration-danger="last_connection_status == 'failed'" decoration-muted="last_connection_status == 'not_tested'"/>
                 <button name="action_test_connection" string="Test" type="object" icon="fa-plug" class="btn-link"/>
             </list>
         </field>
     </record>
 
-    <!-- ============================================================ -->
-    <!-- PayOS Configuration Search View -->
-    <!-- ============================================================ -->
-    <record id="view_payos_config_search" model="ir.ui.view">
-        <field name="name">payos.config.search</field>
-        <field name="model">payos.config</field>
-        <field name="arch" type="xml">
-            <search string="Tìm cấu hình PayOS">
-                <field name="name"/>
-                <filter string="Đang hoạt động" name="active" domain="[('is_active', '=', True)]"/>
-                <filter string="Kết nối thành công" name="success" domain="[('last_connection_status', '=', 'success')]"/>
-            </search>
-        </field>
-    </record>
-
-    <!-- ============================================================ -->
-    <!-- PayOS Configuration Action - Singleton Style -->
-    <!-- ============================================================ -->
+    <!-- Action: open list first, then form on click -->
     <record id="action_payos_config" model="ir.actions.act_window">
-        <field name="name">Cấu hình PayOS</field>
-        <field name="res_model">payos.config</field>
-        <field name="view_mode">form</field>
-        <field name="view_id" ref="view_payos_config_form"/>
-        <field name="context">{'form_view_initial_mode': 'edit'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Tạo cấu hình PayOS
-            </p>
-        </field>
-    </record>
-
-    <!-- Action for list view -->
-    <record id="action_payos_config_list" model="ir.actions.act_window">
-        <field name="name">Danh sách cấu hình PayOS</field>
+        <field name="name">PayOS Configuration</field>
         <field name="res_model">payos.config</field>
         <field name="view_mode">list,form</field>
-        <field name="search_view_id" ref="view_payos_config_search"/>
+        <field name="view_id" ref="view_payos_config_tree"/>
         <field name="context">{'search_default_active': 1}</field>
     </record>
 
-    <!-- ============================================================ -->
-    <!-- Menu Items -->
-    <!-- ============================================================ -->
-    <menuitem id="menu_payos_config" name="Cấu hình" parent="menu_payos_settings" action="action_payos_config" groups="base.group_system" sequence="20"/>
-
-    <menuitem id="menu_payos_config_list" name="Danh sách cấu hình" parent="menu_payos_settings" action="action_payos_config_list" groups="base.group_system" sequence="30"/>
+    <!-- Single top-level menu -->
+    <menuitem id="menu_payos_root" name="PayOS" action="action_payos_config" groups="base.group_system" sequence="50"/>
 </odoo>
