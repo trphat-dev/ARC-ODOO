@@ -303,20 +303,60 @@ class NormalOrderController(http.Controller):
                 f"Type={transaction_type}, Units={units}, Price={price}"
             )
             
+            # Auto-send to exchange immediately (skip manual "Send to Exchange" step)
+            exchange_msg = ''
+            exchange_success = False
+            try:
+                trading_order, error_msg = self._create_trading_order(transaction)
+                if trading_order:
+                    trading_order.action_submit_order()
+                    
+                    new_status = constants.EXCHANGE_STATUS_SENT
+                    if trading_order.state == 'filled':
+                        new_status = constants.EXCHANGE_STATUS_FILLED
+                    elif trading_order.state == 'partially_filled':
+                        new_status = constants.EXCHANGE_STATUS_PARTIAL
+                    elif trading_order.state == 'rejected':
+                        new_status = constants.EXCHANGE_STATUS_REJECTED
+                    
+                    transaction.write({
+                        'exchange_status': new_status,
+                        'exchange_order_id': trading_order.name,
+                        'exchange_sent_at': fields.Datetime.now(),
+                    })
+                    exchange_success = True
+                    exchange_msg = _('Lệnh đã được gửi lên sàn. Mã lệnh sàn: %s') % trading_order.name
+                    _logger.info(f"Auto-sent order {transaction.id} to exchange: {trading_order.name}")
+                    
+                    # Send success notification
+                    self._send_order_notification(
+                        transaction,
+                        'order_sent_success',
+                        str(exchange_msg),
+                        success=True
+                    )
+                else:
+                    exchange_msg = error_msg or _('Không thể gửi lệnh lên sàn')
+                    _logger.warning(f"Auto-send failed for order {transaction.id}: {exchange_msg}")
+            except Exception as ex:
+                exchange_msg = str(ex)
+                _logger.warning(f"Auto-send exception for order {transaction.id}: {ex}")
+            
             return {
                 'success': True,
                 'order_id': transaction.id,
                 'reference': transaction.reference,
-                'message': 'Đặt lệnh thành công! Lệnh đang chờ gửi lên sàn.'
+                'exchange_success': exchange_success,
+                'message': str(exchange_msg) if exchange_success else _('Đặt lệnh thành công! %s') % str(exchange_msg),
             }
             
         except ValidationError as e:
             _logger.warning(f"Validation error creating normal order: {e}")
             _logger.error(f"Error creating normal order: {e}", exc_info=True)
-            return {'success': False, 'message': 'Lỗi hệ thống khi tạo lệnh.'}
+            return {'success': False, 'message': _('Lỗi hệ thống khi tạo lệnh.')}
         except Exception as e:
             _logger.error(f"Unexpected error: {e}", exc_info=True)
-            return {'success': False, 'message': 'Lỗi hệ thống.'}
+            return {'success': False, 'message': _('Lỗi hệ thống.')}
 
     # ==========================================================================
     # LIST NORMAL ORDERS
@@ -944,9 +984,6 @@ class NormalOrderController(http.Controller):
                 ], limit=1)
                 
                 if trading_account:
-                    # Sync balance first if possible (optional, maybe slow)
-                    # trading_account.action_sync_balance() 
-                    
                     # Get latest balance record
                     balance = request.env['trading.account.balance'].sudo().search([
                         ('account_id', '=', trading_account.id)
@@ -957,10 +994,25 @@ class NormalOrderController(http.Controller):
             except Exception as e:
                 _logger.warning(f"Could not get purchasing power: {e}")
             
+            # 3. Get Internal System Balance
+            internal_balance = 0.0
+            try:
+                account_bal = request.env['portfolio.account_balance'].sudo().search([
+                    ('user_id', '=', current_user.id)
+                ], limit=1)
+                if account_bal:
+                    internal_balance = account_bal.available_balance or 0.0
+            except Exception as e:
+                _logger.warning(f"Could not get internal balance: {e}")
+            
+            total_buying_power = purchasing_power + internal_balance
+            
             return {
                 'success': True,
                 'funds': fund_list,
                 'purchasing_power': purchasing_power,
+                'internal_balance': internal_balance,
+                'total_buying_power': total_buying_power,
                 'account_approved': account_approved,
                 'has_trading_account': has_trading_account,
                 'eligible': eligible,

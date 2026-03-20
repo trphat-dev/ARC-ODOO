@@ -65,43 +65,43 @@ class NavDailyInventory(models.Model):
         digits=(16, 2)
     )
     
-    # Closing values - computed realtime without store
+    # Closing values - stored so that search/filter and previous-day lookup work
     closing_ccq = fields.Float(
         string=_('Closing CCQ'), 
         compute='_compute_closing_ccq', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     closing_avg_price = fields.Float(
         string=_('Closing Average Price'), 
         compute='_compute_closing_avg_price', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     closing_value = fields.Float(
         string=_('Closing Value'), 
         compute='_compute_closing_value', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     
-    # Change tracking fields - computed realtime
+    # Change tracking fields - stored to persist alongside closing values
     ccq_change = fields.Float(
         string=_('CCQ Change'), 
         compute='_compute_changes', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     price_change = fields.Float(
         string=_('Price Change'), 
         compute='_compute_changes', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     value_change = fields.Float(
         string=_('Value Change'), 
         compute='_compute_changes', 
-        store=False, 
+        store=True, 
         digits=(16, 2)
     )
     
@@ -154,6 +154,19 @@ class NavDailyInventory(models.Model):
             record.price_change = (record.closing_avg_price or 0.0) - (record.opening_avg_price or 0.0)
             record.value_change = (record.closing_value or 0.0) - (record.opening_value or 0.0)
     
+    def _get_market_maker_user_ids(self):
+        """Get user IDs that are market makers to filter inventory transactions."""
+        try:
+            # Query user.permission.management where is_market_maker is a stored field
+            permissions = self.env['user.permission.management'].sudo().search([
+                ('is_market_maker', '=', True),
+                ('user_id', '!=', False),
+            ])
+            return permissions.mapped('user_id').ids if permissions else []
+        except Exception as e:
+            _logger.warning(f"Error fetching market maker user IDs: {e}")
+            return []
+
     @api.depends('fund_id', 'inventory_date')
     def _compute_transaction_details(self):
         for record in self:
@@ -162,14 +175,18 @@ class NavDailyInventory(models.Model):
                 continue
             
             try:
-                # Get completed NEGOTIATED transactions for the fund on this date
-                transactions = self.env['portfolio.transaction'].search([
+                # Get completed NEGOTIATED transactions from market makers only
+                mm_ids = record._get_market_maker_user_ids()
+                tx_domain = [
                     ('fund_id', '=', record.fund_id.id),
                     ('status', '=', 'completed'),
                     ('order_mode', '=', 'negotiated'),
                     ('created_at', '>=', f"{record.inventory_date} 00:00:00"),
                     ('created_at', '<=', f"{record.inventory_date} 23:59:59")
-                ])
+                ]
+                if mm_ids:
+                    tx_domain.append(('user_id', 'in', mm_ids))
+                transactions = self.env['portfolio.transaction'].search(tx_domain)
                 
                 _logger.info(f"Hiển thị giao dịch cho fund {record.fund_id.name} ngày {record.inventory_date}: {len(transactions)} giao dịch")
             
@@ -303,14 +320,18 @@ class NavDailyInventory(models.Model):
             if not self.fund_id or not self.inventory_date:
                 return self.opening_ccq or 0.0
             
-            # Get completed NEGOTIATED transactions for the fund on this date
-            transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions from market makers only
+            mm_ids = self._get_market_maker_user_ids()
+            tx_domain = [
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
                 ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
-            ], order='create_date')
+            ]
+            if mm_ids:
+                tx_domain.append(('user_id', 'in', mm_ids))
+            transactions = self.env['portfolio.transaction'].search(tx_domain, order='create_date')
             
             _logger.debug(f"Tính CCQ cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch thỏa thuận")
         
@@ -359,14 +380,18 @@ class NavDailyInventory(models.Model):
             if not self.fund_id or not self.inventory_date:
                 return self.opening_avg_price or 0.0
             
-            # Get completed NEGOTIATED transactions for the fund on this date
-            transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions from market makers only
+            mm_ids = self._get_market_maker_user_ids()
+            tx_domain = [
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
                 ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
-            ], order='create_date')
+            ]
+            if mm_ids:
+                tx_domain.append(('user_id', 'in', mm_ids))
+            transactions = self.env['portfolio.transaction'].search(tx_domain, order='create_date')
             
             _logger.debug(f"Tính giá TB cho fund {self.fund_id.name} ngày {self.inventory_date}: {len(transactions)} giao dịch thỏa thuận")
             
@@ -437,14 +462,18 @@ class NavDailyInventory(models.Model):
             return "Không có dữ liệu để tính toán"
         
         try:
-            # Get completed NEGOTIATED transactions for the fund on this date
-            transactions = self.env['portfolio.transaction'].search([
+            # Get completed NEGOTIATED transactions from market makers only
+            mm_ids = self._get_market_maker_user_ids()
+            tx_domain = [
                 ('fund_id', '=', self.fund_id.id),
                 ('status', '=', 'completed'),
                 ('order_mode', '=', 'negotiated'),
                 ('created_at', '>=', f"{self.inventory_date} 00:00:00"),
                 ('created_at', '<=', f"{self.inventory_date} 23:59:59")
-            ], order='create_date')
+            ]
+            if mm_ids:
+                tx_domain.append(('user_id', 'in', mm_ids))
+            transactions = self.env['portfolio.transaction'].search(tx_domain, order='create_date')
             
             details = []
             details.append(f"=== CHI TIẾT TÍNH TOÁN TỒN KHO ===")
@@ -883,111 +912,83 @@ class NavDailyInventory(models.Model):
         return result
     
     def _auto_calculate_inventory(self):
-        """Tự động tính toán tồn kho"""
+        """Directly calculate and persist closing inventory values."""
         for record in self:
             try:
-                # Kiểm tra flag để tránh vòng lặp
                 if hasattr(record, '_calculating_inventory') and record._calculating_inventory:
                     return
-                
-                # Set flag để tránh vòng lặp
                 record._calculating_inventory = True
-                
-                # Force refresh các trường computed để đảm bảo tính toán mới nhất
-                record.invalidate_cache(['closing_ccq', 'closing_avg_price', 'closing_value', 'ccq_change', 'price_change', 'value_change'])
-                
-                # Kiểm tra dữ liệu đầu vào
+
+                # Check opening data
                 if not record.opening_ccq or not record.opening_avg_price:
                     try:
                         record._onchange_load_previous_defaults()
                     except Exception as e:
-                        _logger.warning(f"Lỗi khi load previous defaults: {e}")
-                
-                # Tính toán các giá trị theo thứ tự đúng với logging chi tiết
-                try:
-                    # 1. Tính CCQ cuối ngày trước
-                    record._compute_closing_ccq()
-                    _logger.info(f"Đã tính CCQ cuối ngày cho {record.fund_id.name}: {record.closing_ccq}")
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính closing CCQ: {e}")
-                
-                try:
-                    # 2. Tính giá trung bình cuối ngày (phụ thuộc vào CCQ)
-                    record._compute_closing_avg_price()
-                    _logger.info(f"Đã tính giá TB cuối ngày cho {record.fund_id.name}: {record.closing_avg_price}")
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính closing avg price: {e}")
-                
-                try:
-                    # 3. Tính giá trị cuối ngày (phụ thuộc vào CCQ và giá TB)
-                    record._compute_closing_value()
-                    _logger.info(f"Đã tính giá trị cuối ngày cho {record.fund_id.name}: {record.closing_value}")
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính closing value: {e}")
-                
-                try:
-                    # 4. Tính các thay đổi (phụ thuộc vào tất cả giá trị trên)
-                    record._compute_changes()
-                    _logger.info(f"Đã tính thay đổi cho {record.fund_id.name}: CCQ={record.ccq_change}, Giá={record.price_change}, Giá trị={record.value_change}")
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính changes: {e}")
-                
-                try:
-                    # 5. Tính chi tiết giao dịch (phụ thuộc vào dữ liệu giao dịch)
-                    record._compute_transaction_details()
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính transaction details: {e}")
-                
-                try:
-                    # 6. Tính chi tiết tính toán (phụ thuộc vào tất cả giá trị)
-                    record._compute_calculation_details()
-                except Exception as e:
-                    _logger.warning(f"Lỗi tính calculation details: {e}")
-                
-                # Clear flag
+                        _logger.warning(f"Error loading previous defaults: {e}")
+
+                # Directly calculate values
+                closing_ccq = record._calculate_daily_ccq()
+                closing_avg_price = record._calculate_weighted_average_price()
+                closing_value = closing_ccq * closing_avg_price if closing_ccq and closing_avg_price else 0.0
+
+                # Calculate changes
+                ccq_change = closing_ccq - (record.opening_ccq or 0.0)
+                price_change = closing_avg_price - (record.opening_avg_price or 0.0)
+                opening_value = (record.opening_ccq or 0.0) * (record.opening_avg_price or 0.0)
+                value_change = closing_value - opening_value
+
+                # Write directly via SQL to bypass compute mechanism
+                record.env.cr.execute("""
+                    UPDATE nav_daily_inventory
+                    SET closing_ccq = %s,
+                        closing_avg_price = %s,
+                        closing_value = %s,
+                        ccq_change = %s,
+                        price_change = %s,
+                        value_change = %s
+                    WHERE id = %s
+                """, (
+                    closing_ccq, closing_avg_price, closing_value,
+                    ccq_change, price_change, value_change,
+                    record.id
+                ))
+
+                # Invalidate cache so ORM sees the new values
+                record.invalidate_recordset([
+                    'closing_ccq', 'closing_avg_price', 'closing_value',
+                    'ccq_change', 'price_change', 'value_change'
+                ])
+
+                _logger.info(
+                    f"Inventory computed for {record.fund_id.name}: "
+                    f"CCQ={closing_ccq}, AvgPrice={closing_avg_price}, "
+                    f"Value={closing_value}"
+                )
+
                 record._calculating_inventory = False
-                
-                # Log kết quả cuối cùng
-                _logger.info(f"Hoàn thành tính toán tồn kho cho {record.fund_id.name}: CCQ={record.closing_ccq}, Giá TB={record.closing_avg_price}, Giá trị={record.closing_value}")
-                
-                # Force refresh UI để hiển thị dữ liệu mới nhất
-                record.refresh()
-                    
+
             except Exception as e:
-                _logger.error(f"Lỗi tự động tính toán tồn kho: {e}")
-                # Clear flag trong trường hợp lỗi
+                _logger.error(f"Error computing inventory: {e}")
                 if hasattr(record, '_calculating_inventory'):
                     record._calculating_inventory = False
     
     def force_refresh_calculations(self):
-        """Force refresh tất cả các tính toán để đảm bảo dữ liệu mới nhất"""
+        """Force refresh all stored computed fields via direct SQL."""
         for record in self:
             try:
-                _logger.info(f"Force refresh calculations cho {record.fund_id.name}")
-                # Invalidate cache tất cả trường computed
-                record.invalidate_cache(['closing_ccq', 'closing_avg_price', 'closing_value', 'ccq_change', 'price_change', 'value_change', 'transaction_details', 'calculation_details'])
-                # Tính toán lại
+                _logger.info(f"Force refresh calculations for {record.fund_id.name}")
                 record._auto_calculate_inventory()
-                # Refresh record
-                record.refresh()
             except Exception as e:
-                _logger.error(f"Lỗi force refresh calculations: {e}")
+                _logger.error(f"Error in force_refresh_calculations: {e}")
     
     def force_recompute_all_fields(self):
-        """Force recompute tất cả các trường computed để đảm bảo dữ liệu mới nhất"""
+        """Force recompute all stored computed fields via direct SQL."""
         for record in self:
             try:
-                _logger.info(f"Force recompute all fields cho {record.fund_id.name}")
-                # Force recompute tất cả trường computed
-                record._compute_closing_ccq()
-                record._compute_closing_avg_price()
-                record._compute_closing_value()
-                record._compute_changes()
-                record._compute_transaction_details()
-                record._compute_calculation_details()
-                _logger.info(f"Hoàn thành recompute: CCQ={record.closing_ccq}, Giá TB={record.closing_avg_price}, Giá trị={record.closing_value}")
+                _logger.info(f"Force recompute all fields for {record.fund_id.name}")
+                record._auto_calculate_inventory()
             except Exception as e:
-                _logger.error(f"Lỗi force recompute all fields: {e}")
+                _logger.error(f"Error in force_recompute_all_fields: {e}")
     
     @api.model
     def create_daily_inventory_for_fund(self, fund_id, inventory_date):

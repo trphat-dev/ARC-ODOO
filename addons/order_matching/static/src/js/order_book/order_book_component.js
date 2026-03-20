@@ -32,7 +32,7 @@ export class OrderBookComponent extends Component {
                             <a href="#" class="nav-link active">Khoản đầu tư chờ xử lý</a>
                             <a href="/completed-orders" class="nav-link">Khoản đầu tư đã khớp</a>
                             <a href="/negotiated-orders" class="nav-link">Khoản đầu tư khớp theo thỏa thuận</a>
-                            <a href="/normal-orders" class="nav-link">Lệnh đặt thường</a>
+
                 </div>
                         <t t-if="state.isMarketMaker">
                             <div class="mt-3">

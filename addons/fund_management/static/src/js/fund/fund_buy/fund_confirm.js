@@ -403,11 +403,62 @@ function setupConfirmPageEvents() {
         // NORMAL ORDER: DIRECT EXECUTION (Skip Signature, Check PP/Payment)
         await startNormalOrderProcess();
       } else {
-        // NEGOTIATED ORDER: SIGNATURE MODAL
-        // Hiển thị modal ký hợp đồng trước khi tạo lệnh
+        // NEGOTIATED ORDER: CHECK PURCHASING POWER FIRST, THEN SIGNATURE + OTP
+        const orderAmount = Number(sessionStorage.getItem('selectedTotalAmount') || sessionStorage.getItem('selectedAmount') || 0);
+
+        if (orderAmount > 0) {
+          try {
+            // Show loading
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: "Đang kiểm tra sức mua...",
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => Swal.showLoading()
+              });
+            }
+
+            // Fetch buying power
+            const ppRes = await fetch('/api/fund/normal-order/market-info', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
+            });
+            const ppData = await ppRes.json();
+            const ppResult = ppData.result || ppData;
+            const totalPP = Number(ppResult.total_buying_power || ppResult.purchasing_power || 0);
+
+            if (typeof Swal !== 'undefined') Swal.close();
+
+            if (totalPP < orderAmount) {
+              // Insufficient PP — show PayOS payment first
+              await createPayOSPayment();
+
+              const paySection = document.getElementById('payos-payment-info');
+              if (paySection) {
+                paySection.scrollIntoView({ behavior: 'smooth' });
+                paySection.style.border = '2px solid #F26522';
+                setTimeout(() => paySection.style.border = '', 3000);
+              }
+
+              await Swal.fire({
+                title: "Sức mua không đủ",
+                html: `Cần: <b>${orderAmount.toLocaleString('vi-VN')}đ</b><br>Sức mua hiện tại: <b>${totalPP.toLocaleString('vi-VN')}đ</b><br><br>Vui lòng nạp tiền qua PayOS rồi thử lại.`,
+                icon: "warning",
+                confirmButtonText: "Đã hiểu",
+                confirmButtonColor: "#F26522"
+              });
+              return; // Stop — do NOT show contract/OTP
+            }
+          } catch (ppErr) {
+            console.warn('PP pre-check failed, proceeding anyway:', ppErr);
+            if (typeof Swal !== 'undefined') Swal.close();
+          }
+        }
+
+        // PP sufficient — show signature modal
         const signatureModalElement = document.getElementById('signatureModal');
         if (signatureModalElement) {
-          // Đóng PayOS trước (nếu có)
           try {
             let signatureModal = bootstrap.Modal.getInstance(signatureModalElement);
             if (!signatureModal) {
@@ -419,12 +470,10 @@ function setupConfirmPageEvents() {
             }
             signatureModal.show();
           } catch (error) {
-            console.error('Lỗi hiển thị modal ký:', error);
-            // Fallback: tạo lệnh trực tiếp
+            console.error('Error showing signature modal:', error);
             await createBuyOrderFromConfirm();
           }
         } else {
-          // Fallback: tạo lệnh trực tiếp nếu không có modal
           await createBuyOrderFromConfirm();
         }
       }

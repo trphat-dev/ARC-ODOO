@@ -172,6 +172,10 @@ async function renderResultPageData() {
       setEl('result-sell-date', data.nav_sell_date || '--');
       // Fix: Recalculate maturity value to ensure mround compliance
       const derivedMaturityValue = calculateMaturityValue(data);
+      const maturityDisplay = derivedMaturityValue > 0
+        ? formatVND(derivedMaturityValue)
+        : (data.nav_sell_value1 ? formatVND(data.nav_sell_value1) : '--');
+      setEl('result-maturity-value', maturityDisplay);
     }
 
   } catch (error) {
