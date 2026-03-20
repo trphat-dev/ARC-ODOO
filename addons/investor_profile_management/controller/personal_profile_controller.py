@@ -53,7 +53,7 @@ class PersonalProfileController(http.Controller):
                 })
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/get_currencies', type='http', auth='user', methods=['GET'], csrf=False)
     def get_currencies(self, **kwargs):
@@ -69,7 +69,7 @@ class PersonalProfileController(http.Controller):
                 })
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/get_status_info', type='http', auth='user', methods=['GET'], csrf=False)
     def get_status_info(self, **kwargs):
@@ -101,7 +101,7 @@ class PersonalProfileController(http.Controller):
             
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/data_personal_profile', type='http', auth='user', methods=['GET'], csrf=False)
     def get_personal_profile_data(self, **kwargs):
@@ -161,7 +161,7 @@ class PersonalProfileController(http.Controller):
             
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/save_personal_profile', type='http', auth='user', methods=['POST'], csrf=False)
     def save_personal_profile_data(self, **kwargs):
@@ -218,9 +218,9 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_front_{uname}_{ts}.jpg"
                         create_dict['id_front_filename'] = filename
-                        print(f"✅ Front CCCD image binary loaded for new profile ({len(front_binary)} bytes)")
+                        # print(f"✅ Front CCCD image binary loaded for new profile ({len(front_binary)} bytes)")
                     except Exception as e:
-                        print(f"❌ Error processing front CCCD image for new profile: {e}")
+                        pass  # Front CCCD processing error
                 
                 if 'backPreviewBase64' in data and data['backPreviewBase64']:
                     try:
@@ -236,9 +236,9 @@ class PersonalProfileController(http.Controller):
                         ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                         filename = f"cccd_back_{uname}_{ts}.jpg"
                         create_dict['id_back_filename'] = filename
-                        print(f"✅ Back CCCD image binary loaded for new profile ({len(back_binary)} bytes)")
+                        # print(f"✅ Back CCCD image binary loaded for new profile ({len(back_binary)} bytes)")
                     except Exception as e:
-                        print(f"❌ Error processing back CCCD image for new profile: {e}")
+                        pass  # Back CCCD processing error
                 
                 profile = request.env['investor.profile'].sudo().create(create_dict)
             # Cập nhật dữ liệu
@@ -274,9 +274,9 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_front_{uname}_{ts}.jpg"
                     update_data['id_front_filename'] = filename
-                    print(f"✅ Front CCCD image binary updated to database ({len(front_binary)} bytes)")
+                    # print(f"✅ Front CCCD image binary updated to database ({len(front_binary)} bytes)")
                 except Exception as e:
-                    print(f"❌ Error processing front CCCD image: {e}")
+                    pass  # Front CCCD processing error
             
             if 'backPreviewBase64' in data and data['backPreviewBase64']:
                 try:
@@ -295,9 +295,9 @@ class PersonalProfileController(http.Controller):
                     ts = datetime.utcnow().strftime('%Y%m%d%H%M%S')
                     filename = f"cccd_back_{uname}_{ts}.jpg"
                     update_data['id_back_filename'] = filename
-                    print(f"✅ Back CCCD image binary updated to database ({len(back_binary)} bytes)")
+                    # print(f"✅ Back CCCD image binary updated to database ({len(back_binary)} bytes)")
                 except Exception as e:
-                    print(f"❌ Error processing back CCCD image: {e}")
+                    pass  # Back CCCD processing error
             
             profile.sudo().write(update_data)
             # Đồng bộ lên contact/customer (res.partner)
@@ -311,7 +311,7 @@ class PersonalProfileController(http.Controller):
             return Response(json.dumps({'success': True, 'message': 'Profile updated successfully'}), 
                           content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/upload_id_image', type='http', auth='user', methods=['POST'], csrf=False)
     def upload_id_image(self, **kwargs):
@@ -342,7 +342,7 @@ class PersonalProfileController(http.Controller):
 
             return Response(json.dumps({'success': True}), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/data_bank_info', type='http', auth='user', methods=['GET'], csrf=False)
     def get_bank_info_data(self, **kwargs):
@@ -400,7 +400,7 @@ class PersonalProfileController(http.Controller):
 
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/save_bank_info', type='http', auth='user', methods=['POST'], csrf=False)
     def save_bank_info_data(self, **kwargs):
@@ -455,7 +455,7 @@ class PersonalProfileController(http.Controller):
             return Response(json.dumps({'success': True, 'message': 'Bank info updated successfully'}),
                           content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/data_address_info', type='http', auth='user', methods=['GET'], csrf=False)
     def get_address_info_data(self, **kwargs):
@@ -505,7 +505,7 @@ class PersonalProfileController(http.Controller):
 
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/save_address_info', type='http', auth='user', methods=['POST'], csrf=False)
     def save_address_info_data(self, **kwargs):
@@ -561,7 +561,7 @@ class PersonalProfileController(http.Controller):
             return Response(json.dumps({'success': True, 'message': 'Address information updated successfully'}), 
                           content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/data_verification', type='http', auth='user', methods=['GET'], csrf=False)
     def get_verification_data(self, **kwargs):
@@ -594,7 +594,7 @@ class PersonalProfileController(http.Controller):
 
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/api/verification/complete', type='http', auth='user', methods=['POST'], csrf=False)
     def complete_verification_process(self, **kwargs):
@@ -633,7 +633,7 @@ class PersonalProfileController(http.Controller):
             }), content_type='application/json')
             
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500)
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500)
 
     @http.route('/save_all_profile_data', type='http', auth='user', methods=['POST'], csrf=False)
     def save_all_profile_data(self, **kwargs):
@@ -689,16 +689,16 @@ class PersonalProfileController(http.Controller):
                 try:
                     personal_update_data['id_front'] = base64.b64decode(personal_data['id_front'].split(',')[-1])
                     personal_update_data['id_front_filename'] = 'cccd_front.jpg'
-                    print(f"✅ Front CCCD image saved to database ({len(personal_update_data['id_front'])} bytes)")
+                    # print(f"✅ Front CCCD image saved to database ({len(personal_update_data['id_front'])} bytes)")
                 except Exception as e:
-                    print(f"❌ Error processing front CCCD image: {e}")
+                    pass  # Front CCCD processing error
             if 'id_back' in personal_data and personal_data['id_back']:
                 try:
                     personal_update_data['id_back'] = base64.b64decode(personal_data['id_back'].split(',')[-1])
                     personal_update_data['id_back_filename'] = 'cccd_back.jpg'
-                    print(f"✅ Back CCCD image saved to database ({len(personal_update_data['id_back'])} bytes)")
+                    # print(f"✅ Back CCCD image saved to database ({len(personal_update_data['id_back'])} bytes)")
                 except Exception as e:
-                    print(f"❌ Error processing back CCCD image: {e}")
+                    pass  # Back CCCD processing error
             # Video eKYC không được lưu vào profile vì field không tồn tại
             # Video chỉ dùng cho quá trình verification
             profile.sudo().write(personal_update_data)
@@ -775,7 +775,7 @@ class PersonalProfileController(http.Controller):
             return Response(json.dumps({'success': True, 'message': 'All profile data saved successfully'}), 
                           content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500) 
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500) 
 
     @http.route('/get_states', type='http', auth='user', methods=['GET'], csrf=False)
     def get_states(self, **kwargs):
@@ -788,4 +788,4 @@ class PersonalProfileController(http.Controller):
             data = [{'id': s.id, 'name': s.name} for s in states]
             return Response(json.dumps(data), content_type='application/json')
         except Exception as e:
-            return Response(json.dumps({'error': str(e)}), content_type='application/json', status=500) 
+            return Response(json.dumps({'error': 'Internal server error'}), content_type='application/json', status=500) 

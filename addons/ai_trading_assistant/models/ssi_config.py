@@ -60,7 +60,7 @@ class SSIConfig(models.TransientModel):
         except exceptions.UserError:
             raise
         except Exception as e:
-            raise exceptions.UserError(f'Lỗi kết nối: {str(e)}')
+            raise exceptions.UserError(_('An internal error occurred.'))
 
     def action_test_llm_connection(self):
         api_key = self.env['ir.config_parameter'].sudo().get_param('ai_trading.llm_api_key')
@@ -99,4 +99,4 @@ class SSIConfig(models.TransientModel):
         except exceptions.UserError:
             raise
         except Exception as e:
-            raise exceptions.UserError(f'Lỗi kết nối tới hệ thống OpenRouter: {str(e)}')
+            raise exceptions.UserError(_('An internal error occurred.'))

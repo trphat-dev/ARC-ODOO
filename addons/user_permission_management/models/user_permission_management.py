@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import models, fields, api
+from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 import logging
 
@@ -64,19 +64,19 @@ class UserPermissionManagement(models.Model):
         if vals.get('login'):
             existing = self.search([('login', '=', vals['login'])], limit=1)
             if existing:
-                raise ValidationError(f"Tên đăng nhập '{vals['login']}' đã tồn tại!")
+                raise ValidationError(_("Login '%(login)s' already exists!") % {'login': vals['login']})
         
         # Kiểm tra email đã tồn tại chưa
         if vals.get('email'):
             existing = self.search([('email', '=', vals['email'])], limit=1)
             if existing:
-                raise ValidationError(f"Email '{vals['email']}' đã tồn tại!")
+                raise ValidationError(_("Email '%(email)s' already exists!") % {'email': vals['email']})
         
         # Validate required fields
         if not vals.get('login'):
-            raise ValidationError("Tên đăng nhập là bắt buộc!")
+            raise ValidationError(_("Login is required!"))
         if not vals.get('email'):
-            raise ValidationError("Email là bắt buộc!")
+            raise ValidationError(_("Email is required!"))
         # Ensure name is provided to avoid NOT NULL constraint issue.
         if not vals.get('name'):
             vals['name'] = vals.get('login') or vals.get('email') or 'Unknown User'
@@ -237,7 +237,7 @@ class UserPermissionManagement(models.Model):
             if rec.email:
                 pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
                 if not re.match(pattern, rec.email):
-                    raise ValidationError("Email không hợp lệ!")
+                    raise ValidationError(_("Invalid email format!"))
 
     @api.constrains('login')
     def _check_login(self):
@@ -249,5 +249,5 @@ class UserPermissionManagement(models.Model):
                     ('id', '!=', rec.id)
                 ], limit=1)
                 if existing:
-                    raise ValidationError(f"Tên đăng nhập '{rec.login}' đã tồn tại!")
+                    raise ValidationError(_("Login '%(login)s' already exists!") % {'login': rec.login})
 

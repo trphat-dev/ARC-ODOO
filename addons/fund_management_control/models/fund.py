@@ -416,7 +416,7 @@ class FundCertificate(models.Model):
             return result_summary
         except Exception as e:
             _logger.error("Lỗi trong cron_sync_from_stock_data: %s", str(e), exc_info=True)
-            return {'created': 0, 'updated': 0, 'skipped': 0, 'error': str(e)}
+            return {'created': 0, 'updated': 0, 'skipped': 0, 'error': 'Internal server error'}
 
     @api.model
     def action_sync_from_stock_data(self):
@@ -466,7 +466,7 @@ class FundCertificate(models.Model):
                 'tag': 'display_notification',
                 'params': {
                     'title': 'Lỗi đồng bộ',
-                    'message': f'Đã xảy ra lỗi khi đồng bộ: {str(e)}',
+                    'message': 'Internal server error',
                     'type': 'danger',
                     'sticky': True,
                 }
@@ -933,7 +933,7 @@ class AutoFundCertificateCreator(models.Model):
                 'tag': 'display_notification',
                 'params': {
                     'title': 'Auto Fund Certificate Creation Error',
-                    'message': f'Error: {str(e)}',
+                    'message': 'Internal server error',
                     'type': 'danger',
                     'sticky': True,
                 }

@@ -56,14 +56,14 @@ class MaturityNotificationController(http.Controller):
                 _logger.error(f"Lỗi khi xác nhận bán: {str(e)}")
                 return request.render('order_matching.maturity_notification_response', {
                     'notification': notification,
-                    'message': f'Có lỗi xảy ra: {str(e)}',
+                    'message': 'Có lỗi xảy ra khi xử lý yêu cầu.',
                     'success': False
                 })
                 
         except Exception as e:
             _logger.error(f"Lỗi trong confirm_sell: {str(e)}")
             return request.render('web.http_error', {
-                'error': str(e),
+                'error': 'System Error',
                 'error_title': 'Lỗi',
                 'error_message': 'Đã có lỗi xảy ra khi xử lý yêu cầu.'
             })
@@ -113,14 +113,14 @@ class MaturityNotificationController(http.Controller):
                 _logger.error(f"Lỗi khi từ chối bán: {str(e)}")
                 return request.render('order_matching.maturity_notification_response', {
                     'notification': notification,
-                    'message': f'Có lỗi xảy ra: {str(e)}',
+                    'message': 'Có lỗi xảy ra khi xử lý yêu cầu.',
                     'success': False
                 })
                 
         except Exception as e:
             _logger.error(f"Lỗi trong reject_sell: {str(e)}")
             return request.render('web.http_error', {
-                'error': str(e),
+                'error': 'System Error',
                 'error_title': 'Lỗi',
                 'error_message': 'Đã có lỗi xảy ra khi xử lý yêu cầu.'
             })
@@ -163,7 +163,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi lấy danh sách thông báo đáo hạn: {str(e)}")
             return {
                 'success': False,
-                'message': str(e)
+                'message': 'Lỗi hệ thống khi tải danh sách thông báo.'
             }
 
     @http.route('/api/transaction-list/send-maturity-notifications', type='http', auth='user', methods=['POST'], csrf=False)
@@ -193,7 +193,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi gửi thông báo đáo hạn: {str(e)}", exc_info=True)
             response_data = {
                 'success': False,
-                'message': f'Lỗi khi gửi thông báo đáo hạn: {str(e)}',
+                'message': 'Lỗi hệ thống khi gửi thông báo đáo hạn.',
                 'notifications_created': 0,
                 'notifications_sent': 0
             }
@@ -233,7 +233,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi xóa thông báo đáo hạn: {str(e)}")
             return {
                 'success': False,
-                'message': f'Lỗi khi xóa thông báo: {str(e)}'
+                'message': 'Lỗi hệ thống khi xóa thông báo.'
             }
 
     @http.route('/api/transaction-list/delete-maturity-notifications', type='json', auth='user')
@@ -272,7 +272,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi xóa thông báo đáo hạn: {str(e)}")
             return {
                 'success': False,
-                'message': f'Lỗi khi xóa thông báo: {str(e)}'
+                'message': 'Lỗi hệ thống khi xóa thông báo.'
             }
 
     @http.route('/api/transaction-list/get-transaction-details/<int:transaction_id>', type='json', auth='user')
@@ -342,7 +342,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi lấy chi tiết transaction: {str(e)}")
             return {
                 'success': False,
-                'message': f'Lỗi khi lấy chi tiết: {str(e)}'
+                'message': 'Lỗi hệ thống khi tải chi tiết giao dịch.'
             }
 
     @http.route('/api/transaction-list/confirm-maturity-notification/<int:notification_id>', type='http', auth='user', methods=['POST'], csrf=False)
@@ -389,7 +389,7 @@ class MaturityNotificationController(http.Controller):
                 _logger.error(f"Lỗi khi gọi action_confirm_sell: {str(confirm_error)}", exc_info=True)
                 response_data = {
                     'success': False,
-                    'message': f'Lỗi khi xác nhận bán: {str(confirm_error)}'
+                    'message': 'Lỗi hệ thống khi xác nhận bán.'
                 }
                 return request.make_response(
                     json.dumps(response_data, ensure_ascii=False),
@@ -422,7 +422,7 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi xác nhận thông báo đáo hạn: {str(e)}", exc_info=True)
             response_data = {
                 'success': False,
-                'message': f'Lỗi khi xác nhận: {str(e)}'
+                'message': 'Lỗi hệ thống khi xử lý xác nhận.'
             }
             return request.make_response(
                 json.dumps(response_data, ensure_ascii=False),
@@ -462,5 +462,5 @@ class MaturityNotificationController(http.Controller):
             _logger.error(f"Lỗi khi từ chối thông báo đáo hạn: {str(e)}")
             return {
                 'success': False,
-                'message': f'Lỗi khi từ chối: {str(e)}'
+                'message': 'Lỗi hệ thống khi từ chối thông báo.'
             }

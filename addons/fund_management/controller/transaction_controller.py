@@ -78,8 +78,8 @@ class TransactionController(http.Controller):
             })
 
         except Exception as e:
-            _logger.error(f"Error cancelling transaction: {e}")
-            return self._json_response({"success": False, "message": str(e)})
+            _logger.error(f"Error cancelling transaction: {e}", exc_info=True)
+            return self._json_response({"success": False, "message": "Lỗi hệ thống khi hủy giao dịch."})
 
     @http.route('/api/contract/get', type='http', auth='user', methods=['GET'], csrf=False)
     @require_module_access('fund_management')
@@ -147,7 +147,8 @@ class TransactionController(http.Controller):
             ]
             return self._json_response(result)
         except Exception as e:
-            return self._json_response({"success": False, "error": str(e)})
+            _logger.error(f"Error getting investments: {e}", exc_info=True)
+            return self._json_response({"success": False, "error": "Lỗi hệ thống khi tải dữ liệu đầu tư."})
 
     @http.route('/data_contracts', type='http', auth='user', cors='*')
     @require_module_access('fund_management')
@@ -217,8 +218,8 @@ class TransactionController(http.Controller):
 
             return self._json_response(result)
         except Exception as e:
-            _logger.error(f"Error getting contracts: {e}")
-            return self._json_response({"success": False, "error": str(e)})
+            _logger.error(f"Error getting contracts: {e}", exc_info=True)
+            return self._json_response({"success": False, "error": "Lỗi hệ thống khi tải danh sách hợp đồng."})
 
     @http.route('/api/check_profitability', type='json', auth='user', methods=['POST'])
     @require_module_access('fund_management')
@@ -268,7 +269,8 @@ class TransactionController(http.Controller):
                 }
             }
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            _logger.error(f"Error checking profitability: {e}", exc_info=True)
+            return {'success': False, 'message': 'Lỗi hệ thống khi kiểm tra lợi nhuận.'}
 
     @http.route('/api/transaction/detail', type='http', auth='user', methods=['GET'], csrf=False)
     @require_module_access('fund_management')
@@ -320,5 +322,5 @@ class TransactionController(http.Controller):
             return self._json_response({"success": True, "data": data})
             
         except Exception as e:
-            _logger.error(f"Error getting transaction detail: {e}")
-            return self._json_response({"success": False, "message": str(e)})
+            _logger.error(f"Error getting transaction detail: {e}", exc_info=True)
+            return self._json_response({"success": False, "message": "Lỗi hệ thống khi tải chi tiết giao dịch."})

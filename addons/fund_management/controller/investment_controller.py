@@ -9,6 +9,7 @@ from datetime import datetime
 
 from ..utils import mround, fee_utils, investment_utils, constants
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
+from odoo.addons.arc_core.utils.rate_limiter import rate_limit
 
 _logger = logging.getLogger(__name__)
 
@@ -78,38 +79,29 @@ class NegotiatedOrderController(http.Controller):
             units_float = float(units)
             calculated_amount = float(amount)
             
-            # Check debug options
-            debug_mode = kwargs.get('debug', 'false').lower() in ('true', '1', 'yes')
-            skip_min_ccq = kwargs.get('skip_min_ccq', 'false').lower() in ('true', '1', 'yes') or debug_mode
-            skip_max_ccq = kwargs.get('skip_max_ccq', 'false').lower() in ('true', '1', 'yes')
-            skip_lot_size = kwargs.get('skip_lot_size', 'false').lower() in ('true', '1', 'yes') or debug_mode
-            
             # Validation: Min 100 CCQ, Max 500,000 CCQ per order
             MIN_UNITS = 100
             MAX_UNITS = 500000
             
-            if skip_min_ccq:
-                pass
-            elif units_float < MIN_UNITS:
+            if units_float < MIN_UNITS:
                 return self._json_response({
                     "success": False, 
                     "message": f"Số lượng CCQ tối thiểu là {MIN_UNITS:,} CCQ/lệnh"
                 })
             
-            if skip_max_ccq:
-                pass
-            elif units_float > MAX_UNITS:
+            if units_float > MAX_UNITS:
                 return self._json_response({
                     "success": False, 
                     "message": f"Số lượng CCQ tối đa là {MAX_UNITS:,} CCQ/lệnh"
                 })
             
-            # Validation: Lot size 100 CCQ
+            # Validation: Lot size 100 CCQ (Negotiated orders)
             LOT_SIZE = 100
-            if skip_lot_size:
-                pass
-            elif units_float > 0 and int(units_float) % LOT_SIZE != 0:
-                pass # NOTE: Requirement changed to remove lot size for Normal, but this is Negotiated. Keeping for now or subject to removal if global.
+            if units_float > 0 and int(units_float) % LOT_SIZE != 0:
+                return self._json_response({
+                    "success": False,
+                    "message": f"Số lượng CCQ phải là bội số của {LOT_SIZE:,}"
+                })
             
             effective_unit_price = calculated_amount / units_float if units_float > 0 else 0
             fee = fee_utils.calculate_fee(calculated_amount)
@@ -197,7 +189,8 @@ class NegotiatedOrderController(http.Controller):
             })
 
         except Exception as e:
-            return self._json_response({"success": False, "message": str(e)})
+            _logger.error(f"Error creating investment: {e}", exc_info=True)
+            return self._json_response({"success": False, "message": "Lỗi hệ thống khi tạo lệnh đầu tư."})
 
     @http.route('/submit_fund_sell', type='http', auth='user', methods=['POST'], csrf=False)
     @require_module_access('fund_management')
@@ -231,29 +224,25 @@ class NegotiatedOrderController(http.Controller):
 
             investment_id = int(kwargs.get('investment_id'))
             quantity = float(kwargs.get('quantity'))
-            debug_mode = kwargs.get('debug', 'false').lower() in ('true', '1', 'yes')
 
             investment = request.env['portfolio.investment'].sudo().browse(investment_id)
 
             if not investment.exists():
                 return self._json_response({"success": False, "message": "Không tìm thấy investment."}, status=404)
 
+            # Ownership check: prevent IDOR — only sell your own investment
             user_id = request.env.user.id
+            if investment.user_id.id != user_id:
+                return self._json_response({"success": False, "message": "Bạn không có quyền bán investment này."}, status=403)
             fund = investment.fund_id
             
             # Force T+2 recomputation (stored compute doesn't re-trigger on date change)
             investment._compute_units_breakdown()
 
-            # DEBUG MODE validation
-            if debug_mode:
-                _logger.warning(f'[Fund Sell DEBUG] User {user_id} - Bypassing quantity check.')
-            else:
-                # STRICT VALIDATION: Use negotiated_available_units (Contract/Negotiated Only)
-                # Since submit_fund_sell creates a Negotiated Sell by default (via generic Transaction model default),
-                # we must validate against the Negotiated pool.
-                available = investment.negotiated_available_units
-                if quantity > available:
-                    return self._json_response({"success": False, "message": f"Số lượng bán ({quantity:,.0f}) vượt quá CCQ thỏa thuận khả dụng ({available:,.0f})."}, status=400)
+            # STRICT VALIDATION: Use negotiated_available_units (Contract/Negotiated Only)
+            available = investment.negotiated_available_units
+            if quantity > available:
+                return self._json_response({"success": False, "message": f"Số lượng bán ({quantity:,.0f}) vượt quá CCQ thỏa thuận khả dụng ({available:,.0f})."}, status=400)
 
             # Price determination
             price_from_frontend = kwargs.get('price')

@@ -4,6 +4,9 @@ import json
 from markupsafe import Markup
 from datetime import datetime, timedelta
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
+import logging
+
+_logger = logging.getLogger(__name__)
 
 class AssetManagementController(http.Controller):
     @http.route('/asset-management', type='http', auth='user', website=True)
@@ -513,11 +516,11 @@ class AssetManagementController(http.Controller):
             fund_color = fund_sudo.color or "#2B4BFF"  # Màu mặc định
             if hasattr(fund_sudo, 'certificate_id') and fund_sudo.certificate_id:
                 fund_color = fund_sudo.certificate_id.fund_color or fund_sudo.color or "#2B4BFF"
-                print(f"DEBUG: Fund {fund_sudo.ticker} color from certificate: {fund_sudo.certificate_id.fund_color}, final: {fund_color}")
+                # print(f"DEBUG: Fund {fund_sudo.ticker} color from certificate: {fund_sudo.certificate_id.fund_color}, final: {fund_color}")
             else:
-                print(f"DEBUG: Fund {fund_sudo.ticker} no certificate, using fund.color: {fund_sudo.color}")
+                pass  # No certificate, use fund.color
             
             return fund_color
         except Exception as e:
-            print(f"DEBUG: Error getting fund color for {fund.ticker if fund else 'None'}: {e}")
+            # print(f"DEBUG: Error getting fund color for {fund.ticker if fund else 'None'}: {e}")
             return "#2B4BFF" 

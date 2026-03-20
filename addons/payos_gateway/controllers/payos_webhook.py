@@ -6,12 +6,14 @@ from odoo import http
 from odoo.http import request
 
 from ..services import get_service_from_env
+from odoo.addons.arc_core.utils.rate_limiter import rate_limit, rate_limit_strict
 
 _logger = logging.getLogger(__name__)
 
 
 class PayOSWebhookController(http.Controller):
     @http.route(['/payos/create-link'], type='json', auth='user', methods=['POST'], csrf=False)
+    @rate_limit_strict(max_calls=10, period=60)
     def create_payment_link(self, **kwargs):
         # Guard clause: required fields
         required = ['orderCode', 'amount', 'description', 'returnUrl', 'cancelUrl']
@@ -102,19 +104,29 @@ class PayOSWebhookController(http.Controller):
                     })
                     
                     # Credit the deposited amount to user's account balance
+                    # Validate: deposit_amount must match expected transaction amount
                     deposit_amount = webhook_data.get('amount', 0)
+                    expected_amount = transaction.amount or 0
                     if deposit_amount and deposit_amount > 0 and transaction.user_id:
-                        balance = request.env['portfolio.account_balance'].sudo().search(
-                            [('user_id', '=', transaction.user_id.id)], limit=1
-                        )
-                        if balance:
-                            balance.write({'balance': balance.balance + deposit_amount})
+                        if expected_amount > 0 and abs(deposit_amount - expected_amount) > 1:
+                            _logger.warning(
+                                'PayOS webhook: Amount mismatch for transaction %s. '
+                                'Expected: %s, Received: %s. Skipping balance credit.',
+                                transaction.id, expected_amount, deposit_amount
+                            )
                         else:
-                            # Create balance record if none exists
-                            request.env['portfolio.account_balance'].sudo().create({
-                                'user_id': transaction.user_id.id,
-                                'balance': deposit_amount,
-                            })
+                            credit_amount = deposit_amount
+                            balance = request.env['portfolio.account_balance'].sudo().search(
+                                [('user_id', '=', transaction.user_id.id)], limit=1
+                            )
+                            if balance:
+                                balance.write({'balance': balance.balance + credit_amount})
+                            else:
+                                # Create balance record if none exists
+                                request.env['portfolio.account_balance'].sudo().create({
+                                    'user_id': transaction.user_id.id,
+                                    'balance': credit_amount,
+                                })
                         
                         # Log balance history
                         try:
@@ -346,7 +358,6 @@ class PayOSWebhookController(http.Controller):
                     json.dumps({
                         'success': False, 
                         'error': error_msg,
-                        'debug_info': 'Vui lòng kiểm tra credentials và thử lại. Xem logs để biết thêm chi tiết.'
                     }, ensure_ascii=False),
                     headers=[('Content-Type', 'application/json')],
                     status=500

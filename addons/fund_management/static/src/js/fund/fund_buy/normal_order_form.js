@@ -109,17 +109,7 @@ export class NormalOrderFormComponent extends Component {
                     </div>
                 </div>
 
-                <!-- Debug Toggle -->
-                <div class="row g-3 mt-2">
-                    <div class="col-md-12">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="debugModeToggle" t-model="state.debugMode" t-on-input="validateForm"/>
-                            <label class="form-check-label text-danger fw-bold" for="debugModeToggle">
-                                <i class="fas fa-bug me-1"></i>Bỏ qua kiểm tra giá (Debug)
-                            </label>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- Price Input -->
                 <div class="row g-3 mt-2">
@@ -234,7 +224,7 @@ export class NormalOrderFormComponent extends Component {
             lotSizeError: '',
             liquidityWarning: '',
             submitting: false,
-            debugMode: false,
+
             // Eligibility
             accountApproved: false,
             hasTradingAccount: false,
@@ -794,7 +784,7 @@ export class NormalOrderFormComponent extends Component {
 
         // Price Validation (Limit Order)
         this.state.priceError = '';
-        if (!this.state.debugMode && !this.state.isMarketOrder && this.state.selectedFundId && this.state.price > 0) {
+        if (!this.state.isMarketOrder && this.state.selectedFundId && this.state.price > 0) {
             // Check Ceiling
             if (this.state.ceilingPrice > 0 && this.state.price > this.state.ceilingPrice) {
                 this.state.priceError = `Giá đặt phải nhỏ hơn hoặc bằng giá trần (${this.formatNumber(this.state.ceilingPrice)})`;
@@ -889,7 +879,7 @@ export class NormalOrderFormComponent extends Component {
 
             // 6. Branch Logic based on Purchasing Power
             if (ppStatus === 'insufficient') {
-                // Insufficient -> Show notification and redirect to payment page
+                // Insufficient -> Redirect to fund_confirm page (shows QR/PayOS)
                 if (typeof Swal !== 'undefined') {
                     Swal.close();
                     await Swal.fire({
@@ -942,12 +932,12 @@ export class NormalOrderFormComponent extends Component {
             if (window.FundManagementSmartOTP && typeof window.FundManagementSmartOTP.open === 'function') {
                 window.FundManagementSmartOTP.open({
                     otpType: otpType,
-                    onConfirm: async (otp, debugMode) => {
+                    onConfirm: async (otp) => {
                         try {
                             const response = await fetch('/api/otp/verify', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { otp, debug: debugMode || false } })
+                                body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { otp } })
                             });
                             const data = await response.json();
                             const result = data.result || data;
@@ -996,8 +986,7 @@ export class NormalOrderFormComponent extends Component {
                     units: parseInt(this.state.quantity),
                     price: parseFloat(this.state.price) || 0,
 
-                    order_type_detail: this.state.orderType,
-                    debug: this.state.debugMode || false
+                    order_type_detail: this.state.orderType
                 }
             };
 

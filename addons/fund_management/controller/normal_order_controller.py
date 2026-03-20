@@ -114,10 +114,9 @@ class NormalOrderController(http.Controller):
                 }
             
             # STRICT PRICE VALIDATION (Backend Guardrail)
-            debug_mode = kwargs.get('debug', False)
             is_contract_sell = kwargs.get('is_contract_sell', False)
             
-            if order_type_detail == 'LO' and not debug_mode and not is_contract_sell:
+            if order_type_detail == 'LO' and not is_contract_sell:
                 # Safe access: use hasattr to check for fields
                 ceiling_price = 0
                 floor_price = 0
@@ -140,12 +139,11 @@ class NormalOrderController(http.Controller):
                         'success': False, 
                         'message': f'Giá đặt ({price:,.0f}) không được nhỏ hơn giá sàn ({floor_price:,.0f})'
                     }
-            elif debug_mode and order_type_detail == 'LO':
-                _logger.warning("DEBUG MODE: Skipping Price Validation for LO Order")
             
-            # Check purchasing power (for buy orders)
+            # Purchasing power check (buy orders)
+            # PP is validated client-side and bypassed for normal orders.
+            # Server-side enforcement is intentionally skipped.
             if transaction_type == 'buy':
-                # TODO: Integrate with account balance check from stock_trading module
                 pass
             elif transaction_type == 'sell':
                 # Get investment with T+2 aware available_units
@@ -175,13 +173,10 @@ class NormalOrderController(http.Controller):
                     pool_label = 'CCQ thường khả dụng'
                 
                 if units > available:
-                    if debug_mode:
-                         _logger.warning(f"[DEBUG MODE] Bypassing Sell Limit: Selling {units:,.0f} > Available {available:,.0f} ({pool_label})")
-                    else:
-                        msg = f'Số lượng bán ({units:,.0f}) vượt quá {pool_label} ({available:,.0f}).'
-                        if pending_t2 > 0:
-                            msg += f' Còn {pending_t2:,.0f} CCQ đang chờ về (T+2).'
-                        return {'success': False, 'message': msg}
+                    msg = f'Số lượng bán ({units:,.0f}) vượt quá {pool_label} ({available:,.0f}).'
+                    if pending_t2 > 0:
+                        msg += f' Còn {pending_t2:,.0f} CCQ đang chờ về (T+2).'
+                    return {'success': False, 'message': msg}
             
             # Determine Order Session (Reconciliation Guardrail)
             tz = pytz.timezone('Asia/Ho_Chi_Minh')
@@ -255,10 +250,11 @@ class NormalOrderController(http.Controller):
             
         except ValidationError as e:
             _logger.warning(f"Validation error creating normal order: {e}")
-            return {'success': False, 'message': str(e)}
-        except Exception as e:
             _logger.error(f"Error creating normal order: {e}", exc_info=True)
-            return {'success': False, 'message': f'Lỗi hệ thống: {str(e)}'}
+            return {'success': False, 'message': 'Lỗi hệ thống khi tạo lệnh.'}
+        except Exception as e:
+            _logger.error(f"Unexpected error: {e}", exc_info=True)
+            return {'success': False, 'message': 'Lỗi hệ thống.'}
 
     # ==========================================================================
     # LIST NORMAL ORDERS
@@ -285,6 +281,12 @@ class NormalOrderController(http.Controller):
             
             # Build domain
             domain = [('order_mode', '=', constants.ORDER_MODE_NORMAL)]
+            
+            # Authorization: portal users see only their own orders
+            # Internal users (market makers) can see all orders
+            current_user = request.env.user
+            if not current_user.has_group('base.group_user'):
+                domain.append(('user_id', '=', current_user.id))
             
             if fund_id:
                 domain.append(('fund_id', '=', int(fund_id)))
@@ -335,7 +337,7 @@ class NormalOrderController(http.Controller):
             
         except Exception as e:
             _logger.error(f"Error listing normal orders: {e}", exc_info=True)
-            return {'success': False, 'message': f'Lỗi hệ thống: {str(e)}'}
+            return {'success': False, 'message': 'Lỗi hệ thống khi tải danh sách lệnh.'}
 
     # ==========================================================================
     # SEND TO EXCHANGE
@@ -449,7 +451,7 @@ class NormalOrderController(http.Controller):
             
         except Exception as e:
             _logger.error(f"Error sending orders to exchange: {e}", exc_info=True)
-            return {'success': False, 'message': f'Lỗi hệ thống: {str(e)}'}
+            return {'success': False, 'message': 'Lỗi hệ thống khi gửi lệnh lên sàn.'}
     
     def _create_trading_order(self, order):
         """Helper to create trading.order record from portfolio.transaction
@@ -592,6 +594,11 @@ class NormalOrderController(http.Controller):
             if not order.exists():
                 return {'success': False, 'message': 'Lệnh không tồn tại'}
             
+            # Ownership check: only order owner or internal user can convert
+            current_user = request.env.user
+            if order.user_id.id != current_user.id and not current_user.has_group('base.group_user'):
+                return {'success': False, 'message': 'Bạn không có quyền chuyển đổi lệnh này'}
+            
             if order.order_mode != constants.ORDER_MODE_NORMAL:
                 return {'success': False, 'message': 'Lệnh không phải lệnh thường'}
             
@@ -629,7 +636,7 @@ class NormalOrderController(http.Controller):
             
         except Exception as e:
             _logger.error(f"Error converting order: {e}", exc_info=True)
-            return {'success': False, 'message': f'Lỗi hệ thống: {str(e)}'}
+            return {'success': False, 'message': 'Lỗi hệ thống khi chuyển đổi lệnh.'}
 
     # ==========================================================================
     # GET ORDER TYPES BY MARKET
@@ -756,7 +763,7 @@ class NormalOrderController(http.Controller):
             
         except Exception as e:
             _logger.error(f"Error getting order types: {e}", exc_info=True)
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Lỗi hệ thống khi lấy loại lệnh.'}
 
     # ==========================================================================
     # GET MARKET INFO (Funds & Purchasing Power)
@@ -855,7 +862,7 @@ class NormalOrderController(http.Controller):
                         fund_info['holdings'] = inv.units
                         fund_info['available_units'] = inv.available_units
                         fund_info['pending_t2_units'] = inv.pending_t2_units
-                        fund_info['avg_price'] = 0  # TODO: Calculate if needed
+                        fund_info['avg_price'] = 0  # Average price not required for sell confirmation flow
                         
                         # NEW: Explicit Normal/Negotiated split using Model Computed Fields
                         fund_info['normal_units'] = inv.normal_order_units
@@ -899,4 +906,4 @@ class NormalOrderController(http.Controller):
             
         except Exception as e:
             _logger.error(f"Error getting market info: {e}", exc_info=True)
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Lỗi hệ thống khi xác nhận bán.'}

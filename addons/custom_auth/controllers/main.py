@@ -9,6 +9,7 @@ from odoo.http import request
 from odoo.addons.auth_signup.controllers.main import AuthSignupHome
 from odoo.exceptions import UserError
 from odoo.addons.custom_auth.constants import PERMISSION_INVESTOR_USER
+from odoo.addons.arc_core.utils.rate_limiter import rate_limit_strict
 import werkzeug
 
 _logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class CustomAuthController(AuthSignupHome):
         return True, ''
     
     @http.route('/web/signup/otp', type='json', auth='public', methods=['POST'])
+    @rate_limit_strict(max_calls=5, period=60)
     def send_otp(self, **post):
         """Gửi mã OTP qua SMS"""
         try:
@@ -82,7 +84,7 @@ class CustomAuthController(AuthSignupHome):
             request.session['signup_phone'] = phone
             request.session['signup_data'] = post
             
-            _logger.info("Generated OTP %s for phone %s", otp, phone)
+            _logger.info("Generated OTP for phone %s", phone)
             
             return {
                 'success': True, 
@@ -95,6 +97,7 @@ class CustomAuthController(AuthSignupHome):
             return {'success': False, 'message': 'Có lỗi xảy ra khi gửi OTP.'}
 
     @http.route('/web/signup/direct', type='json', auth='public', methods=['POST'])
+    @rate_limit_strict(max_calls=5, period=60)
     def signup_direct(self, **post):
         """Create account directly without OTP verification"""
         try:
@@ -156,6 +159,7 @@ class CustomAuthController(AuthSignupHome):
 
     
     @http.route('/web/signup/verify-otp', type='json', auth='public', methods=['POST'])
+    @rate_limit_strict(max_calls=10, period=60)
     def verify_otp(self, **post):
         """Xác thực mã OTP và tạo tài khoản"""
         signup_data = request.session.get('signup_data')
@@ -287,7 +291,7 @@ class CustomAuthController(AuthSignupHome):
             except UserError as e:
                 qcontext['error'] = e.args[0]
             except Exception as e:
-                qcontext['error'] = str(e)
+                qcontext['error'] = _('An unexpected error occurred. Please try again.')
                 _logger.exception('error when resetting password')
 
         response = request.render('auth_signup.reset_password', qcontext)

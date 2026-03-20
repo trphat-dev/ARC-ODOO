@@ -32,7 +32,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error("Error in %s: %s", func.__name__, str(e))
             return {
                 'success': False,
-                'message': str(e),
+                'message': 'Internal server error',
                 'error_type': type(e).__name__
             }
         except Exception as e:
@@ -40,7 +40,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error(traceback.format_exc())
             return {
                 'success': False,
-                'message': _('Lỗi hệ thống: %s') % str(e),
+                'message': 'Internal server error',
                 'error_type': 'SystemError'
             }
 
@@ -159,7 +159,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error("Error in persist_matched_pairs: %s", str(e))
             return {
                 'success': False,
-                'message': str(e),
+                'message': 'Internal server error',
                 'error_type': type(e).__name__
             }
         except Exception as e:
@@ -167,7 +167,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error(traceback.format_exc())
             return {
                 'success': False,
-                'message': _('Lỗi hệ thống: %s') % str(e),
+                'message': 'Internal server error',
                 'error_type': 'SystemError'
             }
 
@@ -188,7 +188,7 @@ class MatchedOrdersController(http.Controller):
         except Exception as e:
             return {
                 'success': False,
-                'message': str(e),
+                'message': 'Internal server error',
                 'data': []
             }
 
@@ -404,7 +404,7 @@ class MatchedOrdersController(http.Controller):
             )
         except Exception as e:
             return request.make_response(
-                json.dumps({'success': False, 'message': str(e), 'matched_pairs': [], 'total': 0}, ensure_ascii=False),
+                json.dumps({'success': False, 'message': 'Internal server error', 'matched_pairs': [], 'total': 0}, ensure_ascii=False),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -460,7 +460,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error("Error in get_matched_pairs_json: %s", str(e))
             return {
                 'success': False,
-                'message': str(e),
+                'message': 'Internal server error',
                 'matched_pairs': [],
                 'total': 0,
                 'error_type': type(e).__name__
@@ -470,7 +470,7 @@ class MatchedOrdersController(http.Controller):
             _logger.error(traceback.format_exc())
             return {
                 'success': False,
-                'message': _('Lỗi hệ thống: %s') % str(e),
+                'message': 'Internal server error',
                 'matched_pairs': [],
                 'total': 0,
                 'error_type': 'SystemError'
@@ -549,7 +549,7 @@ class MatchedOrdersController(http.Controller):
             handled = {'buys': [tx.id]} if side == 'buy' else {'sells': [tx.id]}
             return request.make_response(json.dumps({'success': True, 'handled': handled, 'matched_pairs': [pair] if pair else []}, ensure_ascii=False), headers=[('Content-Type', 'application/json')])
         except Exception as e:
-            return request.make_response(json.dumps({'success': False, 'message': str(e)}, ensure_ascii=False), headers=[('Content-Type', 'application/json')], status=500)
+            return request.make_response(json.dumps({'success': False, 'message': 'Internal server error'}, ensure_ascii=False), headers=[('Content-Type', 'application/json')], status=500)
 
     @http.route('/api/transaction-list/market-maker/handle-remaining', type='http', auth='user', methods=['POST'], csrf=False)
     def market_maker_handle_remaining(self, **kwargs):
@@ -713,7 +713,7 @@ class MatchedOrdersController(http.Controller):
         except Exception as e:
             _logger.error(f"Lỗi hệ thống Market Maker: {str(e)}")
             _logger.error(traceback.format_exc())
-            return request.make_response(json.dumps({'success': False, 'message': str(e)}, ensure_ascii=False), headers=[('Content-Type', 'application/json')], status=500)
+            return request.make_response(json.dumps({'success': False, 'message': 'Internal server error'}, ensure_ascii=False), headers=[('Content-Type', 'application/json')], status=500)
 
     # ===== Helpers =====
     def _get_mm_reference_price(self, fund_id):
@@ -744,7 +744,7 @@ class MatchedOrdersController(http.Controller):
                 'opening_price_with_capital_cost': opening_with_cap,
             }
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
 
 
     def _is_user_market_maker(self, user):

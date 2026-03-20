@@ -108,22 +108,9 @@ class NavTransaction(models.Model):
                     '|', ('created_at', '<=', f"{to_date} 23:59:59"), ('create_date', '<=', f"{to_date} 23:59:59")
                 ]
 
-        # Debug: In ra domain để kiểm tra
-        print(f"[DEBUG] NAV Transaction Domain: {domain}")
-        print(f"[DEBUG] Filter params - fund_id: {fund_id}, from_date: {from_date}, to_date: {to_date}, status_filter: {status_filter}")
-        
-        # Query bằng sudo để tránh lỗi phân quyền khi đọc giao dịch của các user khác
+
+        # Query using sudo to avoid permission errors when reading other users' transactions
         portfolio_tx = self.env['portfolio.transaction'].sudo().search(domain, order='created_at desc')
-        
-        print(f"[DEBUG] Found {len(portfolio_tx)} transactions")
-        
-        # Debug: In ra một vài transaction để kiểm tra
-        if len(portfolio_tx) > 0:
-            for i, tx in enumerate(portfolio_tx[:3]):  # Chỉ in 3 transaction đầu
-                print(f"[DEBUG] Transaction {i+1}: ID={tx.id}, Fund={tx.fund_id.name if tx.fund_id else 'None'}, "
-                      f"Created={tx.created_at}, Status={tx.status}")
-        else:
-            print(f"[DEBUG] No transactions found for fund_id={fund_id}")
 
         results = []
 
@@ -218,7 +205,7 @@ class NavTransaction(models.Model):
                 'db_status': tx.status,
                 'active': getattr(tx, 'active', True),
                 'investor_name': getattr(tx, 'investor_name', '') or '',
-                'maturity_date': getattr(tx, 'maturity_date', None) or None,
+                'original_maturity_date': getattr(tx, 'maturity_date', None) or None,
                 # Dữ liệu cho calculator
                 'term_months': term_months_int,
                 'interest_rate': interest_rate,
@@ -271,7 +258,7 @@ class NavTransaction(models.Model):
         except Exception as e:
             return {
                 'success': False,
-                'message': str(e),
+                'message': _('Lỗi hệ thống khi lấy cấu hình.'),
             }
 
 

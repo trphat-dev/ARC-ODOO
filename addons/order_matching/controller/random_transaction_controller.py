@@ -398,7 +398,7 @@ class RandomTransactionController(http.Controller):
             _logger.error(traceback.format_exc())
             return self._make_secure_response({
                 'success': False,
-                'message': f'Lỗi hệ thống: {str(e)}',
+                'message': 'Internal server error',
                 'created_count': 0
             }, status=200)
 

@@ -53,7 +53,7 @@ class TradingAPIController(http.Controller):
             }
         except Exception as e:
             _logger.error(f'Error creating order: {e}')
-            return {'status': 'error', 'message': str(e)}
+            return {'status': 'error', 'message': 'Internal server error'}
     
     @http.route('/api/trading/v1/order/<int:order_id>/cancel', type='json', auth='user', methods=['POST'], csrf=False)
     def cancel_order(self, order_id, **kwargs):
@@ -71,7 +71,7 @@ class TradingAPIController(http.Controller):
             }
         except Exception as e:
             _logger.error(f'Error canceling order: {e}')
-            return {'status': 'error', 'message': str(e)}
+            return {'status': 'error', 'message': 'Internal server error'}
     
     @http.route('/api/trading/v1/balance', type='json', auth='user', methods=['POST'], csrf=False)
     def get_balance(self, **kwargs):
@@ -117,7 +117,7 @@ class TradingAPIController(http.Controller):
             }
         except Exception as e:
             _logger.error(f'Error getting balance: {e}')
-            return {'status': 'error', 'message': str(e)}
+            return {'status': 'error', 'message': 'Internal server error'}
     
     @http.route('/api/trading/v1/position', type='json', auth='user', methods=['POST'], csrf=False)
     def get_position(self, **kwargs):
@@ -163,7 +163,7 @@ class TradingAPIController(http.Controller):
             }
         except Exception as e:
             _logger.error(f'Error getting position: {e}')
-            return {'status': 'error', 'message': str(e)}
+            return {'status': 'error', 'message': 'Internal server error'}
     
     @http.route('/api/trading/v1/order-book', type='json', auth='user', methods=['POST'], csrf=False)
     def get_order_book(self, **kwargs):
@@ -209,7 +209,7 @@ class TradingAPIController(http.Controller):
             }
         except Exception as e:
             _logger.error(f'Error getting order book: {e}')
-            return {'status': 'error', 'message': str(e)}
+            return {'status': 'error', 'message': 'Internal server error'}
     
     @http.route('/api/trading/v1/purchasing-power', type='json', auth='user', methods=['POST'], csrf=False)
     def get_purchasing_power(self, **kwargs):
@@ -320,7 +320,7 @@ class TradingAPIController(http.Controller):
             _logger.error(f'Error getting purchasing power: {e}')
             return {
                 'status': 'error', 
-                'message': str(e),
+                'message': 'Internal server error',
                 'data': {
                     'purchasing_power': 0,
                     'cash_balance': 0,

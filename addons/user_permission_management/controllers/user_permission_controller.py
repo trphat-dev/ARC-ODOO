@@ -35,7 +35,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error rendering system admin page: {str(e)}", exc_info=True)
             return request.render('web.http_error', {
-                'error': str(e),
+                'error': 'System Error',
                 'error_title': 'Lỗi',
                 'error_message': 'Không thể tải trang quản lý System Admin'
             })
@@ -63,7 +63,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error rendering investor user page: {str(e)}", exc_info=True)
             return request.render('web.http_error', {
-                'error': str(e),
+                'error': 'System Error',
                 'error_title': 'Lỗi',
                 'error_message': 'Không thể tải trang quản lý Danh sách Nhà đầu tư'
             })
@@ -91,7 +91,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error rendering fund operator page: {str(e)}", exc_info=True)
             return request.render('web.http_error', {
-                'error': str(e),
+                'error': 'System Error',
                 'error_title': 'Lỗi',
                 'error_message': 'Không thể tải trang Danh sách nhân viên Quản lý quỹ'
             })
@@ -122,7 +122,7 @@ class UserPermissionController(http.Controller):
             _logger.error(f"Error checking user type: {str(e)}", exc_info=True)
             return {
                 'success': False,
-                'error': str(e),
+                'error': 'Internal error',
                 'user_type': None,
                 'is_market_maker': False,
             }
@@ -289,7 +289,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error searching users: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -340,7 +340,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error getting available users: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -510,7 +510,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error creating user permission: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -638,7 +638,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error updating user: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -752,7 +752,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error toggling market maker: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -801,7 +801,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error deleting user: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -842,7 +842,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error getting user: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )
@@ -907,7 +907,7 @@ class UserPermissionController(http.Controller):
         except Exception as e:
             _logger.error(f"Error searching by email: {str(e)}", exc_info=True)
             return request.make_response(
-                json.dumps({'error': str(e), 'success': False}),
+                json.dumps({'error': 'Internal server error', 'success': False}),
                 headers=[('Content-Type', 'application/json')],
                 status=500
             )

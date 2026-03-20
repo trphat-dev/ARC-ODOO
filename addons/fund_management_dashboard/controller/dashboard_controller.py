@@ -83,7 +83,7 @@ class FundManagementDashboardController(http.Controller):
             return {
                 'success': False,
                 'data': {},
-                'message': f'Lỗi: {str(e)}'
+                'message': 'Internal server error'
             }
 
     @http.route('/api/fund-management-dashboard/historical', type='json', auth='user')
@@ -105,7 +105,7 @@ class FundManagementDashboardController(http.Controller):
             return {
                 'success': False,
                 'data': [],
-                'message': f'Lỗi: {str(e)}'
+                'message': 'Internal server error'
             }
 
     @http.route('/api/fund-management-dashboard/today', type='json', auth='user')
@@ -130,7 +130,7 @@ class FundManagementDashboardController(http.Controller):
             return {
                 'success': False,
                 'data': {},
-                'message': f'Lỗi: {str(e)}'
+                'message': 'Internal server error'
             }
 
     def _get_dashboard_data(self):

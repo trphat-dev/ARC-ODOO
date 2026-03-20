@@ -101,7 +101,7 @@ class InvestorListController(http.Controller):
             return json.dumps({'success': True})
             
         except Exception as e:
-            return json.dumps({'error': str(e)})
+            return json.dumps({'error': 'Internal server error'})
 
     @http.route('/api/investor_list/<int:investor_id>/approve', type='json', auth='user', methods=['POST'])
     def approve_investor(self, investor_id):
@@ -119,7 +119,7 @@ class InvestorListController(http.Controller):
             investor.write({'status_manual': True, 'account_status': 'approved'})
             return {'success': True, 'status': 'approved', 'status_display': 'Approved'}
         except Exception as e:
-            return {'error': str(e)}
+            return {'error': 'Internal server error'}
 
     @http.route('/api/investor_list/<int:investor_id>/reject', type='json', auth='user', methods=['POST'])
     def reject_investor(self, investor_id):
@@ -135,7 +135,7 @@ class InvestorListController(http.Controller):
             investor.write({'status_manual': True, 'account_status': 'rejected'})
             return {'success': True, 'status': 'rejected', 'status_display': 'Rejected'}
         except Exception as e:
-            return {'error': str(e)}
+            return {'error': 'Internal server error'}
 
     @http.route('/api/users', type='http', auth='user', methods=['GET'], csrf=False)
     def get_users(self, **kwargs):
@@ -152,7 +152,7 @@ class InvestorListController(http.Controller):
             
             return json.dumps(users_data)
         except Exception as e:
-            return json.dumps({'error': str(e)})
+            return json.dumps({'error': 'Internal server error'})
 
     @http.route('/api/investor_list/<int:investor_id>/reset', type='json', auth='user', methods=['POST'])
     def reset_investor_fields(self, investor_id, **kwargs):
@@ -188,4 +188,4 @@ class InvestorListController(http.Controller):
             
             return json.dumps(response_data)
         except Exception as e:
-            return json.dumps({'error': str(e)})
+            return json.dumps({'error': 'Internal server error'})

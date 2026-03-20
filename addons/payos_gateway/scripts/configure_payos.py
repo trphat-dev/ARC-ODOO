@@ -26,10 +26,10 @@ def configure_payos_credentials():
     params.set_param('payos.api_key', API_KEY)
     params.set_param('payos.checksum_key', CHECKSUM_KEY)
     
-    print("✅ Đã cấu hình PayOS credentials thành công!")
-    print(f"   Client ID: {CLIENT_ID}")
-    print(f"   API Key: {API_KEY[:20]}...")
-    print(f"   Checksum Key: {CHECKSUM_KEY[:20]}...")
+    # print("✅ Đã cấu hình PayOS credentials thành công!")
+    # print(f"   Client ID: {CLIENT_ID}")
+    # print(f"   API Key: {API_KEY[:20]}...")
+    # print(f"   Checksum Key: {CHECKSUM_KEY[:20]}...")
 
 if __name__ == '__main__':
     configure_payos_credentials()

@@ -73,13 +73,13 @@ class ListTenorsInterestRatesController(http.Controller):
             }
             
         except Exception as e:
-            print(f"Error in get_report_data: {e}")
+            # print(f"Error in get_report_data: {e}")
             return {
                 'data': [],
                 'total': 0,
                 'page': int(page),
                 'limit': int(limit),
-                'error': str(e)
+                'error': 'Internal server error'
             }
         
     @http.route('/list_tenors_interest_rates/get_filter_options', type='json', auth='user', methods=['POST'])
@@ -99,7 +99,7 @@ class ListTenorsInterestRatesController(http.Controller):
             }
             
         except Exception as e:
-            print(f"Error in get_filter_options: {e}")
+            # print(f"Error in get_filter_options: {e}")
             return {
                 'term_options': []
             }
@@ -182,7 +182,7 @@ class ListTenorsInterestRatesController(http.Controller):
             return request.make_response(pdf_content, headers=pdf_http_headers)
             
         except Exception as e:
-            print(f"Error in export_pdf: {e}")
+            # print(f"Error in export_pdf: {e}")
             return request.make_response(
                 f"Lỗi khi xuất PDF: {str(e)}",
                 headers=[('Content-Type', 'text/plain')]
@@ -291,7 +291,7 @@ class ListTenorsInterestRatesController(http.Controller):
             return request.make_response(output.read(), headers=xlsx_headers)
             
         except Exception as e:
-            print(f"Error in export_xlsx: {e}")
+            # print(f"Error in export_xlsx: {e}")
             return request.make_response(
                 f"Lỗi khi xuất XLSX: {str(e)}",
                 headers=[('Content-Type', 'text/plain')]

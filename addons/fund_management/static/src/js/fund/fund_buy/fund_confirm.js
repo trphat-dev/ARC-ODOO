@@ -131,11 +131,10 @@ async function createBuyOrderFromConfirm() {
         method: 'call',
         params: {
           fund_id: parseInt(fundId),
-          transaction_type: 'buy', // Default to buy on this page
+          transaction_type: 'buy',
           units: parseInt(units),
           price: parseFloat(price) || 0,
-          order_type_detail: orderType,
-          debug: localStorage.getItem('fund_confirm_debug_bypass_pp') === 'true' // Pass Debug Flag
+          order_type_detail: orderType
         }
       };
 
@@ -216,20 +215,7 @@ async function createBuyOrderFromConfirm() {
         fundId, amount, units, termMonths, interestRate
       });
 
-      // Gửi debug mode và các options cụ thể để backend bypass validation
-      const debugMode = localStorage.getItem('fund_buy_debug_mode') === 'true';
-      if (debugMode) {
-        formData.append('debug', 'true');
 
-        try {
-          const debugOptions = JSON.parse(localStorage.getItem('fund_buy_debug_options') || '{}');
-          if (debugOptions.skipMinCcq) formData.append('skip_min_ccq', 'true');
-          if (debugOptions.skipMaxCcq) formData.append('skip_max_ccq', 'true');
-          if (debugOptions.skipLotSize) formData.append('skip_lot_size', 'true');
-        } catch (e) {
-          console.warn('Lỗi parsing debug options:', e);
-        }
-      }
 
       const res = await fetch('/create_investment', {
         method: 'POST',
@@ -531,17 +517,7 @@ async function startNormalOrderProcess() {
     // Read Status from previous step (normal_order_form.js)
     const ppStatus = sessionStorage.getItem('normal_order_pp_status');
 
-    // Check Debug Bypass
-    const isDebugBypass = localStorage.getItem('fund_confirm_debug_bypass_pp') === 'true';
-
-    // If Status is 'insufficient' AND user asks to Bypass -> Proceed to OTP
-    if (ppStatus === 'insufficient' && isDebugBypass) {
-      console.log("Debug Mode: Bypassing Insufficient PP Check");
-      await triggerSmartOTPForNormalOrder();
-      return;
-    }
-
-    // If Status is 'insufficient' (and NOT bypassing), show Payment UI
+    // If Status is 'insufficient', show PayOS payment info (QR) but still proceed to OTP
     if (ppStatus === 'insufficient') {
       // Scroll to Payment/QR Section
       const paySection = document.getElementById('payos-payment-info');
@@ -551,7 +527,7 @@ async function startNormalOrderProcess() {
         setTimeout(() => paySection.style.border = '', 3000);
       }
 
-      // Trigger QR Generation (if not already)
+      // Trigger QR Generation (for informational display)
       await createPayOSPayment();
 
       // Notify via Toast
@@ -564,57 +540,9 @@ async function startNormalOrderProcess() {
         toast: true,
         position: 'top-end'
       });
-
-      // --- DEBUG: BYPASS TOGGLE UI ---
-      const debugContainer = document.getElementById('payos-payment-info');
-      if (debugContainer) {
-        // Check if Toggle already exists (to prevent dupes)
-        if (!document.getElementById('debug-bypass-pp-toggle')) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'form-check form-switch mt-3';
-
-          const input = document.createElement('input');
-          input.className = 'form-check-input';
-          input.type = 'checkbox';
-          input.id = 'debug-bypass-pp-toggle';
-          input.style.cursor = 'pointer';
-
-          // Check stored state (Must be false here, otherwise we wouldn't be in this block)
-          input.checked = false;
-
-          const label = document.createElement('label');
-          label.className = 'form-check-label text-danger';
-          label.htmlFor = 'debug-bypass-pp-toggle';
-          label.style.cursor = 'pointer';
-          label.textContent = '';
-          label.insertAdjacentHTML('beforeend', '<i class="fas fa-bug"></i> <b>Debug Mode:</b> Bypass Purchasing Power Check');
-
-          wrapper.appendChild(input);
-          wrapper.appendChild(label);
-          debugContainer.appendChild(wrapper);
-
-          // Toggle Handler: Just update storage. Do NOT auto-trigger.
-          // User must click "Payment Confirm" again to bypass.
-          input.addEventListener('change', () => {
-            localStorage.setItem('fund_confirm_debug_bypass_pp', input.checked);
-            if (input.checked) {
-              Swal.fire({
-                text: "Debug Mode Enabled. Click 'Xác nhận' again to proceed.",
-                toast: true,
-                position: 'top-end',
-                timer: 2000,
-                showConfirmButton: false,
-                icon: 'success'
-              });
-            }
-          });
-        }
-      }
-
-      return; // Stop here
     }
 
-    // Otherwise (Status OK), proceed to OTP
+    // Always proceed to OTP (bypass purchasing power check)
     await triggerSmartOTPForNormalOrder();
 
   } catch (err) {
@@ -648,12 +576,12 @@ async function triggerSmartOTPForNormalOrder() {
     if (window.FundManagementSmartOTP && typeof window.FundManagementSmartOTP.open === 'function') {
       window.FundManagementSmartOTP.open({
         otpType: otpType,
-        onConfirm: async (otp, debugMode) => {
+        onConfirm: async (otp) => {
           try {
             const response = await fetch('/api/otp/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-              body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { otp, debug: debugMode || false } })
+              body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { otp } })
             });
             const data = await response.json();
             const result = data.result || data;

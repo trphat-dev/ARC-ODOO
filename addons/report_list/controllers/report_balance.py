@@ -132,11 +132,11 @@ class ReportBalanceController(http.Controller):
             }
 
         except Exception as e:
-            print(f"Error in get_report_data: {str(e)}")
+            # print(f"Error in get_report_data: {str(e)}")
             import traceback
             traceback.print_exc()
             return {
-                'error': str(e),
+                'error': 'Internal server error',
                 'records': [],
                 'total': 0,
             }
@@ -148,7 +148,7 @@ class ReportBalanceController(http.Controller):
             funds = request.env['portfolio.fund'].search_read([], ['id', 'name', 'ticker'], order='name')
             return [{'id': fund['id'], 'name': fund['name'], 'ticker': fund.get('ticker')} for fund in funds]
         except Exception as e:
-            print(f"Error in get_products: {str(e)}")
+            # print(f"Error in get_products: {str(e)}")
             import traceback
             traceback.print_exc()
             return []
@@ -226,11 +226,11 @@ class ReportBalanceController(http.Controller):
             return request.make_response(pdf_content, headers=pdf_http_headers)
 
         except Exception as e:
-            print(f"Error in export_pdf: {str(e)}")
+            # print(f"Error in export_pdf: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất PDF</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 
@@ -284,11 +284,11 @@ class ReportBalanceController(http.Controller):
             return request.make_response(output.read(), headers=xlsx_headers)
 
         except Exception as e:
-            print(f"Error in export_xlsx: {str(e)}")
+            # print(f"Error in export_xlsx: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất XLSX</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 
@@ -339,11 +339,11 @@ class ReportBalanceController(http.Controller):
             return request.make_response(csv_content, headers=csv_http_headers)
 
         except Exception as e:
-            print(f"Error in export_csv: {str(e)}")
+            # print(f"Error in export_csv: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất CSV</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 

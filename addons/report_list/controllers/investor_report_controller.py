@@ -132,13 +132,13 @@ class InvestorReportController(http.Controller):
             }
             
         except Exception as e:
-            print(f"Error in get_investor_report_data: {e}")
+            # print(f"Error in get_investor_report_data: {e}")
             return {
                 'data': [],
                 'total': 0,
                 'page': int(page),
                 'limit': int(limit),
-                'error': str(e)
+                'error': 'Internal server error'
             }
     
     @http.route('/investor_report/export_pdf', type='http', auth='user', website=True, csrf=False)
@@ -242,7 +242,7 @@ class InvestorReportController(http.Controller):
             records = export_data
             
         except Exception as e:
-            print(f"Error in export_pdf: {e}")
+            # print(f"Error in export_pdf: {e}")
             records = []
         
         report_date_range = "Tất cả thời gian"
@@ -391,7 +391,7 @@ class InvestorReportController(http.Controller):
             records = export_data
             
         except Exception as e:
-            print(f"Error in export_xlsx: {e}")
+            # print(f"Error in export_xlsx: {e}")
             records = []
 
         workbook = openpyxl.Workbook()

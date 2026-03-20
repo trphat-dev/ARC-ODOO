@@ -168,6 +168,8 @@ $RECYCLE.BIN/
 # LOGS & TEMPORARY FILES
 # =============================================================================
 *.log
+*.txt.log
+logs.txt
 *.tmp
 *.temp
 *.bak

@@ -2,7 +2,6 @@ from odoo import http
 from odoo.http import request, Response
 import json
 from datetime import datetime, timedelta, timezone
-from datetime import datetime, timedelta
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
 
 
@@ -107,8 +106,10 @@ class FundController(http.Controller):
                 content_type='application/json'
             )
         except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error in fund_calc: {e}", exc_info=True)
             return Response(
-                json.dumps({'error': str(e)}),
+                json.dumps({'error': 'Internal server error'}),
                 content_type='application/json',
                 status=500
             )
@@ -234,7 +235,7 @@ class FundController(http.Controller):
             return Response(json.dumps({'status': 'Success', 'data': data}), content_type='application/json')
         except Exception as e:
             return Response(
-                json.dumps({'status': 'Error', 'message': str(e)}),
+                json.dumps({'status': 'Error', 'message': 'Internal server error'}),
                 content_type='application/json',
                 status=500
             )

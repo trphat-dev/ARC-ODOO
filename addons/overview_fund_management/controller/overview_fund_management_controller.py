@@ -1,10 +1,13 @@
 from odoo import http
 from odoo.http import request
 import json
+import logging
 from markupsafe import Markup
 import pytz
 from datetime import datetime, timedelta
 from odoo.addons.user_permission_management.utils.permission_checker import require_module_access
+
+_logger = logging.getLogger(__name__)
 
 
 class OverviewFundManagementController(http.Controller):
@@ -48,20 +51,12 @@ class OverviewFundManagementController(http.Controller):
             ('status', '=', 'active')
         ])
         
-        # Debug: Log số lượng investment
-        print(f"DEBUG: User {request.env.user.id} has {len(user_investments)} active investments")
-        
-        # Lấy các fund mà user hiện tại đã đầu tư
+        # Get user investments
         user_funds = user_investments.mapped('fund_id').sudo().filtered(lambda f: f.status == 'active')
         
-        # Debug: Log số lượng fund
-        print(f"DEBUG: User has {len(user_funds)} active funds")
-        
-        # Lọc các fund có ít nhất 1 investment của user hiện tại (kiểm tra trực tiếp)
+        # Filter funds that have at least 1 active investment
         funds_with_investment = user_funds.filtered(lambda f: len(f.sudo().investment_ids.filtered(lambda inv: inv.user_id.id == request.env.user.id and inv.status == 'active')) > 0)
         
-        # Debug: Log số lượng fund với investment
-        print(f"DEBUG: User has {len(funds_with_investment)} funds with investments")
         fund_data = []
         
         # Gộp các fund có cùng ticker
@@ -107,10 +102,7 @@ class OverviewFundManagementController(http.Controller):
                         cert_color = fund_sudo.certificate_id.fund_color
                         if cert_color:
                             fund_color = cert_color
-                        print(f"DEBUG: Fund {fund.ticker} color from certificate: {cert_color}, final: {fund_color}")
-            except Exception as e:
-                print(f"DEBUG: Error getting certificate color for {fund.ticker}: {e}")
-                # Fallback to fund color already set
+            except Exception:
                 pass
             
             if ticker not in merged_funds:
@@ -404,4 +396,4 @@ class OverviewFundManagementController(http.Controller):
             return {'funds': funds_data}
             
         except Exception as e:
-            return {'error': str(e), 'funds': []}
+            return {'error': 'Internal server error', 'funds': []}

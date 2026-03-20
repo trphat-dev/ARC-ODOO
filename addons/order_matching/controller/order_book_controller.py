@@ -45,7 +45,7 @@ class OrderBookController(http.Controller):
         })
 
     # ==== API SỔ LỆNH GIAO DỊCH ====
-    @http.route('/api/transaction-list/order-book', type='http', auth='public', methods=['POST'], csrf=False)
+    @http.route('/api/transaction-list/order-book', type='http', auth='user', methods=['POST'], csrf=False)
     def get_order_book(self, **kwargs):
         """Lấy dữ liệu sổ lệnh giao dịch"""
         
@@ -122,9 +122,16 @@ class OrderBookController(http.Controller):
             price_change = 0
             price_change_percent = 0
             try:
-                # Lấy giá trước đó từ NAV history hoặc fund config
-                prev_price = fund.current_nav or 10000
                 current_price = fund.current_nav or 10000
+                # Read previous NAV from daily inventory (yesterday)
+                from datetime import datetime as dt, timedelta
+                yesterday = dt.now().date() - timedelta(days=1)
+                prev_inventory = request.env['nav.daily.inventory'].sudo().search([
+                    ('fund_id', '=', int(fund_id)),
+                    ('inventory_date', '<=', yesterday),
+                    ('opening_avg_price', '>', 0)
+                ], order='inventory_date desc', limit=1)
+                prev_price = prev_inventory.opening_avg_price if prev_inventory else current_price
                 price_change = current_price - prev_price
                 if prev_price > 0:
                     price_change_percent = (price_change / prev_price) * 100
@@ -304,17 +311,18 @@ class OrderBookController(http.Controller):
             )
             
         except Exception as e:
-            pass
+            import logging
+            logging.getLogger(__name__).error('Order book error: %s', str(e))
             return request.make_response(
                 json.dumps({
                     "success": False,
-                    "message": str(e)
+                    "message": "Lỗi hệ thống. Vui lòng thử lại sau."
                 }, ensure_ascii=False),
                 headers=[("Content-Type", "application/json")],
                 status=500
             )
 
-    @http.route('/api/transaction-list/funds', type='http', auth='public', methods=['POST'], csrf=False)
+    @http.route('/api/transaction-list/funds', type='http', auth='user', methods=['POST'], csrf=False)
     def get_funds(self, **kwargs):
         """Lấy danh sách funds cho dropdown"""
         
@@ -341,11 +349,12 @@ class OrderBookController(http.Controller):
             )
             
         except Exception as e:
-            pass
+            import logging
+            logging.getLogger(__name__).error('Funds list error: %s', str(e))
             return request.make_response(
                 json.dumps({
                     "success": False,
-                    "message": str(e)
+                    "message": "Lỗi hệ thống. Vui lòng thử lại sau."
                 }, ensure_ascii=False),
                 headers=[("Content-Type", "application/json")],
                 status=500

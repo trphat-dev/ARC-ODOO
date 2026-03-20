@@ -371,7 +371,7 @@ class ExchangeIntegrationController(http.Controller):
         except ValueError as je:
             return {'success': False, 'message': str(je)}
         except Exception as e:
-            return {'success': False, 'message': _('Lỗi: %s') % str(e)}
+            return {'success': False, 'message': _('Lỗi hệ thống.')}
 
     @http.route('/api/transaction-list/send-many-to-exchange', type='json', auth='user')
     def send_many_pairs_to_exchange(self, matched_order_ids=None, auto_submit=True, **kwargs):
@@ -450,7 +450,7 @@ class ExchangeIntegrationController(http.Controller):
                 'message': _('Đã xử lý %s cặp, tạo %s orders (mua+bán), submit %s cặp') % (len(ids), created_pairs * 2, submitted_pairs if auto_submit else 0)
             }
         except Exception as e:
-            return {'success': False, 'message': _('Lỗi: %s') % str(e)}
+            return {'success': False, 'message': _('Lỗi hệ thống.')}
 
     # Alias để tương thích frontend: bulk-send-to-exchange
     @http.route('/api/transaction-list/bulk-send-to-exchange', type='json', auth='user')
@@ -503,6 +503,6 @@ class ExchangeIntegrationController(http.Controller):
             ids = self._coerce_id_list(raw_ids if raw_ids is not None else kwargs)
             return self.send_many_pairs_to_exchange(matched_order_ids=ids, auto_submit=auto_submit)
         except Exception as e:
-            return {'success': False, 'message': _('Lỗi: %s') % str(e)}
+            return {'success': False, 'message': _('Lỗi hệ thống.')}
 
 

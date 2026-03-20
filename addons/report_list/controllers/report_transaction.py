@@ -135,7 +135,7 @@ class ReportTransactionController(http.Controller):
                     'chuong_trinh_ticker': fund_ticker,
                 })
             
-            print(f"Returning data: {len(data)} records, total: {total}, domain: {domain}, page: {page}, limit: {limit}")
+            # print(f"Returning data: {len(data)} records, total: {total}, domain: {domain}, page: {page}, limit: {limit}")
             return {
                 'data': data,
                 'total': total,
@@ -144,11 +144,11 @@ class ReportTransactionController(http.Controller):
             }
             
         except Exception as e:
-            print(f"Error in get_report_data: {str(e)}")
+            # print(f"Error in get_report_data: {str(e)}")
             import traceback
             traceback.print_exc()
             return {
-                'error': str(e),
+                'error': 'Internal server error',
                 'records': [],
                 'total': 0,
             }
@@ -167,7 +167,7 @@ class ReportTransactionController(http.Controller):
             return products
             
         except Exception as e:
-            print(f"Error in get_products: {str(e)}")
+            # print(f"Error in get_products: {str(e)}")
             import traceback
             traceback.print_exc()
             return []
@@ -230,11 +230,11 @@ class ReportTransactionController(http.Controller):
             return request.make_response(pdf_content, headers=pdf_http_headers)
             
         except Exception as e:
-            print(f"Error in export_report_transaction_pdf: {str(e)}")
+            # print(f"Error in export_report_transaction_pdf: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất PDF</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 
@@ -334,11 +334,11 @@ class ReportTransactionController(http.Controller):
             return request.make_response(output.read(), headers=xlsx_headers)
             
         except Exception as e:
-            print(f"Error in export_xlsx: {str(e)}")
+            # print(f"Error in export_xlsx: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất XLSX</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 
@@ -419,11 +419,11 @@ class ReportTransactionController(http.Controller):
             return request.make_response(csv_content, headers=csv_http_headers)
             
         except Exception as e:
-            print(f"Error in export_report_transaction_csv: {str(e)}")
+            # print(f"Error in export_report_transaction_csv: {str(e)}")
             import traceback
             traceback.print_exc()
             return request.make_response(
-                f"<h1>Lỗi xuất CSV</h1><p>Chi tiết lỗi: {str(e)}</p>",
+                "<h1>Error</h1><p>An internal error occurred. Please try again later.</p>",
                 headers=[('Content-Type', 'text/html')]
             )
 
@@ -498,5 +498,5 @@ class ReportTransactionController(http.Controller):
             except Exception:
                 return request.not_found()
         except Exception as e:
-            print(f"Error viewing contract: {str(e)}")
+            # print(f"Error viewing contract: {str(e)}")
             return request.not_found()

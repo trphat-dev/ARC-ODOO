@@ -151,7 +151,7 @@ class NavManagementController(http.Controller):
             }
             return request.make_json_response(payload)
         except Exception as e:
-            return request.make_json_response({'success': False, 'message': str(e)}, status=500)
+            return request.make_json_response({'success': False, 'message': 'Internal server error'}, status=500)
 
     @http.route('/nav_management/api/calc_metrics', type='json', auth='user', methods=['POST'])
     def calc_metrics(self):
@@ -184,7 +184,7 @@ class NavManagementController(http.Controller):
                     results.append(it or {})
             return { 'success': True, 'items': results }
         except Exception as e:
-            return { 'success': False, 'message': str(e) }
+            return { 'success': False, 'message': 'Internal server error' }
 
     @http.route('/nav_management/api/cap_config', type='http', auth='user', methods=['GET'])
     def get_cap_config(self):
@@ -205,7 +205,7 @@ class NavManagementController(http.Controller):
                 'message': cfg.get('message')
             })
         except Exception as e:
-            return request.make_json_response({'success': False, 'message': str(e)}, status=500)
+            return request.make_json_response({'success': False, 'message': 'Internal server error'}, status=500)
 
     @http.route('/nav_management/api/calculate_nav_transaction', type='json', auth='user', methods=['POST'])
     def calculate_nav_transaction(self, fund_id=None, from_date=None, to_date=None, cap_upper=None, cap_lower=None):
@@ -249,7 +249,7 @@ class NavManagementController(http.Controller):
                 else:
                     return {'success': False, 'message': cfg.get('message') or 'Không tìm thấy cấu hình chặn trên/chặn dưới.'}
             except Exception as e:
-                return {'success': False, 'message': f'Lỗi đọc cấu hình chặn trên/chặn dưới: {str(e)}'}
+                return {'success': False, 'message': 'Internal server error'}
 
             if not fund_id:
                 return {'success': False, 'message': 'Thiếu fund_id'}
@@ -293,7 +293,7 @@ class NavManagementController(http.Controller):
             traceback.print_exc()
             return {
                 'success': False,
-                'message': str(e)
+                'message': 'Internal server error'
             }
     
     
@@ -340,7 +340,7 @@ class NavManagementController(http.Controller):
         except Exception as e:
             return {
                 'success': False,
-                'message': str(e)
+                'message': 'Internal server error'
             }
 
     @http.route('/nav_management/api/nav_stat_card', type='json', auth='user', methods=['POST'])
@@ -376,7 +376,7 @@ class NavManagementController(http.Controller):
             }
             return {'success': True, 'data': data}
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
     
     # Legacy route /nav_management/api/nav_opening_price has been removed. Use /nav_management/api/opening_price_today instead.
     
@@ -404,30 +404,22 @@ class NavManagementController(http.Controller):
             if not fund_id:
                 return {'success': False, 'message': 'Thiếu fund_id'}
 
-            # Log để debug
-            print(f"Getting NAV average price for fund_id={fund_id}, date={inventory_date}")
-            print(f"Request jsonrequest: {request.jsonrequest if hasattr(request, 'jsonrequest') else 'None'}")
-
             Inventory = request.env['nav.daily.inventory']
             inv = Inventory.search([('fund_id', '=', fund_id), ('inventory_date', '=', inventory_date)], limit=1)
             
             if not inv:
-                print(f"No inventory found for fund {fund_id} on {inventory_date}, creating new one...")
-                # Tạo bản ghi mới cho ngày hiện tại (luôn tạo mới để cập nhật realtime)
+                # Create new record for current date
                 inv = Inventory.create_daily_inventory_for_fund(fund_id, inventory_date)
                 if not inv:
                     return {'success': False, 'message': 'Không thể tạo bản ghi tồn kho'}
                 # Tự động tính toán ngay sau khi tạo
                 inv._auto_calculate_inventory()
             else:
-                print(f"Found existing inventory for fund {fund_id} on {inventory_date}")
-                # Nếu đã có bản ghi, tính lại để cập nhật realtime
+                # Recalculate existing record for realtime update
                 inv._auto_calculate_inventory()
 
             # Lấy giá trị NAV trung bình từ tồn kho cuối ngày (cho statcard)
             average_nav_price = inv.closing_avg_price or 0
-            
-            print(f"Returning average_nav_price: {average_nav_price}")
             
             return {
                 'success': True, 
@@ -435,19 +427,10 @@ class NavManagementController(http.Controller):
                 'fund_id': inv.fund_id.id,
                 'fund_name': inv.fund_id.name,
                 'date': inv.inventory_date.isoformat(),
-                'debug_info': {
-                    'opening_ccq': inv.opening_ccq,
-                    'closing_ccq': inv.closing_ccq,
-                    'opening_avg_price': inv.opening_avg_price,
-                    'closing_avg_price': inv.closing_avg_price,
-                    'status': inv.status
-                }
             }
         except Exception as e:
-            print(f"Error in get_nav_average_price: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            return {'success': False, 'message': str(e)}
+            _logger.error("Error in get_nav_average_price: %s", str(e), exc_info=True)
+            return {'success': False, 'message': 'Internal server error'}
     
     @http.route('/nav_management/api/recalculate_inventory', type='json', auth='user', methods=['POST'])
     def recalculate_inventory_after_transaction_change(self, fund_id=None, inventory_date=None):
@@ -470,7 +453,7 @@ class NavManagementController(http.Controller):
             
             return result
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
     
     @http.route('/nav_management/api/refresh_all_inventories', type='json', auth='user', methods=['POST'])
     def refresh_all_inventories(self):
@@ -479,7 +462,7 @@ class NavManagementController(http.Controller):
             result = request.env['nav.daily.inventory'].auto_refresh_all_inventories()
             return result
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
     
     @http.route('/nav_management/api/daily_inventory/create', type='json', auth='user', methods=['POST'])
     def create_daily_inventory(self, fund_id, inventory_date, opening_ccq, opening_avg_price, description=''):
@@ -507,7 +490,7 @@ class NavManagementController(http.Controller):
         except Exception as e:
             return {
                 'success': False,
-                'message': str(e)
+                'message': 'Internal server error'
             }
     
     @http.route('/nav_management/api/daily_inventory/auto_create', type='json', auth='user', methods=['POST'])
@@ -548,7 +531,7 @@ class NavManagementController(http.Controller):
         except Exception as e:
             return {
                 'success': False,
-                'message': str(e)
+                'message': 'Internal server error'
             }
 
     @http.route('/nav_management/api/inventory/recalc_after_match', type='json', auth='user', methods=['POST'])
@@ -594,7 +577,7 @@ class NavManagementController(http.Controller):
             }
             return {'success': True, 'message': 'Đã tính lại tồn kho cuối ngày', 'data': data}
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
 
     @http.route('/nav_management/api/inventory/confirm_end_of_day', type='json', auth='user', methods=['POST'])
     def confirm_end_of_day_inventory(self, fund_id=None, inventory_date=None):
@@ -634,7 +617,7 @@ class NavManagementController(http.Controller):
                 }
             }
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
 
 
     @http.route('/nav_management/api/opening_price_today', type='json', auth='user', methods=['POST'])
@@ -713,7 +696,7 @@ class NavManagementController(http.Controller):
 
             return {'success': False, 'message': 'Không tìm thấy dữ liệu opening cho quỹ'}
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
 
     def _safe_get_capital_cost(self, cert):
         """Safely get capital_cost from certificate, returns 0.0 if field doesn't exist."""
@@ -780,7 +763,7 @@ class NavManagementController(http.Controller):
         except Exception as e:
             from odoo import http as _http
             _logger.error(f"Error in get_opening_price_today_http: {e}", exc_info=True)
-            return _http.Response(json.dumps({'success': False, 'message': str(e)}), status=500, content_type='application/json')
+            return _http.Response(json.dumps({'success': False, 'message': 'Internal server error'}), status=500, content_type='application/json')
     
     @http.route('/nav_management/api/auto_create_inventory', type='json', auth='user', methods=['POST'])
     def auto_create_inventory(self):
@@ -801,7 +784,7 @@ class NavManagementController(http.Controller):
                 'data': result
             }
         except Exception as e:
-            return {'success': False, 'message': str(e)}
+            return {'success': False, 'message': 'Internal server error'}
 
     @http.route('/nav_management/api/fund_config', type='http', auth='user', methods=['GET', 'POST'], csrf=False)
     def get_fund_config(self, fund_id=None):
@@ -839,4 +822,4 @@ class NavManagementController(http.Controller):
             })
         except Exception as e:
             return request.make_json_response(
-                {'success': False, 'message': str(e)}, status=500)
+                {'success': False, 'message': 'Internal server error'}, status=500)

@@ -216,8 +216,7 @@
                 <div class="ai-chat-input-area">
                     <input type="text" class="ai-chat-input" 
                            placeholder="Hỏi về cổ phiếu, thị trường, kiến thức..." 
-                           t-ref="chatInput"
-                           t-on-keydown="onKeyDown"/>
+                           t-ref="chatInput"/>
                     <button class="ai-chat-send" t-on-click="sendMessage" t-att-disabled="state.isTyping">
                         <i class="fa fa-paper-plane"></i>
                     </button>

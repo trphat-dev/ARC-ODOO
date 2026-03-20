@@ -43,4 +43,4 @@ class ImageController(http.Controller):
 
         except Exception as e:
             _logger.error('Error uploading ID documents: %s', str(e))
-            return {'error': str(e)}
+            return {'error': 'Internal server error'}

@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, useRef, onMounted, markup } from "@odoo/owl";
+import { Component, useState, useRef, onMounted, onWillUnmount, markup } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -109,12 +109,48 @@ export class AIChatbot extends Component {
 
         // Make quick actions available in template
         this.quickActions = QUICK_ACTIONS;
+
+        // Bind keydown handler for native addEventListener
+        this._boundKeyDown = (ev) => {
+            if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                ev.stopImmediatePropagation();
+                this.sendMessage();
+            }
+        };
+
+        onMounted(() => {
+            // Attach native DOM event listener (bypasses OWL event system)
+            this._attachKeyDown();
+        });
+
+        onWillUnmount(() => {
+            this._detachKeyDown();
+        });
+    }
+
+    _attachKeyDown() {
+        // Try to attach immediately, and also observe for DOM changes
+        const el = this.chatInputRef.el;
+        if (el) {
+            el.addEventListener('keydown', this._boundKeyDown, true);
+        }
+    }
+
+    _detachKeyDown() {
+        const el = this.chatInputRef.el;
+        if (el) {
+            el.removeEventListener('keydown', this._boundKeyDown, true);
+        }
     }
 
     toggleChat() {
         this.state.isOpen = !this.state.isOpen;
         if (this.state.isOpen) {
             this.scrollToBottom();
+            // Re-attach keydown listener after DOM renders the input
+            setTimeout(() => this._attachKeyDown(), 100);
         }
     }
 
@@ -220,14 +256,6 @@ export class AIChatbot extends Component {
                 this.sendMessage();
                 return;
             }
-        }
-    }
-
-    onKeyDown(ev) {
-        if (ev.key === 'Enter' && !ev.shiftKey) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            this.sendMessage();
         }
     }
 

@@ -79,7 +79,7 @@ def _get_ssi_client(ssi_id, ssi_secret, api_url):
 
 def fetch_all_tickers_from_ssi(ssi_id, ssi_secret, api_url):
     """Lấy danh sách tất cả các mã CK trực tiếp từ SSI API (HOSE+HNX+UPCOM)"""
-    print("[*] Fetching ALL tickers from SSI API...")
+    # print("[*] Fetching ALL tickers from SSI API...")
     from ssi_fc_data import model
 
     client, config = _get_ssi_client(ssi_id, ssi_secret, api_url)
@@ -104,14 +104,14 @@ def fetch_all_tickers_from_ssi(ssi_id, ssi_secret, api_url):
                     page_index += 1
                     time.sleep(1)
                 elif str(data.get('status')) == '429' or "too many" in data.get('message', '').lower():
-                    print(f"[!] {market} bị giới hạn tần suất (Rate Limit 429), đang chờ 3s...")
+                    # print(f"[!] {market} bị giới hạn tần suất (Rate Limit 429), đang chờ 3s...")
                     time.sleep(3)
                     continue
                 else:
-                    print(f"[-] {market} ngưng tải do API phản hồi: {data.get('message')}")
+                    # print(f"[-] {market} ngưng tải do API phản hồi: {data.get('message')}")
                     break
             except Exception as e:
-                print(f"[!] Bỏ qua {market} trang {page_index} do lỗi gọi API: {e}")
+                # print(f"[!] Bỏ qua {market} trang {page_index} do lỗi gọi API: {e}")
                 break
         time.sleep(1)
 
@@ -205,21 +205,21 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
     else:
         tickers = [t.strip().upper() for t in ticker_input.split(',')]
 
-    print(f"=========== BẮT ĐẦU HUẤN LUYỆN FINRL: {len(tickers)} MÃ | {algorithm.upper()} ===========")
+    # print(f"=========== BẮT ĐẦU HUẤN LUYỆN FINRL: {len(tickers)} MÃ | {algorithm.upper()} ===========")
 
     # ──── 1. Fetch Data ────
     df_list = []
     total = len(tickers)
     last_error = ""
 
-    print(f"[*] Tải dữ liệu từ SSI ({from_date} - {to_date}):")
+    # print(f"[*] Tải dữ liệu từ SSI ({from_date} - {to_date}):")
     for i, tic in enumerate(tickers, 1):
         try:
             percent = (i / total) * 100
             bar_len = 20
             filled_len = int(bar_len * i // total)
             bar = '█' * filled_len + '-' * (bar_len - filled_len)
-            print(f'\r[{bar}] {percent:.1f}% ({i}/{total}) Tải: {tic:<6}   ', end='', flush=True)
+            # print(f'\r[{bar}] {percent:.1f}% ({i}/{total}) Tải: {tic:<6}   ', end='', flush=True)
 
             df = fetch_data_from_ssi(tic, from_date, to_date, ssi_id, ssi_secret, api_url)
             time.sleep(0.5)
@@ -235,10 +235,10 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
     full_df = pd.concat(df_list, ignore_index=True)
     full_df.sort_values(by=['date', 'tic'], ascending=True, inplace=True)
     full_df.reset_index(drop=True, inplace=True)
-    print(f"[*] Total DataFrame shape: {full_df.shape}")
+    # print(f"[*] Total DataFrame shape: {full_df.shape}")
 
     # ──── 2. Dimension Alignment ────
-    print("[*] Đang đồng bộ hóa độ dài dữ liệu (Dimension Alignment) & Xử lý nến thiếu (Forward Fill)...")
+    # print("[*] Đang đồng bộ hóa độ dài dữ liệu (Dimension Alignment) & Xử lý nến thiếu (Forward Fill)...")
 
     all_dates = sorted(full_df['date'].unique())
     total_market_days = len(all_dates)
@@ -249,19 +249,19 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
 
     dropped_count = len(tic_counts) - len(valid_tics)
     if dropped_count > 0:
-        print(f"[!] Loại bỏ {dropped_count} mã cổ phiếu do dữ liệu quá ít (<70% chu kỳ).")
+        pass  # Some tickers dropped due to insufficient data
 
     full_df = full_df[full_df['tic'].isin(valid_tics)].copy()
 
-    print(f"[*] Đang xử lý lấp đầy dữ liệu cho {len(valid_tics)} mã cổ phiếu...")
+    # print(f"[*] Đang xử lý lấp đầy dữ liệu cho {len(valid_tics)} mã cổ phiếu...")
     df_pivot = full_df.pivot(index='date', columns='tic', values=['open', 'high', 'low', 'close', 'volume'])
     df_pivot = df_pivot.ffill().bfill()
     full_df = df_pivot.stack(level='tic', future_stack=True).reset_index()
     full_df = full_df.sort_values(['date', 'tic']).reset_index(drop=True)
-    print(f"[*] Dữ liệu hợp lệ: {len(valid_tics)} Mã x {len(all_dates)} Ngày.")
+    # print(f"[*] Dữ liệu hợp lệ: {len(valid_tics)} Mã x {len(all_dates)} Ngày.")
 
     # ──── 3. Feature Engineering ────
-    print(f"[*] Feature Engineering... : {indicators}")
+    # print(f"[*] Feature Engineering... : {indicators}")
 
     try:
         try:
@@ -316,9 +316,9 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
         df_part.sort_values(['date', 'tic'], ignore_index=True, inplace=True)
         df_part.index = df_part.date.factorize()[0]
 
-    print(f"[*] Train : {train_df['date'].min()} -> {train_df['date'].max()} ({len(train_df)} rows)")
-    print(f"[*] Valid : {val_df['date'].min()} -> {val_df['date'].max()} ({len(val_df)} rows)")
-    print(f"[*] Trade : {trade_df['date'].min()} -> {trade_df['date'].max()} ({len(trade_df)} rows)")
+    # print(f"[*] Train : {train_df['date'].min()} -> {train_df['date'].max()} ({len(train_df)} rows)")
+    # print(f"[*] Valid : {val_df['date'].min()} -> {val_df['date'].max()} ({len(val_df)} rows)")
+    # print(f"[*] Trade : {trade_df['date'].min()} -> {trade_df['date'].max()} ({len(trade_df)} rows)")
 
     # ──── 5. Create Environment ────
     stock_dimension = int(len(processed_df.tic.unique()))
@@ -345,7 +345,7 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
     else:
         net_arch = [dict(pi=[512, 256], vf=[512, 256])]
 
-    print(f"[*] Network architecture: {net_arch[0]} (stock_dim={stock_dimension})")
+    # print(f"[*] Network architecture: {net_arch[0]} (stock_dim={stock_dimension})")
 
     # ──── 7. Determine Algorithms to Train ────  FIX #3
     _epochs = int(epochs)
@@ -355,17 +355,17 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
     else:
         algorithms_to_train = [algo_lower]
 
-    print(f"[*] Algorithms to train: {[a.upper() for a in algorithms_to_train]}")
+    # print(f"[*] Algorithms to train: {[a.upper() for a in algorithms_to_train]}")
 
     # ──── 8. Train + Backtest Each Algorithm ────
     results = {}
 
     for current_algo in algorithms_to_train:
-        print(f"\n{'─'*50}")
-        print(f"[*] Training {current_algo.upper()} for {_epochs} timesteps...")
+        # print(f"\n{'─'*50}")
+        # print(f"[*] Training {current_algo.upper()} for {_epochs} timesteps...")
 
         model_kwargs = ALGO_CONFIGS.get(current_algo, {}).copy()  # FIX #7
-        print(f"[*] Hyperparameters: {model_kwargs}")
+        # print(f"[*] Hyperparameters: {model_kwargs}")
 
         start_time = time.time()
 
@@ -406,9 +406,9 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
                 callback_after_eval=stop_cb,
                 verbose=0
             )
-            print(f"[*] EvalCallback enabled: eval every {max(_epochs // 20, 500)} steps, early stop after 5 no-improvement evals.")
+            # print(f"[*] EvalCallback enabled: eval every {max(_epochs // 20, 500)} steps, early stop after 5 no-improvement evals.")
         except Exception as e:
-            print(f"[!] EvalCallback setup failed ({e}), training without early stopping.")
+            # print(f"[!] EvalCallback setup failed ({e}), training without early stopping.")
             eval_callback = None
 
         if eval_callback:
@@ -423,12 +423,12 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
             )
 
         elapsed = (time.time() - start_time) / 60
-        print(f"[*] {current_algo.upper()} training completed in {elapsed:.2f} min.")
+        # print(f"[*] {current_algo.upper()} training completed in {elapsed:.2f} min.")
 
         # Backtest on TRADE set
-        print(f"[*] Backtesting {current_algo.upper()} on trade set...")
+        # print(f"[*] Backtesting {current_algo.upper()} on trade set...")
         sharpe, ret_pct, max_dd = _backtest_model(trained_model, trade_df, env_kwargs)
-        print(f"[*] {current_algo.upper()} Results: Sharpe={sharpe:.2f}, Return={ret_pct:.2f}%, MaxDD={max_dd:.2f}%")
+        # print(f"[*] {current_algo.upper()} Results: Sharpe={sharpe:.2f}, Return={ret_pct:.2f}%, MaxDD={max_dd:.2f}%")
 
         results[current_algo] = {
             'model': trained_model,
@@ -448,25 +448,25 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
 
     # ──── 9. Select Best Algorithm ────
     if len(results) > 1:
-        print(f"\n{'='*50}")
-        print("[*] SO SÁNH CÁC THUẬT TOÁN:")
-        print(f"{'='*50}")
-        print(f"{'Algorithm':<10} {'Sharpe':>8} {'Return%':>10} {'MaxDD%':>10}")
-        print("-" * 40)
+        # print(f"\n{'='*50}")
+        # print("[*] SO SÁNH CÁC THUẬT TOÁN:")
+        # print(f"{'='*50}")
+        # print(f"{'Algorithm':<10} {'Sharpe':>8} {'Return%':>10} {'MaxDD%':>10}")
+        # print("-" * 40)
         for algo, r in results.items():
-            print(f"{algo.upper():<10} {r['sharpe']:>8.2f} {r['return_pct']:>9.2f}% {r['max_drawdown']:>9.2f}%")
+            pass  # Algorithm comparison output removed
 
         best_algo = max(results, key=lambda x: results[x]['sharpe'])
-        print(f"\n[★] Thuật toán tốt nhất: {best_algo.upper()} (Sharpe = {results[best_algo]['sharpe']:.2f})")
+        # print(f"\n[★] Thuật toán tốt nhất: {best_algo.upper()} (Sharpe = {results[best_algo]['sharpe']:.2f})")
     else:
         best_algo = algorithms_to_train[0]
 
     best = results[best_algo]
     trained_model = best['model']
 
-    print(f"\n{'='*50}")
-    print(f"[*] XUẤT MODEL: {best_algo.upper()}")
-    print(f"{'='*50}")
+    # print(f"\n{'='*50}")
+    # print(f"[*] XUẤT MODEL: {best_algo.upper()}")
+    # print(f"{'='*50}")
 
     # ──── 10. Save Model ────
     final_tickers = valid_tics if ticker_input.upper() == "ALL" else tickers
@@ -531,8 +531,8 @@ def train_model(ticker_input, algorithm="ppo", epochs=10000,
     with zipfile.ZipFile(zip_path, 'a') as zf:
         zf.writestr('metadata.json', json.dumps(metadata, indent=4))
 
-    print(f"[SUCCESS] Model và Metadata đã được lưu tại {zip_path}")
-    print("=========== HOÀN TẤT ===========")
+    # print(f"[SUCCESS] Model và Metadata đã được lưu tại {zip_path}")
+    # print("=========== HOÀN TẤT ===========")
 
 
 # ══════════════════════════════════════════════════════
@@ -554,9 +554,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("\n" + "="*50)
-    print(" === CHƯƠNG TRÌNH HUẤN LUYỆN AI ĐẦU TƯ CHỨNG KHOÁN === ")
-    print("="*50 + "\n")
+    # print("\n" + "="*50)
+    # print(" === CHƯƠNG TRÌNH HUẤN LUYỆN AI ĐẦU TƯ CHỨNG KHOÁN === ")
+    # print("="*50 + "\n")
 
     ticker = args.ticker
     algo = args.algo
@@ -590,7 +590,7 @@ if __name__ == "__main__":
     if not ssi_client:
         ssi_client = input("> Nhập [SSI Consumer ID]: ").strip()
         if not ssi_client:
-            print("[ERROR] Bắt buộc phải nhập SSI Consumer ID!")
+            # print("[ERROR] Bắt buộc phải nhập SSI Consumer ID!")
             sys.exit(1)
 
     ssi_secret = args.ssi_secret
@@ -598,19 +598,19 @@ if __name__ == "__main__":
         import getpass
         ssi_secret = getpass.getpass("> Nhập [SSI Consumer Secret]: ").strip()
         if not ssi_secret:
-            print("[ERROR] Bắt buộc phải nhập SSI Consumer Secret!")
+            # print("[ERROR] Bắt buộc phải nhập SSI Consumer Secret!")
             sys.exit(1)
 
     # ──── Batch Training for ALL tickers ────
     if ticker.upper() == "ALL":
         batch_size = args.batch_size
-        print(f"\n[*] Chế độ BATCH: Tải danh sách tất cả mã từ SSI...")
+        # print(f"\n[*] Chế độ BATCH: Tải danh sách tất cả mã từ SSI...")
         all_tickers = fetch_all_tickers_from_ssi(ssi_client, ssi_secret, args.ssi_url)
         total_tickers = len(all_tickers)
         total_batches = (total_tickers + batch_size - 1) // batch_size
 
-        print(f"[*] Tổng: {total_tickers} mã → {total_batches} batch x {batch_size} mã/batch")
-        print(f"{'='*50}\n")
+        # print(f"[*] Tổng: {total_tickers} mã → {total_batches} batch x {batch_size} mã/batch")
+        # print(f"{'='*50}\n")
 
         failed_batches = []
         for batch_idx in range(total_batches):
@@ -620,26 +620,26 @@ if __name__ == "__main__":
             batch_name = f"BATCH_{batch_idx+1:03d}"
             batch_ticker_str = ",".join(batch_tickers)
 
-            print(f"\n{'='*60}")
-            print(f"[BATCH {batch_idx+1}/{total_batches}] {batch_name}: {batch_ticker_str}")
-            print(f"{'='*60}")
+            # print(f"\n{'='*60}")
+            # print(f"[BATCH {batch_idx+1}/{total_batches}] {batch_name}: {batch_ticker_str}")
+            # print(f"{'='*60}")
 
             try:
                 train_model(batch_ticker_str, algo, epochs, from_date, to_date,
                             ssi_client, ssi_secret, args.ssi_url, indicator_list)
             except Exception as e:
-                print(f"[ERROR] Batch {batch_name} thất bại: {e}")
+                # print(f"[ERROR] Batch {batch_name} thất bại: {e}")
                 failed_batches.append((batch_name, str(e)))
                 continue
 
         # Summary
-        print(f"\n{'='*60}")
-        print(f"[TỔNG KẾT] {total_batches - len(failed_batches)}/{total_batches} batch thành công")
+        # print(f"\n{'='*60}")
+        # print(f"[TỔNG KẾT] {total_batches - len(failed_batches)}/{total_batches} batch thành công")
         if failed_batches:
-            print(f"[!] Batch thất bại:")
+            # print(f"[!] Batch thất bại:")
             for name, err in failed_batches:
-                print(f"    - {name}: {err}")
-        print(f"{'='*60}")
+                pass  # Failed batch output removed
+        # print(f"{'='*60}")
 
     else:
         # Single ticker or comma-separated list
@@ -648,6 +648,6 @@ if __name__ == "__main__":
         except Exception as e:
             import traceback
             traceback.print_exc()
-            print(f"[ERROR] Quá trình huấn luyện thất bại: {str(e)}")
+            # print(f"[ERROR] Quá trình huấn luyện thất bại: {str(e)}")
             sys.exit(1)
 

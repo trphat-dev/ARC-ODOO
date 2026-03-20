@@ -15,7 +15,7 @@ class SecurityController(http.Controller):
     - Digital Signature Helpers (PDF Path)
     """
 
-    @http.route('/save_signed_pdf_path', type='http', auth='public', csrf=False, methods=['POST'])
+    @http.route('/save_signed_pdf_path', type='http', auth='user', csrf=False, methods=['POST'])
     def save_signed_pdf_path(self, **kwargs):
         """Save signed PDF path to session"""
         file_path = kwargs.get("file_path")
@@ -89,7 +89,6 @@ class SecurityController(http.Controller):
         """Verify OTP with stock_trading module integration."""
         try:
             code = (kwargs.get('otp') or kwargs.get('code') or '').strip()
-            debug_mode = kwargs.get('debug', False)
             
             if not code:
                 return {
@@ -98,24 +97,7 @@ class SecurityController(http.Controller):
                 }
 
             current_user = request.env.user
-            _logger.info(f'[OTP Verify] User: {current_user.id} ({current_user.login}), OTP: {code[:2]}**, Debug: {debug_mode}')
-            
-            # DEBUG MODE Bypass
-            if debug_mode:
-                _logger.warning(f'[OTP Verify] DEBUG MODE ENABLED - Bypassing OTP validation for user {current_user.id}')
-                config = request.env['trading.config'].sudo().search([
-                    ('user_id', '=', current_user.id),
-                    ('active', '=', True)
-                ], limit=1)
-                otp_type = config.otp_type or 'smart' if config else 'smart'
-                
-                return {
-                    'success': True, 
-                    'message': 'OTP đã được xác thực thành công (DEBUG MODE).',
-                    'write_token': 'DEBUG_TOKEN_' + str(current_user.id),
-                    'otp_type': otp_type,
-                    'debug': True
-                }
+            _logger.info(f'[OTP Verify] User: {current_user.id} ({current_user.login}), OTP: {code[:2]}**')
             
             config = request.env['trading.config'].sudo().search([
                 ('user_id', '=', current_user.id),

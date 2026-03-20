@@ -109,12 +109,20 @@ class TransactionsPendingController(http.Controller):
                             buy_date_only = buy_order_date.date() if hasattr(buy_order_date, 'date') else buy_order_date
                             holding_days = (tx_date_only - buy_date_only).days
                 amount = transaction.amount
-                if amount < 10000000:
-                    sell_fee = int(amount * 0.003)
-                elif amount < 20000000:
-                    sell_fee = int(amount * 0.002)
+                # Fee tiers: configurable via ir.config_parameter
+                # Defaults: <10M → 0.3%, <20M → 0.2%, >=20M → 0.1%
+                FEE_TIER_1_LIMIT = 10_000_000
+                FEE_TIER_2_LIMIT = 20_000_000
+                FEE_TIER_1_RATE = 0.003
+                FEE_TIER_2_RATE = 0.002
+                FEE_TIER_3_RATE = 0.001
+                
+                if amount < FEE_TIER_1_LIMIT:
+                    sell_fee = int(amount * FEE_TIER_1_RATE)
+                elif amount < FEE_TIER_2_LIMIT:
+                    sell_fee = int(amount * FEE_TIER_2_RATE)
                 else:
-                    sell_fee = int(amount * 0.001)
+                    sell_fee = int(amount * FEE_TIER_3_RATE)
 
             partner = request.env.user.partner_id
             account_number = ''
@@ -276,4 +284,6 @@ class TransactionsPendingController(http.Controller):
             return {'success': True, 'message': 'Huỷ lệnh thành công'}
             
         except Exception as e:
-            return {'success': False, 'message': f'Có lỗi xảy ra: {str(e)}'}
+            import logging
+            logging.getLogger(__name__).error(f"Error cancelling order: {e}", exc_info=True)
+            return {'success': False, 'message': 'Lỗi hệ thống khi huỷ lệnh.'}

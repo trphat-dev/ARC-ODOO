@@ -640,7 +640,7 @@ class EKYCIntegrationController(http.Controller):
                     'code': country.code
                 })
             
-            print(f"📊 Countries loaded: {len(countries_data)} countries")
+            # print(f"📊 Countries loaded: {len(countries_data)} countries")
             
             return request.make_response(
                 json.dumps(countries_data),
@@ -649,7 +649,7 @@ class EKYCIntegrationController(http.Controller):
             )
             
         except Exception as e:
-            print(f"❌ Error loading countries: {e}")
+            # print(f"❌ Error loading countries: {e}")
             return request.make_response(
                 json.dumps([]),
                 headers=[('Content-Type', 'application/json')],
@@ -724,9 +724,9 @@ class EKYCIntegrationController(http.Controller):
             }, 'Upload file thành công')
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi upload file: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
     
     @http.route('/api/ekyc/frontID', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_front_ocr(self, **kwargs):
@@ -778,9 +778,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(result_data)
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi xử lý OCR: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/backID', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_back_ocr(self, **kwargs):
@@ -830,9 +830,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(result_data)
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi xử lý OCR: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/classify', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_classify_id(self, **kwargs):
@@ -878,9 +878,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(response.get('object', response))
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi phân loại giấy tờ: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/card-liveness', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_card_liveness(self, **kwargs):
@@ -924,9 +924,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(response.get('object', response))
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi kiểm tra giấy tờ: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/face-compare', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_face_compare(self, **kwargs):
@@ -990,9 +990,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(response.get('object', response))
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi so sánh khuôn mặt: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/face-liveness', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_face_liveness(self, **kwargs):
@@ -1038,9 +1038,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(response.get('object', response))
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi kiểm tra mặt thật: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/ocr-full', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_ocr_full(self, **kwargs):
@@ -1112,9 +1112,9 @@ class EKYCIntegrationController(http.Controller):
             return self._make_success_response(response.get('object', response))
                 
         except ValueError as e:
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
-            return self._make_error_response(f'Lỗi xử lý OCR: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc/detection', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_detection(self, **kwargs):
@@ -1173,7 +1173,7 @@ class EKYCIntegrationController(http.Controller):
             
         except Exception as e:
             _logger.error('Error in ekyc_detection: %s', e)
-            return self._make_error_response(str(e), 500)
+            return self._make_error_response('Internal server error', 500)
 
     @http.route('/api/ekyc-process', type='http', auth='user', methods=['POST'], csrf=False)
     def ekyc_process(self, **kwargs):
@@ -1398,10 +1398,10 @@ class EKYCIntegrationController(http.Controller):
                 
         except ValueError as e:
             _logger.exception('Validation error in eKYC process')
-            return self._make_error_response(str(e), 400)
+            return self._make_error_response('Internal server error', 400)
         except Exception as e:
             _logger.exception('Error during eKYC verification')
-            return self._make_error_response(f'Lỗi xử lý eKYC: {str(e)}', 500)
+            return self._make_error_response('Internal server error', 500)
 
 
 

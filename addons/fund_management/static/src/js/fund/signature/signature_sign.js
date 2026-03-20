@@ -83,7 +83,7 @@ async function triggerSmartOTPAndCreateOrder() {
     if (window.FundManagementSmartOTP && typeof window.FundManagementSmartOTP.open === 'function') {
       window.FundManagementSmartOTP.open({
         otpType: otpType,
-        onConfirm: async (otp, debugMode) => {
+        onConfirm: async (otp) => {
           try {
             const response = await fetch('/api/otp/verify', {
               method: 'POST',
@@ -95,7 +95,7 @@ async function triggerSmartOTPAndCreateOrder() {
               body: JSON.stringify({
                 jsonrpc: '2.0',
                 method: 'call',
-                params: { otp: otp || '', debug: debugMode || false }
+                params: { otp: otp || '' }
               })
             });
 
@@ -165,20 +165,8 @@ async function createBuyOrder() {
     if (termMonths) formData.append('term_months', termMonths);
     if (interestRate) formData.append('interest_rate', interestRate);
     
-    // Gửi debug mode và các options cụ thể để backend bypass validation
-    const debugMode = localStorage.getItem('fund_buy_debug_mode') === 'true';
-    if (debugMode) {
-        formData.append('debug', 'true');
-        
-        try {
-            const debugOptions = JSON.parse(localStorage.getItem('fund_buy_debug_options') || '{}');
-            if (debugOptions.skipMinCcq) formData.append('skip_min_ccq', 'true');
-            if (debugOptions.skipMaxCcq) formData.append('skip_max_ccq', 'true');
-            if (debugOptions.skipLotSize) formData.append('skip_lot_size', 'true');
-        } catch (e) {
-            console.warn('Lỗi parsing debug options:', e);
-        }
-    }
+
+
 
     const res = await fetch('/create_investment', {
       method: 'POST',

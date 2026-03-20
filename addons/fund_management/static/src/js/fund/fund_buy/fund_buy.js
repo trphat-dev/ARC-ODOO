@@ -314,32 +314,7 @@ function shouldSkipLotSize() {
   return sessionStorage.getItem('debug_skip_lot_size') === 'true';
 }
 
-function initFundBuyDebugToggle() {
-  const toggleBtn = document.getElementById('debug-mode-buy-toggle');
-  if (!toggleBtn) return;
 
-  // Sync initial state
-  const isDebug = sessionStorage.getItem('debug_mode_buy') === 'true';
-  toggleBtn.classList.toggle('active', isDebug);
-
-  toggleBtn.addEventListener('click', () => {
-    const nextState = !(sessionStorage.getItem('debug_mode_buy') === 'true');
-    sessionStorage.setItem('debug_mode_buy', nextState);
-    sessionStorage.setItem('debug_skip_min_ccq', nextState);
-    sessionStorage.setItem('debug_skip_max_ccq', nextState);
-    sessionStorage.setItem('debug_skip_lot_size', nextState);
-
-    toggleBtn.classList.toggle('active', nextState);
-
-    Swal.fire({
-      icon: 'info',
-      title: nextState ? 'Debug Mode ON' : 'Debug Mode OFF',
-      text: nextState ? 'Bỏ qua các ràng buộc số lượng tối thiểu/tối đa và lô 100.' : 'Đã khôi phục các ràng buộc đặt lệnh.',
-      timer: 1500,
-      showConfirmButton: false
-    });
-  });
-}
 
 function clearOrderSession() {
   console.log('[Session] Clearing order session data');
@@ -360,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFundSelect();
   initShareQuantityInput();
   initPaymentButton();
-  initFundBuyDebugToggle(); // Debug toggle (replaces old initDebugButton)
+
   initOrderModeTabs(); // Order Mode Tabs (Thường vs Thỏa thuận)
 
   const amountInput = document.getElementById('amount-input');

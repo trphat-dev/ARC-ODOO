@@ -199,87 +199,61 @@ class PartialMatchingEngine(models.Model):
 
     def _calculate_priority_score(self, order_record):
         """
-        Tính điểm ưu tiên theo Price-Time Priority CHUẨN
-        Dựa trên CompanyStockComparator từ StockExchangeApp-main
-        
-        Logic Java Comparator:
-        - Buy: return -1 nếu order1 có priority cao hơn (giá cao hơn, hoặc cùng giá nhưng thời gian sớm hơn)
-        - Sell: return -1 nếu order1 có priority cao hơn (giá thấp hơn, hoặc cùng giá nhưng thời gian sớm hơn)
-        
-        PriorityQueue sắp xếp theo: return -1 → priority cao hơn → ở đầu queue
-        
-        Công thức Odoo (score cao hơn = priority cao hơn):
-        - Buy: (price * large_number) - time_int
-          → Giá cao hơn → score cao hơn
-          → Cùng giá, time_int nhỏ hơn (sớm hơn) → score cao hơn
-        - Sell: (max_price - price) * large_number - time_int
-          → Giá thấp hơn → (max_price - price) cao hơn → score cao hơn
-          → Cùng giá, time_int nhỏ hơn (sớm hơn) → score cao hơn
+        Calculate priority score using Price-Time Priority (FIFO).
+        Based on CompanyStockComparator from StockExchangeApp-main.
+
+        Score formula (higher score = higher priority):
+        - Buy:  price * MULTIPLIER - epoch_seconds
+        - Sell: (MAX_PRICE - price) * MULTIPLIER - epoch_seconds
+
+        Uses epoch seconds for sub-second FIFO precision.
         """
         price = float(order_record.price or order_record.current_nav or 0)
-        create_time = order_record.create_date
-        
-        # Chuyển đổi thời gian thành số để so sánh (giống companyOrderIntegerTime trong Java)
-        # Java: (h1*10+h2)*60+(m1*10+m2) = hour*60 + minute
-        time_score = self._time_to_integer(create_time)
-        
-        # Sử dụng số lớn để đảm bảo giá có priority cao hơn thời gian
-        # Giả sử giá tối đa là 999999, time_int tối đa là 1440 (24*60)
-        LARGE_MULTIPLIER = 1000000
-        
+        # Prefer created_at (order placement time) over create_date (ORM record time)
+        order_time = (
+            (order_record.created_at if hasattr(order_record, 'created_at') and order_record.created_at else None)
+            or order_record.create_date
+        )
+        time_score = self._time_to_integer(order_time)
+
+        # epoch seconds max ~2e9, so multiplier must be larger to ensure
+        # price always dominates over time in the score.
+        LARGE_MULTIPLIER = 10_000_000_000  # 1e10
+
         if order_record.transaction_type == 'buy':
-            # Buy: Giá cao nhất trước, cùng giá thì thời gian sớm nhất trước
-            # Java: if (order1.getPrice() < order2.getPrice()) return 1; (order1 thấp hơn)
-            #       else if (order1.getPrice() == order2.getPrice()) {
-            #           if (order1TimeStamp > order2TimeStamp) return 1; (order1 muộn hơn)
-            #       }
-            #       return -1; (order1 cao hơn/ưu tiên hơn)
-            # Công thức: (price * LARGE_MULTIPLIER) - time_score
-            # → Giá cao hơn → score cao hơn
-            # → Cùng giá, time_score nhỏ hơn (sớm hơn) → score cao hơn
+            # Higher price → higher score; same price → earlier time → higher score
             return (price * LARGE_MULTIPLIER) - time_score
-        else:  # sell
-            # Sell: Giá thấp nhất trước, cùng giá thì thời gian sớm nhất trước
-            # Java: if (order1.getPrice() > order2.getPrice()) return 1; (order1 cao hơn)
-            #       else if (order1.getPrice() == order2.getPrice()) {
-            #           if (order1TimeStamp > order2TimeStamp) return 1; (order1 muộn hơn)
-            #       }
-            #       return -1; (order1 thấp hơn/ưu tiên hơn)
-            # Công thức: (MAX_PRICE - price) * LARGE_MULTIPLIER - time_score
-            # → Giá thấp hơn → (MAX_PRICE - price) cao hơn → score cao hơn
-            # → Cùng giá, time_score nhỏ hơn (sớm hơn) → score cao hơn
-            MAX_PRICE = 1000000  # Giả sử giá tối đa
+        else:
+            # Lower price → higher score; same price → earlier time → higher score
+            MAX_PRICE = 1_000_000
             return (MAX_PRICE - price) * LARGE_MULTIPLIER - time_score
 
     def _time_to_integer(self, datetime_obj):
         """
-        Chuyển đổi datetime thành integer để so sánh CHUẨN
-        Tương tự companyOrderIntegerTime trong Java
-        
-        Java: 
-        private int companyOrderIntegerTime(String timeStamp) {
-            int h1 = timeStamp.charAt(0) - '0';
-            int h2 = timeStamp.charAt(1) - '0';
-            int m1 = timeStamp.charAt(3) - '0';
-            int m2 = timeStamp.charAt(4) - '0';
-            return (h1*10+h2)*60+(m1*10+m2);
-        }
-        
-        Format input: "HH:MM" (ví dụ: "09:45")
-        Output: Số phút từ 00:00 (ví dụ: 09:45 → 9*60+45 = 585)
+        Convert datetime to epoch seconds for precise FIFO ordering.
+
+        Improvement over Java's hour*60+minute approach:
+        - Java original: only minute-level precision (max 1440)
+        - This version: second-level precision via UNIX epoch
+        - Two orders in the same minute are now correctly ordered
+
+        Args:
+            datetime_obj: datetime object or False/None
+
+        Returns:
+            int: epoch seconds (e.g. 1710900000)
         """
         if not datetime_obj:
             return 0
-        
+
         try:
-            # Lấy giờ và phút từ datetime
-            hour = datetime_obj.hour
-            minute = datetime_obj.minute
-            # Chuyển thành phút từ 00:00 (giống Java: hour*60 + minute)
-            # Ví dụ: 09:45 → 9*60+45 = 585
-            return hour * 60 + minute
-        except Exception:
-            return 0
+            return int(datetime_obj.timestamp())
+        except (AttributeError, TypeError, OSError):
+            try:
+                # Fallback for date objects without timestamp()
+                return int(datetime.combine(datetime_obj, datetime.min.time()).timestamp())
+            except Exception:
+                return 0
 
     def _match_orders(self):
         """
@@ -436,8 +410,9 @@ class PartialMatchingEngine(models.Model):
                 buy_order.invalidate_recordset(['matched_units', 'remaining_units'])
                 sell_order.invalidate_recordset(['matched_units', 'remaining_units'])
                 
-                # Commit database để đảm bảo execution record được lưu
-                self.env.cr.commit()
+                # Flush to DB (not commit) to ensure computed fields refresh
+                # Keeps the entire match operation atomic — rollback on error
+                self.env.cr.flush()
                 
                 # QUAN TRỌNG: Reload từ database để lấy matched_units mới nhất (từ executions)
                 # Đảm bảo remaining_units được tính chính xác trước khi tiếp tục
@@ -482,8 +457,8 @@ class PartialMatchingEngine(models.Model):
                         'status': 'completed',
                     })
                     
-                    # QUAN TRỌNG: Commit database để đảm bảo execution record được lưu
-                    self.env.cr.commit()
+                    # Flush to DB (not commit) to keep atomicity
+                    self.env.cr.flush()
                     
                     # Reload từ database để lấy matched_units mới nhất (từ executions)
                     buy_order.invalidate_recordset(['matched_units', 'remaining_units'])
@@ -534,8 +509,8 @@ class PartialMatchingEngine(models.Model):
                         'status': 'completed',
                     })
                     
-                    # QUAN TRỌNG: Commit database để đảm bảo execution record được lưu
-                    self.env.cr.commit()
+                    # Flush to DB (not commit) to keep atomicity
+                    self.env.cr.flush()
                     
                     # Reload từ database để lấy matched_units mới nhất (từ executions)
                     buy_order.invalidate_recordset(['matched_units', 'remaining_units'])
@@ -576,8 +551,8 @@ class PartialMatchingEngine(models.Model):
                         'status': 'completed',
                     })
                     
-                    # QUAN TRỌNG: Commit database để đảm bảo execution record được lưu
-                    self.env.cr.commit()
+                    # Flush to DB (not commit) to keep atomicity
+                    self.env.cr.flush()
                     
                     # Reload từ database để lấy matched_units mới nhất (từ executions)
                     buy_order.invalidate_recordset(['matched_units', 'remaining_units'])
@@ -710,24 +685,16 @@ class PartialMatchingEngine(models.Model):
     @api.model
     def time_to_integer_helper(self, datetime_obj):
         """
-        Helper method để chuyển datetime thành integer
-        Có thể được gọi từ controller/service layer
-        
+        Convert datetime to epoch seconds for precise FIFO ordering.
+        Public helper callable from controller/service layer.
+
         Args:
             datetime_obj: datetime object
-            
+
         Returns:
-            int: Số phút từ 00:00
+            int: epoch seconds
         """
-        if not datetime_obj:
-            return 0
-        
-        try:
-            hour = datetime_obj.hour
-            minute = datetime_obj.minute
-            return hour * 60 + minute
-        except Exception:
-            return 0
+        return self._time_to_integer(datetime_obj)
     
     @api.model
     def get_order_price(self, order):

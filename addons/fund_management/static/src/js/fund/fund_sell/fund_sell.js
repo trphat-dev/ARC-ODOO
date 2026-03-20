@@ -834,9 +834,7 @@ async function triggerSmartOTPForSell(orderParams, onSuccess, onCleanup) {
     }
 
     // Define actual Create Order function
-    const createOrder = async (debugMode = false) => {
-      // Inject debug flag if needed
-      if (debugMode) orderParams.debug = true;
+    const createOrder = async () => {
 
       const response = await fetch('/api/fund/normal-order/create', {
         method: 'POST',
@@ -888,7 +886,7 @@ async function triggerSmartOTPForSell(orderParams, onSuccess, onCleanup) {
       if (window.FundManagementSmartOTP && typeof window.FundManagementSmartOTP.open === 'function') {
         window.FundManagementSmartOTP.open({
           otpType: otpType,
-          onConfirm: async (otp, debugMode) => {
+          onConfirm: async (otp) => {
             // Verify OTP first
             try {
               const verifyRes = await fetch('/api/otp/verify', {
@@ -897,7 +895,7 @@ async function triggerSmartOTPForSell(orderParams, onSuccess, onCleanup) {
                 body: JSON.stringify({
                   jsonrpc: '2.0',
                   method: 'call',
-                  params: { otp, debug: debugMode }
+                  params: { otp }
                 })
               });
               const verifyData = await verifyRes.json();
@@ -908,7 +906,7 @@ async function triggerSmartOTPForSell(orderParams, onSuccess, onCleanup) {
               }
 
               // OTP Correct -> Create Order
-              await createOrder(debugMode);
+              await createOrder();
 
             } catch (err) {
               throw err; // Throw back to Modal to show error

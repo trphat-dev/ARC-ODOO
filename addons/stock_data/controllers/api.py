@@ -283,7 +283,7 @@ class StockDataApiController(http.Controller):
         except Exception as e:
             _logger.exception("Error in get_intraday_ohlc API: %s", e)
             return request.make_response(
-                json.dumps({'status': 'Error', 'message': str(e)}),
+                json.dumps({'status': 'Error', 'message': 'Internal server error'}),
                 headers=[('Content-Type', 'application/json')]
             )
 
@@ -436,7 +436,7 @@ class StockDataApiController(http.Controller):
             
         except Exception as e:
             _logger.exception("Error in get_realtime_price API: %s", e)
-            return {'status': 'Error', 'message': str(e)}
+            return {'status': 'Error', 'message': 'Internal server error'}
 
     # =========================================================================
     # STREAMING API ENDPOINTS
@@ -466,7 +466,7 @@ class StockDataApiController(http.Controller):
             }
         except Exception as e:
             _logger.exception("Error in streaming_health API: %s", e)
-            return {'status': 'Error', 'message': str(e)}
+            return {'status': 'Error', 'message': 'Internal server error'}
 
     @http.route('/stock_data/api/streaming/status', type='json', auth='user', methods=['POST'], csrf=False)
     def streaming_status(self, **kwargs):
@@ -488,7 +488,7 @@ class StockDataApiController(http.Controller):
             }
         except Exception as e:
             _logger.exception("Error in streaming_status API: %s", e)
-            return {'status': 'Error', 'message': str(e)}
+            return {'status': 'Error', 'message': 'Internal server error'}
 
     @http.route('/stock_data/api/streaming/start', type='json', auth='user', methods=['POST'], csrf=False)
     def streaming_start(self, **kwargs):
@@ -526,7 +526,7 @@ class StockDataApiController(http.Controller):
             }
         except Exception as e:
             _logger.exception("Error in streaming_start API: %s", e)
-            return {'status': 'Error', 'message': str(e)}
+            return {'status': 'Error', 'message': 'Internal server error'}
 
     @http.route('/stock_data/api/streaming/stop', type='json', auth='user', methods=['POST'], csrf=False)
     def streaming_stop(self, **kwargs):
@@ -549,7 +549,7 @@ class StockDataApiController(http.Controller):
             }
         except Exception as e:
             _logger.exception("Error in streaming_stop API: %s", e)
-            return {'status': 'Error', 'message': str(e)}
+            return {'status': 'Error', 'message': 'Internal server error'}
 
     @http.route('/stock_data/api/streaming/stats', type='http', auth='user', methods=['GET'], csrf=False)
     def streaming_stats(self, **kwargs):
@@ -596,6 +596,6 @@ class StockDataApiController(http.Controller):
         except Exception as e:
             _logger.exception("Error in streaming_stats API: %s", e)
             return request.make_response(
-                json.dumps({'status': 'Error', 'message': str(e)}),
+                json.dumps({'status': 'Error', 'message': 'Internal server error'}),
                 headers=[('Content-Type', 'application/json')]
             )

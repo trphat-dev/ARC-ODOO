@@ -196,7 +196,7 @@ class TradingPortalController(CustomerPortal):
             return request.make_response(
                 json.dumps({
                     'status': 'error',
-                    'message': f'Lỗi khi liên kết tài khoản: {str(e)}'
+                    'message': 'Lỗi hệ thống khi liên kết tài khoản.'
                 }),
                 headers=[('Content-Type', 'application/json')]
             )
@@ -267,7 +267,7 @@ class TradingPortalController(CustomerPortal):
             return request.make_response(
                 json.dumps({
                     'status': 'error',
-                    'message': f'Lỗi khi lấy số dư: {str(e)}'
+                    'message': 'Lỗi hệ thống khi lấy số dư.'
                 }),
                 headers=[('Content-Type', 'application/json')]
             )
