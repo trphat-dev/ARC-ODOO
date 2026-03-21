@@ -1055,14 +1055,42 @@ function startPaymentStatusPolling(orderCode) {
         await Swal.fire({
           icon: 'success',
           title: 'Thanh toán thành công!',
-          text: 'Hệ thống đã nhận được thanh toán. Đang tiếp tục đặt lệnh...',
+          text: 'Vui lòng hoàn tất xác nhận để đặt lệnh.',
           timer: 2500,
           showConfirmButton: false,
           timerProgressBar: true
         });
 
-        // Auto-retry order creation
-        await createBuyOrderFromConfirm();
+        // Route through proper flow (contract + OTP) instead of creating order directly
+        const hasTerm = !!sessionStorage.getItem('selected_term_months');
+        const isNormalOrder = !!sessionStorage.getItem('selected_order_type') && !hasTerm;
+
+        if (isNormalOrder) {
+          // Normal Order: OTP verification -> Create Order
+          await startNormalOrderProcess();
+        } else {
+          // Negotiated Order: Signature Modal (Contract) -> OTP -> Create Order
+          const signatureModalElement = document.getElementById('signatureModal');
+          if (signatureModalElement) {
+            try {
+              let signatureModal = bootstrap.Modal.getInstance(signatureModalElement);
+              if (!signatureModal) {
+                signatureModal = new bootstrap.Modal(signatureModalElement, {
+                  backdrop: true,
+                  keyboard: true,
+                  focus: true
+                });
+              }
+              signatureModal.show();
+            } catch (error) {
+              console.error('Error showing signature modal after payment:', error);
+              await createBuyOrderFromConfirm();
+            }
+          } else {
+            // Fallback: no signature modal on this page, proceed directly
+            await createBuyOrderFromConfirm();
+          }
+        }
       } else if (paymentStatus === 'CANCELLED' || paymentStatus === 'cancelled' || paymentStatus === 'EXPIRED') {
         stopPaymentPolling();
         console.log('[PaymentPoll] Payment cancelled/expired');
